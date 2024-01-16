@@ -13,7 +13,6 @@ services:
       - "ROS_MASTER_URI=http://ros_master:11311"
       - "ROS_LOG_LEVEL=info"
       - "PYTHONUNBUFFERED=1"
-
     ports:
       - "9000:9000"
     networks:
