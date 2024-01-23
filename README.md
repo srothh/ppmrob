@@ -17,19 +17,47 @@ and add the node/service to the docker-compose.yml file.
 
 ## Nodes
 
-### Drone
+### Tello
 
-#### Commands
+#### Actions
 
-- takeoff 
+| action  | argument  |   |
+|---|---|---|
+| launch  | bool  | true: takeoff <br> false: land  |
+|  move | int  | move forward x cm  |
+|  command | string  | execute command  | 
+- Launch 
 
-Auto takeoff.
+TBD:
 
-- land
-
-Auto landing.
-
+Actions
 - streamon
+- turn
+- move in all directions
+
+Services
+- stream
+
+
+Publish status
+
+- pitch:%d
+- roll:%d
+- yaw:%d
+- vgx:%d
+- vgy%d
+- vgz:%d
+- templ:%d
+- temph:%d
+- tof:%d
+- h:%d
+- bat:%d
+- baro:%.2f
+- time:%d
+- agx:%.2f
+- agy:%.2f
+- agz:%.2f
+
 
 Enable video stream.
 streamoff Disable video stream.

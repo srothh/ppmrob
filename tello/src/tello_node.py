@@ -3,6 +3,9 @@
 import rospy
 from std_msgs.msg import String
 
+from launch_server import *
+from move_server import *
+from command_server import *
 
 def tello_node():
     # Initialize the ROS node
@@ -13,7 +16,7 @@ def tello_node():
     #move_server = MoveAction("move")
     #command_server = CommandAction("command")
 
-    rospy.is_spin()
+    rospy.spin()
     
 if __name__ == '__main__':
     try:
