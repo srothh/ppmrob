@@ -33,4 +33,4 @@ ENV ROS_WORKSPACE /catkin_ws
 
 RUN chmod +x /catkin_ws/src/listener/src/listener_node.py
 # Source the ROS setup file every time a new container is run
-ENTRYPOINT ["/bin/bash", "-c", "source /opt/ros/$ROS_DISTRO/setup.bash && source /catkin_ws/devel/setup.bash && roslaunch $PACKAGE_NAME $LAUNCH_FILE"]
+ENTRYPOINT ["/bin/bash", "-c", "source /opt/ros/$ROS_DISTRO/setup.bash && source /catkin_ws/devel/setup.bash && roslaunch $PACKAGE_NAME $LAUNCH_FILE --wait"]

@@ -1,0 +1,3 @@
+<launch>
+  <node pkg="tello" type="tello_node.py" name="tello_node" output="screen"/>
+</launch>
