@@ -32,13 +32,14 @@ services:
     depends_on:
       - ros_master
   tello:
-    image: ros:noetic-ros-base
+    #image: ros:noetic-ros-base
     build: ./tello
-    #command: stdbuf -o L roscore
-    volumes:
-      - type: bind
-        source: ./tello
-        target: /catkin_ws/src/tello
+    #volumes:
+    #  - type: bind
+    #    source: ./tello
+    #    target: /catkin_ws/src/tello
+    #volumes:
+    #  - ./tello:/catkin_ws/src/tello
     environment:
       - "ROS_MASTER_URI=http://ros_master:11311"
       - "ROS_LOG_LEVEL=debug"

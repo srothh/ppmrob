@@ -71,7 +71,7 @@ find_package(catkin REQUIRED COMPONENTS
 
 add_action_files(
   DIRECTORY action
-  FILES Fibonacci.action Launch.action
+  FILES Move.action Launch.action Command.action
 )
 
 ## Generate added messages and services with any dependencies listed here

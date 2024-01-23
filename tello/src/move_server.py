@@ -55,5 +55,5 @@ class MoveAction(object):
 if __name__ == '__main__':
     rospy.init_node('move')
     print("launching server:", rospy.get_name())
-    server = LaunchAction(rospy.get_name())
+    server = MoveAction(rospy.get_name())
     rospy.spin()
