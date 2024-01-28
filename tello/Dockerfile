@@ -18,7 +18,7 @@ RUN apt-get update && apt-get install -y dos2unix
 RUN apt-get update && apt-get install -y python3
 
 # Convert line endings in the Python script
-#RUN dos2unix /catkin_ws/src/$PACKAGE_NAME/src/*
+RUN dos2unix /catkin_ws/src/$PACKAGE_NAME/src/*
 
 # Change back to the root of the workspace
 WORKDIR /catkin_ws
