@@ -1,5 +1,27 @@
 # Tello
 
+## test
+
+```bash
+#start servers
+
+$ rosrun tello tello_node.py
+
+# start state listener
+
+$ rosrun tello state_listener.py
+
+# start action client
+
+$ rosrun tello launch_client.py
+
+```
+### Notes
+
+* if battery < 70 strange things happen, 
+** error No valid imu
+** error no joystick
+
 ## Actions
 
 | action  | argument  |   |
@@ -13,9 +35,9 @@
 
 ## Sensors
 
-published state
+sensordata published in topics
 
-| publisher  | | topic | comment |
+| publisher  | topic | comment |
 |---|---|---|
 | TelemetrySensor  | telemetry  | all state fields |
 | BatteryPublisher  | battery | battery status |
@@ -51,6 +73,7 @@ contains all fields from the status string broadcasted by the drone
 - preempted actions: drone should stop current command
 - set speed, 
 - streaming server, streamof, streamoff
+- prevent safety shutdown
 
 
 

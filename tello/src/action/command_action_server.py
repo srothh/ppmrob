@@ -6,7 +6,7 @@ import actionlib
 import time
 
 import tello.msg
-from djitellopy import Tello
+from djitellopy import Tello, TelloException
 from action import ActionServer
 
 class CommandActionServer(ActionServer):
@@ -24,10 +24,12 @@ class CommandActionServer(ActionServer):
         rospy.loginfo('%s %s' % (self._action_name, goal.command))
         self._feedback.progress = []
         self._feedback.progress.append(True)        
-        
-        success = self._drone.send_control_command(goal.command)
-
-        self.success_cb(success)
+        try:
+            success = self._drone.send_control_command(goal.command)
+            self.success_cb(success)
+        except TelloException as e:
+            rospy.loginfo('%s: %s' % (self._action_name, e)) 
+            self.success_cb(False)       
 
 
     def success_cb(self, success):
