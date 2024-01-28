@@ -1,5 +1,5 @@
 #goal definition
-uint8 cm
+int16 distance
 ---
 #result definition
 bool success
