@@ -14,8 +14,8 @@ RUN /bin/bash -c "source /opt/ros/noetic/setup.bash && catkin_create_pkg $PACKAG
 # Copy the src of package into the container
 COPY . /catkin_ws/src/$PACKAGE_NAME/
 
-RUN apt-get update && apt-get install -y dos2unix
-RUN apt-get update && apt-get install -y python3
+RUN apt-get update && apt-get install -y dos2unix python3 python3-pip
+RUN pip3 install av
 
 # Convert line endings in the Python script
 RUN dos2unix /catkin_ws/src/$PACKAGE_NAME/src/*

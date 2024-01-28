@@ -12,18 +12,27 @@ from action.command_action_server import CommandActionServer
 from sensor.battery_publisher import BatteryPublisher
 from sensor.telemetry_sensor import TelemetrySensor
 
-from djitellopy import Tello
+from djitellopy import Tello, TelloException
 
 def tello_node():
     # Initialize the ROS node
     rospy.init_node('tello', anonymous=True)
-    print("starting tello node")
+    rospy.loginfo("starting tello node")
     # init tello driver
     drone = Tello()
-    # start drone
-    drone.connect()
-    print(drone.query_sdk_version())
-    print(drone.query_active())
+
+    # try to start drone in forever loop
+    connected = False
+    while not connected:
+        try:
+            drone.connect()
+            print('connented')
+            connected = True
+        except TelloException as e:
+            print('retry')
+            pass
+
+    rospy.loginfo("connected: %s %s", drone.query_sdk_version(), drone.query_active())
 
     # start action servers
     command = CommandActionServer('command', drone)
