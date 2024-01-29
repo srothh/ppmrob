@@ -1,3 +1,4 @@
+import rospy
 from djitellopy import Tello, TelloException
 
 
@@ -8,7 +9,10 @@ class KeepaliveServer:
 
     def keepalive(self, event = None):
         try:
-            self._drone.send_keepalive()
+            result = self._drone.send_keepalive()
+            if result == None:
+                rospy.loginfo("drone dead?")
+                # TODO: soutdown drone
         except TelloException:
             pass 
         

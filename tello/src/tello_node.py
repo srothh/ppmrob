@@ -2,6 +2,7 @@
 
 import rospy
 from std_msgs.msg import String
+import time
 
 from action.launch_action_server import LaunchActionServer
 from action.rotate_action_server import RotateActionServer
@@ -24,15 +25,18 @@ def tello_node():
     rospy.loginfo("starting tello node")
     # init tello driver
     drone = Tello()
-
+    connected = False
     # block till drone is connected
-    while True:
+    while not connected:
         try:
-            drone.connect()
-            if drone.get_current_state():
-                break
+           drone.connect()
         except TelloException as e:
-            pass
+           pass
+        #rospy.loginfo('connected %s', drone.get_current_state())
+        print(drone.get_current_state())
+        if drone.get_current_state():
+            connected = True
+        time.sleep(1)
 
     rospy.loginfo("connected: %s %s", drone.query_sdk_version(), drone.query_active())
 
