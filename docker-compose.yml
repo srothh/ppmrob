@@ -31,6 +31,25 @@ services:
       - ppmrob
     depends_on:
       - ros_master
+  tello:
+    #image: ros:noetic-ros-base
+    build: ./tello
+    #volumes:
+    #  - type: bind
+    #    source: ./tello
+    #    target: /catkin_ws/src/tello
+    #volumes:
+    #  - ./tello:/catkin_ws/src/tello
+    environment:
+      - "ROS_MASTER_URI=http://ros_master:11311"
+      - "ROS_LOG_LEVEL=debug"
+      - "PYTHONUNBUFFERED=1"
+    ports:
+      - "9002:9002"
+    networks:
+      - ppmrob
+    depends_on:
+      - ros_master
 networks:
   ppmrob:
     driver: "bridge"

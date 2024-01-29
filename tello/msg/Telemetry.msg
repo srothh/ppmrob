@@ -1,0 +1,16 @@
+int16 pitch
+int16 roll
+int16 yaw
+int16 vgx
+int16 vgy
+int16 vgz
+int16 templ
+int16 temph
+int16 tof
+int16 h
+int16 bat
+float32 baro
+int16 time
+float32 agx
+float32 agy
+float32 agz
