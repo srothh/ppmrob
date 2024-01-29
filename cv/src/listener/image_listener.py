@@ -30,6 +30,7 @@ def listener_node():
 
     # Subscribe to the 'chatter' topic and register the callback function
     rospy.Subscriber('camera/forward', Image, callback)
+    print("Started CV NODE")
 
     # Spin to keep the script from exiting
     rospy.spin()

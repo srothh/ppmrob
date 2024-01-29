@@ -7,30 +7,17 @@ services:
     tty: true
     networks:
       - ppmrob
-  publisher:
-    build: ./publisher
+  cv:
+    build: ./cv
     environment:
       - "ROS_MASTER_URI=http://ros_master:11311"
       - "ROS_LOG_LEVEL=info"
       - "PYTHONUNBUFFERED=1"
-    ports:
-      - "9000:9000"
     networks:
       - ppmrob
     depends_on:
       - ros_master
-  listener:
-    environment:
-      - "ROS_MASTER_URI=http://ros_master:11311"
-      - "ROS_LOG_LEVEL=info"
-      - "PYTHONUNBUFFERED=1"
-    build: ./listener
-    ports:
-      - "9001:9001"
-    networks:
-      - ppmrob
-    depends_on:
-      - ros_master
+      - tello
   tello:
     #image: ros:noetic-ros-base
     build: ./tello

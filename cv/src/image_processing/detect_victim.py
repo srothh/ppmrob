@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 import torch
 from torchvision import transforms
 from PIL import Image

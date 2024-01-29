@@ -1,4 +1,5 @@
 # Define NN
+#!/usr/bin/env python3
 from torch import nn
 
 class SRCnn(nn.Module):
