@@ -1,23 +1,6 @@
-# ppmrob
-## Initial docker setup
-Currently listener + publisher example. To run use
+# Tello
 
-``
-docker compose up --build
-``
-
-To exit run
-
-``
-docker compose down
-``
-## Custom nodes
-To create custom nodes, recreate the folder structure for your node, edit the variables PACKAGE_NAME (name of the package/node you want to create) and LAUNCH_FILE(name of the launch file in your directory for this node) in the Dockerfile
-and add the node/service to the docker-compose.yml file.
-
-## Tello
-
-### test
+## test
 
 ```bash
 #start servers
@@ -33,13 +16,13 @@ $ rosrun tello state_listener.py
 $ rosrun tello launch_client.py
 
 ```
-#### Notes
+### Notes
 
 * if battery < 70 strange things happen, 
 ** error No valid imu
 ** error no joystick
 
-### Actions
+## Actions
 
 | action  | argument  |   |
 |---|---|---|
@@ -50,7 +33,7 @@ $ rosrun tello launch_client.py
 | z |  int distance  | negative: down <br> positive up  |
 |  command | string  | execute command  | 
 
-### Sensors
+## Sensors
 
 sensordata published in topics
 
@@ -59,11 +42,11 @@ sensordata published in topics
 | TelemetrySensor  | telemetry  | all state fields |
 | BatteryPublisher  | battery | battery status |
 
-#### BatteryPublisher 
+### BatteryPublisher 
 
 queries actively the status of the battery (command 'battery?') to prevent safety hutdown after 15 sec. NOT WORKING
 
-#### TelemetrySensor
+### TelemetrySensor
 
 contains all fields from the status string broadcasted by the drone
 
@@ -84,15 +67,15 @@ contains all fields from the status string broadcasted by the drone
 - agy:%.2f
 - agz:%.2f
 
-### Servers
 
-* KeepAliveServer
-
-#### TODO
+### TODO
 
 - preempted actions: drone should stop current command
-- set speed
+- set speed, 
 - streaming server, streamof, streamoff
+- prevent safety shutdown (tello.send_keepalive())
 - command timeout
+
+
 
 

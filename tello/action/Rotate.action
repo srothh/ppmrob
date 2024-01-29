@@ -1,0 +1,8 @@
+#goal definition
+int16 bearing
+---
+#result definition
+bool success
+---
+#feedback
+bool[] progress
