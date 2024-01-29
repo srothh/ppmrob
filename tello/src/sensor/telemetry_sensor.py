@@ -7,14 +7,14 @@ from djitellopy import Tello
 class TelemetrySensor():
 
     # publish state data
-    # TODO: check if drone connected
     def publish(self, event=None):
-            msg = Telemetry()
-            # attributes of msg have same names as the tello.state dictonary keys)
-            for field in [a for a in dir(msg) if not a.startswith('_') and not callable(getattr(msg, a))]:
-                setattr(msg, field, self._drone.get_state_field(field))
-            rospy.logdebug(msg)
-            self._publisher.publish(msg)
+             if self._drone.get_current_state():
+                msg = Telemetry()
+                # attributes of msg have same names as the tello.state dictonary keys)
+                for field in [a for a in dir(msg) if not a.startswith('_') and not callable(getattr(msg, a))]:
+                    setattr(msg, field, self._drone.get_state_field(field))
+                rospy.logdebug(msg)
+                self._publisher.publish(msg)
 
 
     def __init__(self, drone):
