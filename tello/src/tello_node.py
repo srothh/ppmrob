@@ -11,6 +11,7 @@ from action.z_action_server import ZActionServer
 from action.command_action_server import CommandActionServer
 from sensor.battery_publisher import BatteryPublisher
 from sensor.telemetry_sensor import TelemetrySensor
+from sensor.image_sensor import ImageSensor
 from server.keepalive_server import KeepaliveServer
 
 from djitellopy import Tello, TelloException
@@ -46,6 +47,10 @@ def tello_node():
     # start sensor publishers
     tel = TelemetrySensor(drone)
     rospy.Timer(rospy.Duration(1.0), tel.publish)
+
+    img = ImageSensor(drone)
+    rospy.Timer(rospy.Duration(0.2), img.publish)
+
 
     # send keepalive messages
     keep = KeepaliveServer(drone)
