@@ -11,12 +11,13 @@ class ImageSensor():
     def publish(self, event=None):
             if self._drone.get_current_state() and not self._drone.stream_on:
                 self._drone.streamon()
-            frameReader = self._drone.get_frame_read()
-            frame = frameReader.frame
-            msg = self._br.cv2_to_imgmsg(frame)
-            #rospy.loginfo(msg)
-            self._publisher.publish(msg)
-            self._counter += 1
+            else:
+                frameReader = self._drone.get_frame_read()
+                frame = frameReader.frame
+                msg = self._br.cv2_to_imgmsg(frame, encoding='rgb8')
+                #rospy.loginfo(msg)
+                self._publisher.publish(msg)
+                self._counter += 1
 
 
     def __init__(self, drone):
