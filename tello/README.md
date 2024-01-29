@@ -73,7 +73,8 @@ contains all fields from the status string broadcasted by the drone
 - preempted actions: drone should stop current command
 - set speed, 
 - streaming server, streamof, streamoff
-- prevent safety shutdown
+- prevent safety shutdown (tello.send_keepalive())
+- command timeout
 
 
 

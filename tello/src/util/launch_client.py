@@ -43,9 +43,8 @@ def launch_client():
     xclient = actionlib.SimpleActionClient('x', tello.msg.XAction)
     xclient.wait_for_server()
     xclient.send_goal_and_wait(tello.msg.XGoal(distance=50))
-    print(xclient.get_result())
+    #time.sleep(1)
     xclient.send_goal_and_wait(tello.msg.XGoal(distance=-50))
-    print(xclient.get_result())
 
 
     print('y')
@@ -65,6 +64,8 @@ def launch_client():
     zclient.wait_for_server()
     zclient.send_goal_and_wait(tello.msg.CommandGoal(command='flip b'))
 
+    #test keepalive
+    time.sleep(15)
 
     print('land')
     landgoal = tello.msg.LaunchGoal(order=False)

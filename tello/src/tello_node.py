@@ -11,19 +11,29 @@ from action.z_action_server import ZActionServer
 from action.command_action_server import CommandActionServer
 from sensor.battery_publisher import BatteryPublisher
 from sensor.telemetry_sensor import TelemetrySensor
+from server.keepalive_server import KeepaliveServer
 
-from djitellopy import Tello
+from djitellopy import Tello, TelloException
+
+    
 
 def tello_node():
     # Initialize the ROS node
     rospy.init_node('tello', anonymous=True)
-    print("starting tello node")
+    rospy.loginfo("starting tello node")
     # init tello driver
     drone = Tello()
-    # start drone
-    drone.connect()
-    print(drone.query_sdk_version())
-    print(drone.query_active())
+
+    # block till drone is connected
+    while True:
+        try:
+            drone.connect()
+            if drone.get_current_state():
+                break
+        except TelloException as e:
+            pass
+
+    rospy.loginfo("connected: %s %s", drone.query_sdk_version(), drone.query_active())
 
     # start action servers
     command = CommandActionServer('command', drone)
@@ -36,6 +46,10 @@ def tello_node():
     # start sensor publishers
     tel = TelemetrySensor(drone)
     rospy.Timer(rospy.Duration(1.0), tel.publish)
+
+    # send keepalive messages
+    keep = KeepaliveServer(drone)
+    rospy.Timer(rospy.Duration(15.0), keep.keepalive)
 
     rospy.spin()
     
