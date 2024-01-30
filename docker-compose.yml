@@ -35,6 +35,9 @@ services:
       - "PYTHONUNBUFFERED=1"
     ports:
       - "9002:9002"
+      - "8889:8889/udp"
+      - "8890:8890/udp"
+      - "11111:11111/udp"
     networks:
       - ppmrob
     depends_on:

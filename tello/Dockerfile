@@ -14,8 +14,8 @@ RUN /bin/bash -c "source /opt/ros/noetic/setup.bash && catkin_create_pkg $PACKAG
 # Copy the src of package into the container
 COPY . /catkin_ws/src/$PACKAGE_NAME/
 
-RUN apt-get update && apt-get install -y dos2unix python3 python3-pip
-RUN pip3 install av
+RUN apt-get update && apt-get install -y dos2unix python3 python3-pip ros-noetic-cv-bridge netcat net-tools
+RUN pip3 install av image
 
 # Convert line endings in the Python script
 RUN dos2unix /catkin_ws/src/$PACKAGE_NAME/src/*
@@ -33,5 +33,6 @@ ENV ROS_DISTRO noetic
 ENV ROS_WORKSPACE /catkin_ws
 # Source the ROS setup file every time a new container is run
 ENTRYPOINT ["/bin/bash", "-c", "source /opt/ros/$ROS_DISTRO/setup.bash && source /catkin_ws/devel/setup.bash && roslaunch $PACKAGE_NAME $LAUNCH_FILE --wait"]
+#ENTRYPOINT ["/bin/bash", "-c", "while true; do sleep 1000; done"]
 #ENTRYPOINT ["/bin/bash"]
  
