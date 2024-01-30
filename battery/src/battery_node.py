@@ -12,16 +12,13 @@ BATTERY_DEFAULT_RATE = 0.20  # Send every 5 seconds
 class BatterySubscriber:
 
     def start(self):
-        pub = rospy.Publisher('/drone-control/return_signal', Bool, queue_size=10)
+        pub = rospy.Publisher('/battery/return_signal', Bool, queue_size=10)
         rate = rospy.Rate(self._rate)
         while not rospy.is_shutdown():
             message = Bool()
-            if self._battery_status < BATTERY_THRESHOLD_IN_PERCENT:
-                message.data = True
-            else:
-                message.data = False
+            message.data = True if self._battery_status < BATTERY_THRESHOLD_IN_PERCENT else False
             pub.publish(message)
-            rospy.loginfo("Send %s to /drone-control/return_signal", message.data)
+            rospy.loginfo("Publishing %s return signal", message.data)
             rate.sleep()  # wait according to the publishing rate
 
     def battery_status_callback(self, data: Int32):
@@ -30,7 +27,7 @@ class BatterySubscriber:
 
     def __init__(self, rate=BATTERY_DEFAULT_RATE):
         self._battery_status = BATTERY_FULL_PERCENTAGE
-        self._sub = rospy.Subscriber('/battery', Int32, callback=self.battery_status_callback)
+        self._sub = rospy.Subscriber('/drone/battery', Int32, callback=self.battery_status_callback)
         self._rate = rate
 
 
