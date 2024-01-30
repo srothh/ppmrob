@@ -7,8 +7,8 @@ import sys
 import os
 parent_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 sys.path.append(parent_dir)
-from ..image_processing.detect_line import detect_lines
-from ..image_processing.detect_victim import classify_image
+from image_processing.detect_line import detect_lines
+from image_processing.detect_victim import classify_image
 import cv2
 #from PIL import Image
 
@@ -24,9 +24,9 @@ def callback(data):
     #cv2.imwrite('lastframe.png', frame)
     print(classify_image(frame))
     detect_lines(frame)
-def listener_node():
+def cv_node():
     # Initialize the ROS node
-    rospy.init_node('imagelistener', anonymous=True)
+    rospy.init_node('cv_node', anonymous=True)
 
     # Subscribe to the 'chatter' topic and register the callback function
     rospy.Subscriber('camera/forward', Image, callback)
@@ -36,4 +36,4 @@ def listener_node():
     rospy.spin()
 
 if __name__ == '__main__':
-    listener_node()
+    cv_node()

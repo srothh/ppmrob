@@ -34,7 +34,7 @@ $ rosrun tello launch_client.py
 
 # view/save camera images
 
-$ rosrun tello image_listener.py
+$ rosrun tello cv_node.py
 
 ```
 #### Notes

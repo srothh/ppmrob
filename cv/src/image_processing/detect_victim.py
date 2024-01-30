@@ -4,14 +4,16 @@ from torchvision import transforms
 from PIL import Image
 import cv2
 from torchvision.transforms import Compose, Resize, ToTensor
-
-from SRCnn import SRCnn
-
+from .SRCnn import SRCnn
+import os
 model = SRCnn(3, 32, 1)
 device = "cuda" if torch.cuda.is_available() else "cpu"
 model = model.to(device)
 # Load the trained model
-state_dict = torch.load('../../model/first_cnn.pth')
+script_dir = os.path.dirname(os.path.realpath(__file__))
+model_path = os.path.join(script_dir, 'model', 'first_cnn.pth')
+state_dict = torch.load(model_path, map_location=torch.device(device))
+model.load_state_dict(state_dict)
 
 # Load the state dictionary into the model
 model.load_state_dict(state_dict)
