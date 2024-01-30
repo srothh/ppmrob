@@ -24,7 +24,7 @@ class BatterySubscriber:
             rospy.loginfo("Send %s to /drone-control/return_signal", message.data)
             rate.sleep()  # wait according to the publishing rate
 
-    def battery_status_callback(self, data):
+    def battery_status_callback(self, data: Int32):
         rospy.loginfo("battery at %s%%", data.data)
         self._battery_status = data.data
 
