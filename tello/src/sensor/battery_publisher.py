@@ -23,7 +23,7 @@ class BatteryPublisher():
 
 
     def __init__(self, drone):
-        self._pub = rospy.Publisher('battery', Int32, queue_size=10)
+        self._pub = rospy.Publisher('/battery', Int32, queue_size=10)
         self._rate = rospy.Rate(1)  # 1 Hz
         self._drone = drone
 
