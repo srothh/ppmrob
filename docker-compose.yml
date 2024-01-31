@@ -13,7 +13,7 @@ services:
       - "ROS_MASTER_URI=http://ros_master:11311"
       - "ROS_LOG_LEVEL=info"
       - "PYTHONUNBUFFERED=1"
-      - DISPLAY=host.docker.internal:0 # Uncomment only if running VcXsrv on Windows (https://sourceforge.net/projects/vcxsrv/), it will show gui things like imshow(). Will cause crash without it.
+#      - DISPLAY=host.docker.internal:0 # Uncomment only if running VcXsrv on Windows (https://sourceforge.net/projects/vcxsrv/), it will show gui things like imshow(). Will cause crash without it.
     #      - "NVIDIA_VISIBLE_DEVICES=all" GPU needs extra work
     networks:
       - ppmrob
