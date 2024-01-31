@@ -14,13 +14,13 @@ import cv2
 #from PIL import Image
 
 
-def img_processing(frame):
+def img_processing(frame,window):
     # Detect lines in the image
     frame = detect_lines(frame)
     # Check if a victim was detected
     victim_detected = bool(classify_image(frame).item())
     # Display the image
-    display_image(frame,victim_detected)
+    display_image(frame,victim_detected, window)
     return victim_detected
 def callback(data):
     rospy.loginfo("Received image frame: %d %dx%d" % (data.height, data.height, data.width))
@@ -32,15 +32,21 @@ def callback(data):
     #cv2.waitKey(3)
     #save image
     #cv2.imwrite('lastframe.png', frame)
-    img_processing(frame)
+    window_name = 'contours'
+    cv2.namedWindow(window_name, cv2.WINDOW_NORMAL)
+    img_processing(frame,window_name)
 def cv_node():
     # Initialize the ROS node
     rospy.init_node('cv_node', anonymous=True)
     # UNCOMMENT THIS TO TEST THE CLASSIFY_IMAGE FUNCTION (or0001.jpg needs to be in src directory)
+    # DELETE THIS FOR TESTING WITH DRONE
     frame = cv2.imread('/catkin_ws/src/cv/src/or0001.jpg')
     frame2 = cv2.imread('/catkin_ws/src/cv/src/IMG_0106.jpg')
-    img_processing(frame)
-    img_processing(frame2)
+    window_name = 'contours'
+    cv2.namedWindow(window_name, cv2.WINDOW_NORMAL)
+    img_processing(frame, window_name)
+    img_processing(frame2, window_name)
+    # STOP DELETE
     # Subscribe to the 'chatter' topic and register the callback function
     rospy.Subscriber('camera/forward', Image, callback)
     print("Started CV NODE")
