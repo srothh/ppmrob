@@ -31,7 +31,4 @@ def detect_lines(image):
             filtered_contours.append(cnt)
     cv2.drawContours(image, filtered_contours, -1, (0, 0, 255), 20)
     image = cv2.resize(image,(300,300))
-    cv2.namedWindow('contours', cv2.WINDOW_NORMAL)
-    cv2.imshow('contours', image)
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
+    return image

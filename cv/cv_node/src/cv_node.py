@@ -9,9 +9,19 @@ parent_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__
 sys.path.append(parent_dir)
 from image_processing.detect_line import detect_lines
 from image_processing.detect_victim import classify_image
+from image_processing.display_image import display_image
 import cv2
 #from PIL import Image
 
+
+def img_processing(frame):
+    # Detect lines in the image
+    frame = detect_lines(frame)
+    # Check if a victim was detected
+    victim_detected = bool(classify_image(frame).item())
+    # Display the image
+    display_image(frame,victim_detected)
+    return victim_detected
 def callback(data):
     rospy.loginfo("Received image frame: %d %dx%d" % (data.height, data.height, data.width))
     br = CvBridge()
@@ -22,16 +32,15 @@ def callback(data):
     #cv2.waitKey(3)
     #save image
     #cv2.imwrite('lastframe.png', frame)
-    print(classify_image(frame))
-    detect_lines(frame)
+    img_processing(frame)
 def cv_node():
     # Initialize the ROS node
     rospy.init_node('cv_node', anonymous=True)
     # UNCOMMENT THIS TO TEST THE CLASSIFY_IMAGE FUNCTION (or0001.jpg needs to be in src directory)
     frame = cv2.imread('/catkin_ws/src/cv/src/or0001.jpg')
-    print(classify_image(frame))
-    frame = cv2.imread('/catkin_ws/src/cv/src/IMG_0106.jpg')#
-    detect_lines(frame)
+    frame2 = cv2.imread('/catkin_ws/src/cv/src/IMG_0106.jpg')
+    img_processing(frame)
+    img_processing(frame2)
     # Subscribe to the 'chatter' topic and register the callback function
     rospy.Subscriber('camera/forward', Image, callback)
     print("Started CV NODE")
