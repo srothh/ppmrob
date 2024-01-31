@@ -28,8 +28,10 @@ def cv_node():
     # Initialize the ROS node
     rospy.init_node('cv_node', anonymous=True)
     # UNCOMMENT THIS TO TEST THE CLASSIFY_IMAGE FUNCTION (or0001.jpg needs to be in src directory)
-    # frame = cv2.imread('/catkin_ws/src/cv/src/or0001.jpg')
-    # print(classify_image(frame))
+    frame = cv2.imread('/catkin_ws/src/cv/src/or0001.jpg')
+    print(classify_image(frame))
+    frame = cv2.imread('/catkin_ws/src/cv/src/IMG_0106.jpg')#
+    detect_lines(frame)
     # Subscribe to the 'chatter' topic and register the callback function
     rospy.Subscriber('camera/forward', Image, callback)
     print("Started CV NODE")
