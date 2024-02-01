@@ -13,7 +13,7 @@ def listener_node():
     rospy.init_node('listener', anonymous=True)
 
     # Subscribe to the 'chatter' topic and register the callback function
-    rospy.Subscriber('telemetry', Telemetry, callback)
+    rospy.Subscriber('/drone/telemetry', Telemetry, callback)
 
     # Spin to keep the script from exiting
     rospy.spin()

@@ -8,6 +8,8 @@ from abc import ABC, abstractmethod, abstractproperty
 
 
 class ActionServer(ABC):
+
+    TIME_BTW_COMMANDS = 0.1 # seconds
     # create messages that are used to publish feedback/result
 
     _drone = None
@@ -25,6 +27,10 @@ class ActionServer(ABC):
     def command(self, command):
         rospy.loginfo("command: %s", command)
         r = rospy.Rate(1)
+
+        # wait between commands
+        time.sleep(0.1)
+
         self._drone.send_command_without_return(command) 
         responses = self._drone.get_own_udp_object()['responses']
         aborted = False
@@ -34,11 +40,14 @@ class ActionServer(ABC):
             if self._as.is_preempt_requested():
                 rospy.loginfo('%s: Preempted' % self._action_name)
                 self._as.set_preempted()
-                self._drone.send_control_command("stop") 
+                self._drone.send_command_with_return("stop") 
                 aborted = True
                 break
             r.sleep()  # Sleep during send command
-
+        
+        # record timestamp
+        self._drone.last_received_command_timestamp = time.time()
+        
         if (aborted):
             self.success_cb(False)
             return False
