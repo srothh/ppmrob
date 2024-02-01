@@ -13,11 +13,11 @@ class BatterySubscriber:
 
     def start(self):
         pub = rospy.Publisher('/battery/return_signal', Bool, queue_size=10) # Bool is the message type
-        rate = rospy.Rate(self._rate)
-        message = Bool() # create a message
+        rate = rospy.Rate(self._rate) # set rate of the following loop
+        message = Bool() # create a message for return signal
         while not rospy.is_shutdown():
             message.data = True if self._battery_status < BATTERY_THRESHOLD_IN_PERCENT else False
-            pub.publish(message)
+            pub.publish(message) # publish the return signal
             rospy.loginfo("Publishing %s return signal", message.data)
             rate.sleep()  # wait according to the publishing rate
 
@@ -26,9 +26,9 @@ class BatterySubscriber:
         self._battery_status = data.data # keep as short as possible, since interrupts the execution flow
 
     def __init__(self, rate=BATTERY_DEFAULT_RATE):
-        self._battery_status = BATTERY_FULL_PERCENTAGE # convention: prefix single underscore to non-publ. instan. vars
+        self._battery_status = BATTERY_FULL_PERCENTAGE
         self._sub = rospy.Subscriber('/drone/battery', Int32, callback=self.battery_status_callback)
-        self._rate = rate
+        self._rate = rate # convention: prefix single underscore to non-public instance variables
 
 
 if __name__ == '__main__':
