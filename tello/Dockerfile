@@ -1,5 +1,5 @@
 # Use the ROS Noetic image as the base
-FROM ros:noetic-ros-base
+FROM ros:noetic-perception
 
 # Create a workspace directory for the ROS project
 WORKDIR /catkin_ws/src

@@ -22,8 +22,6 @@ class XActionServer(ActionServer):
 
     def execute_cb(self, goal):
         rospy.loginfo('%s %i' % (self._action_name, goal.distance))
-        self._feedback.progress = []
-        self._feedback.progress.append(True)        
         
         if (20 <= goal.distance <= 500):
             self.command('forward %d' % goal.distance)
@@ -41,7 +39,7 @@ class XActionServer(ActionServer):
 
     def feedback_cb(self):
         print('.', end =" ")
-        self._feedback.progress.append(True)
+        self._feedback.progress.append(self._drone.get_state_field('vgx'))
         self._as.publish_feedback(self._feedback)    
 
 

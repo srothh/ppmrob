@@ -24,7 +24,7 @@ class ImageSensor():
 
 
     def __init__(self, drone):
-        self._publisher = rospy.Publisher('camera/forward', Image, queue_size=10)
+        self._publisher = rospy.Publisher('/drone/camera', Image, queue_size=10)
         self._drone = drone
         self._br = CvBridge()
         self._counter = 0

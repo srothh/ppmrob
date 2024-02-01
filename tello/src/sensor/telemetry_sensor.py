@@ -18,7 +18,7 @@ class TelemetrySensor():
 
 
     def __init__(self, drone):
-        self._publisher = rospy.Publisher('telemetry', Telemetry, queue_size=10)
+        self._publisher = rospy.Publisher('/drone/telemetry', Telemetry, queue_size=10)
         self._drone = drone
         rospy.loginfo('TelemetrySensor initalized')
 

@@ -1,5 +1,6 @@
 #goal definition
-int16 distance
+string axis
+int16 parameter
 ---
 #result definition
 bool success
