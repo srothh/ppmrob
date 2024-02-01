@@ -9,6 +9,7 @@ from action.rotate_action_server import RotateActionServer
 from action.x_action_server import XActionServer
 from action.y_action_server import YActionServer
 from action.z_action_server import ZActionServer
+from action.move_action_server import MoveActionServer
 from action.command_action_server import CommandActionServer
 from sensor.battery_publisher import BatteryPublisher
 from sensor.telemetry_sensor import TelemetrySensor
@@ -40,6 +41,14 @@ def tello_node():
 
     rospy.loginfo("connected: %s %s", drone.query_sdk_version(), drone.query_active())
 
+    # start sensor publishers
+    tel = TelemetrySensor(drone)
+    rospy.Timer(rospy.Duration(1), tel.publish)
+
+    img = ImageSensor(drone)
+    rospy.Timer(rospy.Duration(0.5), img.publish)
+
+
     # start action servers
     command = CommandActionServer('command', drone)
     launch = LaunchActionServer('launch', drone)
@@ -47,18 +56,13 @@ def tello_node():
     x = XActionServer('x', drone)
     y = YActionServer('y', drone)
     z = ZActionServer('z', drone)
+    move = MoveActionServer('move', drone)
 
-    # start sensor publishers
-    tel = TelemetrySensor(drone)
-    rospy.Timer(rospy.Duration(1.0), tel.publish)
-
-    img = ImageSensor(drone)
-    rospy.Timer(rospy.Duration(0.2), img.publish)
 
 
     # send keepalive messages
     keep = KeepaliveServer(drone)
-    rospy.Timer(rospy.Duration(15.0), keep.keepalive)
+    rospy.Timer(rospy.Duration(10.0), keep.keepalive)
 
     rospy.spin()
     

@@ -21,7 +21,7 @@ def listener_node():
     # Initialize the ROS node
     rospy.init_node('imagelistener', anonymous=True)
 
-    rospy.Subscriber('camera/forward', Image, callback)
+    rospy.Subscriber('/drone/camera', Image, callback)
 
     # Spin to keep the script from exiting
     rospy.spin()

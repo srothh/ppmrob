@@ -69,7 +69,7 @@ find_package(catkin REQUIRED COMPONENTS
 
 add_action_files(
   DIRECTORY action
-  FILES Launch.action Command.action Rotate.action X.action Y.action Z.action
+  FILES Launch.action Command.action Rotate.action X.action Y.action Z.action Move.action
 )
 
 ## Generate added messages and services with any dependencies listed here
