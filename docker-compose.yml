@@ -53,19 +53,21 @@ services:
       - ppmrob
     depends_on:
       - ros_master
-  battery:
-    build: ./battery
+  drone:
+    build: ./drone
     environment:
       - "ROS_MASTER_URI=http://ros_master:11311"
-      - "ROS_LOG_LEVEL=info"
+      - "ROS_LOG_LEVEL=debug"
       - "PYTHONUNBUFFERED=1"
     ports:
-      - "9008:9008"
+      - "9003:9003"
+      - "8889:8889/udp"
+      - "8890:8890/udp"
+      - "11111:11111/udp"
     networks:
       - ppmrob
     depends_on:
       - ros_master
-      - tello
 networks:
   ppmrob:
     driver: "bridge"
