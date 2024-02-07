@@ -1,4 +1,6 @@
 version: "3"
+volumes: 
+  src-dir:
 services:
   ros_master:
     image: ros:noetic-ros-base
@@ -15,6 +17,8 @@ services:
       - "PYTHONUNBUFFERED=1"
     ports:
       - "9000:9000"
+    volumes:
+      - src-dir:/catkin_ws/src
     networks:
       - ppmrob
     depends_on:
@@ -44,6 +48,22 @@ services:
       - "11111:11111/udp"
     networks:
       - ppmrob
+    volumes:
+      - src-dir:/catkin_ws/src
+    depends_on:
+      - ros_master
+  safety:
+    build: ./safety
+    environment:
+      - "ROS_MASTER_URI=http://ros_master:11311"
+      - "ROS_LOG_LEVEL=debug"
+      - "PYTHONUNBUFFERED=1"
+    ports:
+      - "9004:9004"
+    networks:
+      - ppmrob
+    volumes:
+      - src-dir:/catkin_ws/src
     depends_on:
       - ros_master
 networks:

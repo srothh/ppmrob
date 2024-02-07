@@ -4,6 +4,8 @@ import rospy
 from std_msgs.msg import String
 from tello import Tello
 from action import LaunchAction
+from action import MoveAction
+from action import EmergencyAction
 from sensor import ImageSensor
 
 
@@ -15,8 +17,18 @@ def drone_node():
 
     # init tello driver
     drone = Tello()
+
+    drone.connect()
+
+    emergency_server = EmergencyAction('emergency', drone)
+    rospy.loginfo("emergency server created")
+
+
     launch_server = LaunchAction('launch', drone)
     rospy.loginfo("launch server created")
+
+    launch_server = MoveAction('move', drone)
+    rospy.loginfo("move server created")
 
     img = ImageSensor(drone)
     rospy.Timer(rospy.Duration(0.5), img.publish)

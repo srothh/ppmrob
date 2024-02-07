@@ -4,6 +4,7 @@ import rospy
 import actionlib
 import time
 import drone.msg
+from geometry_msgs.msg import Transform, Vector3, Quaternion
 
 def launch_client():
     print('start')
@@ -17,6 +18,29 @@ def launch_client():
     client.wait_for_result()
     # Prints out the result of executing the action
     print(client.get_result())
+
+
+    moveclient = actionlib.SimpleActionClient('move', drone.msg.MoveAction)
+    moveclient.wait_for_server()
+
+    moveclient.send_goal_and_wait(drone.msg.MoveGoal(target=Transform(Vector3(0, 0, 0), Quaternion(0, 0, 180.5, 0))))
+    time.sleep(5)
+    moveclient.send_goal_and_wait(drone.msg.MoveGoal(target=Transform(Vector3(0, 0, 0), Quaternion(0, 0, -90.999, 0))))
+    time.sleep(5)
+    moveclient.send_goal_and_wait(drone.msg.MoveGoal(target=Transform(Vector3(0, 0, 0), Quaternion(0, 0, -90.1, 0))))
+    time.sleep(5)
+    # moveclient.send_goal_and_wait(drone.msg.MoveGoal(target=Transform(Vector3(50, 0, 0), Quaternion(0, 0, 0, 0))))
+    # time.sleep(5)
+    # moveclient.send_goal_and_wait(drone.msg.MoveGoal(target=Transform(Vector3(-50, 0, 0), Quaternion(0, 0, 0, 0))))
+    # time.sleep(5)
+    # moveclient.send_goal_and_wait(drone.msg.MoveGoal(target=Transform(Vector3(0, 50, 0), Quaternion(0, 0, 0, 0))))
+    # time.sleep(5)
+    # moveclient.send_goal_and_wait(drone.msg.MoveGoal(target=Transform(Vector3(0, -50, 0), Quaternion(0, 0, 0, 0))))
+    # time.sleep(5)
+    # moveclient.send_goal_and_wait(drone.msg.MoveGoal(target=Transform(Vector3(0, 0, -50), Quaternion(0, 0, 0, 0))))
+    # time.sleep(5)
+    # moveclient.send_goal_and_wait(drone.msg.MoveGoal(target=Transform(Vector3(0, 0, 50), Quaternion(0, 0, 0, 0))))
+    # time.sleep(5)
 
 
     print('land')  

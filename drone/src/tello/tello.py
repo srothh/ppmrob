@@ -22,26 +22,24 @@ class Tello:
         self.sock.bind(self.locaddr)
         
 
-        # send init command
-        self.command('command')
+        
 
-        connected = False
+    def connect(self):
+        self.connected = False
         # block till drone is connected
-        while not connected:
+        while not self.connected:
             connected = self.command('command', timeout=1) 
             time.sleep(1)
+            self.connected = True
 
-        rospy.loginfo("connected")
+        self.connected = True
+        rospy.loginfo("connected, battery: %s" % self.send_command_with_return('battery?'))
 
-
-
-
+    ## blocking method to send command and return with success
     def command(self, cmd, timeout=10) -> bool:
         result = False
-        # Send data
-        msg = cmd.encode(encoding="utf-8") 
-        sent = self.sock.sendto(msg, self.tello_address)
-        print("sent: ", sent)
+        # send command
+        self.send_command(cmd)
 
         # endless loop monitorig socket with select
         counter = 0
@@ -62,6 +60,19 @@ class Tello:
             counter += 1
         return result
 
+    def send_command_with_return(self, cmd, timeout=10) -> str:
+        result = ""
+        self.send_command(cmd)
+        start_time = time.time()
+        while time.time() - start_time < timeout:
+            ready = select.select([self.sock], [], [], 0.3)
+            if ready[0]:
+                result = self.sock.recv(1024)
+                break
+            else:
+                print ('.', end='', flush=True)
+        return result.decode(encoding="utf-8")
+
     def end(self):
         self.sock.close()
 
@@ -77,6 +88,17 @@ class Tello:
                 self.background_frame_read = BackgroundFrameRead(self, address, with_queue, max_queue_len)
                 self.background_frame_read.start()
             return self.background_frame_read
+
+
+    ## send command to drone and return imidiately
+    def send_command(self, cmd):
+        sent = self.sock.sendto(cmd.encode(encoding="utf-8"), self.tello_address)
+        return sent
+    def execute_commands(self, cmds):
+        for cmd in cmds:
+            self.command(cmd)
+            time.sleep(1)
+        return True
 
 
 class BackgroundFrameRead:

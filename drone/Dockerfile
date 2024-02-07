@@ -2,37 +2,32 @@
 FROM ros:noetic-perception
 
 # Create a workspace directory for the ROS project
-WORKDIR /catkin_ws/src
+#WORKDIR /catkin_ws/src
 
 #edit these for custom nodes
 ENV PACKAGE_NAME drone
 ENV LAUNCH_FILE drone.launch
-# Create a new ROS package for the package
-#RUN /bin/bash -c "source /opt/ros/noetic/setup.bash"
-RUN /bin/bash -c "source /opt/ros/noetic/setup.bash && catkin_create_pkg $PACKAGE_NAME rospy std_msgs actionlib_msgs actionlib message_generation"
 
 # Copy the src of package into the container
-COPY . /catkin_ws/src/$PACKAGE_NAME/
+COPY . /root/$PACKAGE_NAME/
 
 RUN apt-get update && apt-get install -y dos2unix python3 python3-pip netcat net-tools
 RUN pip3 install av image
 
 # Convert line endings in the Python script
-RUN dos2unix /catkin_ws/src/$PACKAGE_NAME/src/*
 
 # Change back to the root of the workspace
 WORKDIR /catkin_ws
 
-# Run catkin_make to build the ROS project
-SHELL ["/bin/bash", "-c"]
-#RUN /bin/bash -c "source /opt/ros/noetic/setup.bash"
-RUN source /opt/ros/noetic/setup.bash  && catkin_make && source /catkin_ws/devel/setup.bash
 
 # Set up environment variables for ROS
 ENV ROS_DISTRO noetic
 ENV ROS_WORKSPACE /catkin_ws
+
+RUN echo "source /opt/ros/$ROS_DISTRO/setup.bash && source /catkin_ws/devel/setup.bash" >> /root/.bashrc
+
 # Source the ROS setup file every time a new container is run
 #ENTRYPOINT ["/bin/bash", "-c", "source /opt/ros/$ROS_DISTRO/setup.bash && source /catkin_ws/devel/setup.bash && roslaunch $PACKAGE_NAME $LAUNCH_FILE --wait"]
-ENTRYPOINT ["/bin/bash", "-c", "while true; do sleep 1000; done"]
-#ENTRYPOINT ["/bin/bash"]
+#ENTRYPOINT ["/bin/bash", "-c", "while true; do sleep 1000; done"]
+ENTRYPOINT /root/${PACKAGE_NAME}/entrypoint.sh
  
