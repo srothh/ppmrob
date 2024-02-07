@@ -12,13 +12,13 @@ model = model.to(device)
 # Load the trained model
 script_dir = os.path.dirname(os.path.realpath(__file__))
 model_path = os.path.join(script_dir, 'model', 'first_cnn.pth')
+yolo_path = os.path.join(script_dir, 'model', 'best.pt')
+yolo_model = torch.hub.load('ultralytics/yolov5', 'custom', path=yolo_path, force_reload=True)
 state_dict = torch.load(model_path, map_location=torch.device(device))
 model.load_state_dict(state_dict)
-
 # Load the state dictionary into the model
 model.load_state_dict(state_dict)
 model.eval()
-
 # Define the image transformation process
 transformation = Compose([
     Resize((64, 64)),
@@ -36,3 +36,12 @@ def classify_image(frame):
     logits = torch.sigmoid(output)
     predicted = (logits > 0.5).long()
     return predicted
+
+
+# Performs object detection with our YOLO model.
+# Requires a PIL image for the model task
+def yolo_detection(frame,confidence_threshold=0.9):
+    results = yolo_model(frame)  # Perform inference
+    filtered_results = results.xyxy[0][
+        results.xyxy[0][:, 4] > confidence_threshold]  # Filter detections by confidence threshold
+    return filtered_results
