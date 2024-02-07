@@ -28,10 +28,9 @@ class Tello:
         self.connected = False
         # block till drone is connected
         while not self.connected:
-            connected = self.command('command', timeout=1) 
+            self.connected = self.command('command', timeout=1) 
             time.sleep(1)
-            self.connected = True
-
+        
         self.connected = True
         rospy.loginfo("connected, battery: %s" % self.send_command_with_return('battery?'))
 
@@ -61,7 +60,7 @@ class Tello:
         return result
 
     def send_command_with_return(self, cmd, timeout=10) -> str:
-        result = ""
+        result = ''
         self.send_command(cmd)
         start_time = time.time()
         while time.time() - start_time < timeout:

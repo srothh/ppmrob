@@ -3,7 +3,6 @@
 import rospy 
 import actionlib  # the library should be added as package dependency for the package on which working here
 import drone.msg
-import keyboard
 
 
 if __name__ == '__main__':
@@ -15,8 +14,8 @@ if __name__ == '__main__':
         client.wait_for_server()
         while True:
             print('Press \'e\' to send emergency command\nany other key to land')
-            event = keyboard.read_event()
-            if event.event_type == keyboard.KEY_DOWN and event.name == 'e':
+            event = input()
+            if event == 'e':
                 client.send_goal_and_wait(drone.msg.EmergencyGoal(soft=False))
             else:  
                 client.send_goal_and_wait(drone.msg.EmergencyGoal(soft=True))
