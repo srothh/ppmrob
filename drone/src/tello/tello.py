@@ -34,7 +34,7 @@ class Tello:
         self.connected = True
         rospy.loginfo("connected, battery: %s" % self.send_command_with_return('battery?'))
 
-    ## blocking method to send command and return with success
+    ## blocking method to send command and return with boolen success
     def command(self, cmd, timeout=10) -> bool:
         result = False
         # send command
@@ -59,6 +59,7 @@ class Tello:
             counter += 1
         return result
 
+    ## blocking method to send command and return with the string result
     def send_command_with_return(self, cmd, timeout=10) -> str:
         result = ''
         self.send_command(cmd)

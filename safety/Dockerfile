@@ -12,7 +12,6 @@ ENV LAUNCH_FILE safety.launch
 # Copy the src of package into the container
 COPY . /root/$PACKAGE_NAME/
 
-
 RUN apt-get update && apt-get install -y dos2unix python3  python3-pip
 RUN pip3 install keyboard
 
