@@ -8,12 +8,13 @@ import time
 HOST = ''
 PORT = 9000
 
+sock = None
+
 def recv():
-    global sock
     count = 0
+    print ("Listener is waiting for responses...")
     while True: 
         try:
-            print('receiving')
             data, server = sock.recvfrom(1518)
             print("UDP ",count," from ", server, ": ", data.decode(encoding="utf-8"))
             count += 1
@@ -25,10 +26,16 @@ def recv():
 def main():
     print('\r\n\r\nTello Control.\r\n')
     print('type end to quit.\r\n')
+    print('type Command to enter API mode.\r\n')
     
     # Create a UDP socket
-    local_addr = (HOST,PORT) 
-    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    local_addr = (HOST,PORT)
+
+    global sock
+    sock = socket.socket(
+        socket.AF_INET,
+        socket.SOCK_DGRAM)
+
     tello_address = ('192.168.10.1', 8889)
     sock.bind(local_addr)
 
