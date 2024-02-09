@@ -3,6 +3,7 @@
 import rospy  # the library should be added as package dependency for the package on which working here
 import drone.msg
 import cv2
+import actionlib
 
 if __name__ == '__main__':
     try:
