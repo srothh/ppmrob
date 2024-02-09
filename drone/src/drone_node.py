@@ -6,6 +6,7 @@ from tello import Tello
 from action import LaunchAction
 from action import MoveAction
 from action import EmergencyAction
+from action import CommandAction
 from sensor import ImageSensor
 
 
@@ -29,6 +30,9 @@ def drone_node():
 
     launch_server = MoveAction('move', drone)
     rospy.loginfo("move server created")
+
+    launch_server = CommandAction('command', drone)
+    rospy.loginfo("command server created")
 
     img = ImageSensor(drone)
     rospy.Timer(rospy.Duration(0.5), img.publish)
