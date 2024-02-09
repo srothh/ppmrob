@@ -27,7 +27,7 @@ def img_processing(frame,window):
     rgb_image = detect_lines(rgb_image)
     # Display the image
     display_object_detection(detected, window, rgb_image, 10, (0, 255, 0))
-def callback(data):
+def callback(data, args):
     rospy.loginfo("Received image frame: %d %dx%d" % (data.height, data.height, data.width))
     br = CvBridge()
     # note: swich encoding to bgr8
@@ -37,21 +37,19 @@ def callback(data):
     #cv2.waitKey(3)
     #save image
     #cv2.imwrite('lastframe.png', frame)
-    window_name = 'contours'
-    cv2.namedWindow(window_name, cv2.WINDOW_NORMAL)
-    img_processing(frame,window_name)
+    img_processing(frame, args[0])
 def cv_node():
     # Initialize the ROS node
     rospy.init_node('cv_node', anonymous=True)
     # UNCOMMENT THIS TO TEST THE CLASSIFY_IMAGE FUNCTION (or0001.jpg needs to be in src directory)
     # DELETE THIS FOR TESTING WITH DRONE
-    frame = cv2.imread('/catkin_ws/src/cv/src/IMG_0285.jpg')
+    frame = cv2.imread('/catkin_ws/src/cv/src/or0001.jpg')
     window_name = 'contours'
     cv2.namedWindow(window_name, cv2.WINDOW_NORMAL)
     img_processing(frame, window_name)
     # STOP DELETE
     # Subscribe to the 'chatter' topic and register the callback function
-    rospy.Subscriber('camera/forward', Image, callback)
+    rospy.Subscriber('camera/forward', Image, callback, window_name)
     print("Started CV NODE")
     # Spin to keep the script from exiting
     rospy.spin()
