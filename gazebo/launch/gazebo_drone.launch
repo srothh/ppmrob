@@ -1,0 +1,14 @@
+<launch>
+  <!-- Start gazebo in empty world -->
+  <include file="$(find gazebo_ros)/launch/empty_world.launch">
+    <arg name="world_name" value="$(find gazebo)/worlds/empty.world"/>
+  </include>
+  <!--><include file="$(find gazebo)/launch/main_launch.launch"/>-->
+
+  <!-- Load urdf model -->
+  <!--><param name="robot_description" command="$(find xacro)/xacro '$(find gazebo)/urdf/drone.xacro'"/>-->
+  <param name="robot_description" command="cat '$(find gazebo)/urdf/drone.urdf'"/>
+
+  <node name="spawn_urdf" pkg="gazebo_ros" type="spawn_model" respawn="false" output="screen"
+        args="-urdf -model tello_model -param robot_description"/>
+</launch>
