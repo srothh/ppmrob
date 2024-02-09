@@ -42,6 +42,10 @@ def launch_client():
     # moveclient.send_goal_and_wait(drone.msg.MoveGoal(target=Transform(Vector3(0, 0, 50), Quaternion(0, 0, 0, 0))))
     # time.sleep(5)
 
+    commandclient = actionlib.SimpleActionClient('command', drone.msg.CommandAction)
+    commandclient.wait_for_server()
+    commandclient.send_goal_and_wait(drone.msg.CommandGoal(command='flip b'))
+
 
     print('land')  
     client.send_goal_and_wait(drone.msg.LaunchGoal(takeoff=False))

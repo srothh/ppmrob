@@ -46,8 +46,11 @@ class Tello:
             ready = select.select([self.sock], [], [], 1.0)
             if ready[0]:
                 data, server = self.sock.recvfrom(1024)
-                print(data.decode(encoding="utf-8"))
-                result = True if data.decode(encoding="utf-8") == "ok" else False
+                try:
+                    print(data.decode(encoding="utf-8"))
+                    result = True if data.decode(encoding="utf-8") == "ok" else False
+                except Exception:
+                    print('could not decode received data')
                 break
             else:
                 #print(counter)
@@ -76,6 +79,19 @@ class Tello:
     def end(self):
         self.sock.close()
 
+
+
+    ## send command to drone and return imidiately
+    def send_command(self, cmd):
+        sent = self.sock.sendto(cmd.encode(encoding="utf-8"), self.tello_address)
+        return sent
+    def execute_commands(self, cmds):
+        for cmd in cmds:
+            self.command(cmd)
+            time.sleep(1)
+        return True
+
+    #image frame getter copied from dijtello lib
     def get_frame_read(self, with_queue = False, max_queue_len = 32) -> 'BackgroundFrameRead':
             """Get the BackgroundFrameRead object from the camera drone. Then, you just need to call
             backgroundFrameRead.frame to get the actual frame received by the drone.
@@ -88,17 +104,6 @@ class Tello:
                 self.background_frame_read = BackgroundFrameRead(self, address, with_queue, max_queue_len)
                 self.background_frame_read.start()
             return self.background_frame_read
-
-
-    ## send command to drone and return imidiately
-    def send_command(self, cmd):
-        sent = self.sock.sendto(cmd.encode(encoding="utf-8"), self.tello_address)
-        return sent
-    def execute_commands(self, cmds):
-        for cmd in cmds:
-            self.command(cmd)
-            time.sleep(1)
-        return True
 
 
 class BackgroundFrameRead:

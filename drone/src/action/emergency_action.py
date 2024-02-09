@@ -20,10 +20,6 @@ class EmergencyAction(object):
         self._tello = tello
 
     def execute_cb(self, goal):
-        # helper variables
-        r = rospy.Rate(1)
-        success = True
-
         # publish info to the console for the user
         rospy.loginfo('%s' % (self._action_name))
 

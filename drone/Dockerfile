@@ -28,6 +28,6 @@ RUN echo "source /opt/ros/$ROS_DISTRO/setup.bash && source /catkin_ws/devel/setu
 
 # Source the ROS setup file every time a new container is run
 #ENTRYPOINT ["/bin/bash", "-c", "source /opt/ros/$ROS_DISTRO/setup.bash && source /catkin_ws/devel/setup.bash && roslaunch $PACKAGE_NAME $LAUNCH_FILE --wait"]
-#ENTRYPOINT ["/bin/bash", "-c", "while true; do sleep 1000; done"]
-ENTRYPOINT /root/${PACKAGE_NAME}/entrypoint.sh
+ENTRYPOINT ["/bin/bash", "-c", "while true; do sleep 1000; done"]
+#ENTRYPOINT /root/${PACKAGE_NAME}/entrypoint.sh
  
