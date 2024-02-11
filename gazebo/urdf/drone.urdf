@@ -238,7 +238,7 @@
   <joint name="arm1_propeller1" type="revolute">
     <parent link="arm1"/>
     <child link="propeller1"/>
-    <origin rpy="0 0 0" xyz="0.1905255888325765 0.08999999999999998 0.015"/>
+    <origin rpy="0 0 0" xyz="0.15588457268119896 0.08999999999999998 0.015"/>
     <axis xyz="0 0 1"/>
     <limit effort="0" lower="0" upper="0" velocity="0"/>
   </joint>
@@ -265,7 +265,7 @@
   <joint name="arm3_propeller3" type="revolute">
     <parent link="arm3"/>
     <child link="propeller3"/>
-    <origin rpy="0 0 0" xyz="-0.19052558883257648 0.09000000000000005 0.015"/>
+    <origin rpy="0 0 0" xyz="-0.15588457268119893 0.09000000000000005 0.015"/>
     <axis xyz="0 0 1"/>
     <limit effort="0" lower="0" upper="0" velocity="0"/>
   </joint>
@@ -292,7 +292,7 @@
   <joint name="arm4_propeller4" type="revolute">
     <parent link="arm4"/>
     <child link="propeller4"/>
-    <origin rpy="0 0 0" xyz="-0.19052558883257653 -0.08999999999999994 0.015"/>
+    <origin rpy="0 0 0" xyz="-0.15588457268119899 -0.08999999999999994 0.015"/>
     <axis xyz="0 0 1"/>
     <limit effort="0" lower="0" upper="0" velocity="0"/>
   </joint>
@@ -319,7 +319,7 @@
   <joint name="arm6_propeller6" type="revolute">
     <parent link="arm6"/>
     <child link="propeller6"/>
-    <origin rpy="0 0 0" xyz="0.19052558883257653 -0.08999999999999994 0.015"/>
+    <origin rpy="0 0 0" xyz="0.15588457268119899 -0.08999999999999994 0.015"/>
     <axis xyz="0 0 1"/>
     <limit effort="0" lower="0" upper="0" velocity="0"/>
   </joint>
