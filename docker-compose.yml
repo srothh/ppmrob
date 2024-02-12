@@ -66,6 +66,20 @@ services:
     depends_on:
       - ros_master
       - tello
+  ros_gui:
+    image: osrf/ros:noetic-desktop-full
+    command: rqt
+    environment:
+      - "ROS_MASTER_URI=http://ros_master:11311"
+      - "DISPLAY"
+      - "QT_X11_NO_MITSHM=1"
+    depends_on:
+      - ros_master
+    networks:
+      - ppmrob
+    volumes:
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+    restart: always
 networks:
   ppmrob:
     driver: "bridge"
