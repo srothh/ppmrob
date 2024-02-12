@@ -9,8 +9,6 @@ class DroneControl:
         self.battery_data = None
         self.planning_data = None
         self.cv_data = None
-
-    def __int__(self):
         rospy.init_node("drone_control_node", anonymous=True)
 
         rospy.Subscriber("cv_data", String, self.cv_callback)
