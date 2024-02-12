@@ -325,7 +325,7 @@
   </joint>
   <!-- Tello plugin for Gazebo -->
   <gazebo>
-    <plugin filename="libTelloPlugin.so" name="TelloPlugin">
+    <plugin filename="libcontrol_plugin.so" name="ControlPlugin">
       <parameter name="use_sim_time" type="bool">1</parameter>
       <link_name>body</link_name>
       <center_of_mass>0 0 0</center_of_mass>
