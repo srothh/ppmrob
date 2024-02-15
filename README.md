@@ -101,25 +101,47 @@ sensordata published in topics
 
 | publisher  | topic | msg type |comment |
 |---|---|---|
-| TelemetrySensor  | /drone/odometry |  nav_msgs/Odometry | TBD |
-| BatterySensor  | /drone/battery | std_msgs/Int32 | battery status TBD |
+| TwistSensor  | /drone/twist |  geometry_msgs/TwistStamped | velocity in x,y,z. with timestamp |
+| BatterySensor  | /drone/battery | std_msgs/UInt8 | battery level in % |
 | ImageSensor  | /drone/camera | Image | Image data | 
 
 #### BatteryPublisher 
 
 pubishes the status of the battery read from the tello status string
+ 
+ ```
+ $ rostopic echo /drone/battery
+---
+data: 66
+---
+data: 66
+---
+ ```
 
-- bat:%d
 
-
-#### TelemetrySensor
+#### TwistSensor
 
 reads fields from the status string broadcasted by the drone
 
-- vgx:%d
-- vgy%d
-- vgz:%d
+```
+$ rostopic echo /drone/twist
 
+header: 
+  seq: 3076
+  stamp: 
+    secs: 1708002179
+    nsecs: 882850885
+  frame_id: "velocity"
+twist: 
+  linear: 
+    x: 10.0
+    y: 0.0
+    z: 0.0
+  angular: 
+    x: 0.0
+    y: 0.0
+    z: 0.0
+```
 
 #### available fields from the tello status string
 
@@ -155,7 +177,5 @@ http://wiki.ros.org/cv_bridge/Tutorials/ConvertingBetweenROSImagesAndOpenCVImage
 
 - preempted actions: drone should stop current command
 - set speed
-- streaming server: false colors (blue/red)
-- command timeout
 
 
