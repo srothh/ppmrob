@@ -1,4 +1,6 @@
 version: "3"
+volumes: 
+  workspace:
 services:
   ros_master:
     image: ros:noetic-ros-base
@@ -7,45 +9,15 @@ services:
     tty: true
     networks:
       - ppmrob
-  publisher:
-    build: ./publisher
-    environment:
-      - "ROS_MASTER_URI=http://ros_master:11311"
-      - "ROS_LOG_LEVEL=info"
-      - "PYTHONUNBUFFERED=1"
-    ports:
-      - "9000:9000"
-    networks:
-      - ppmrob
-    depends_on:
-      - ros_master
-  listener:
-    environment:
-      - "ROS_MASTER_URI=http://ros_master:11311"
-      - "ROS_LOG_LEVEL=info"
-      - "PYTHONUNBUFFERED=1"
-    build: ./listener
-    ports:
-      - "9001:9001"
-    networks:
-      - ppmrob
-    depends_on:
-      - ros_master
-  tello:
-    #image: ros:noetic-ros-base
-    build: ./tello
-    #volumes:
-    #  - type: bind
-    #    source: ./tello
-    #    target: /catkin_ws/src/tello
-    #volumes:
-    #  - ./tello:/catkin_ws/src/tello
+  drone:
+    build: ./drone
+#    entrypoint: /root/src/entrypoint.sh
     environment:
       - "ROS_MASTER_URI=http://ros_master:11311"
       - "ROS_LOG_LEVEL=debug"
       - "PYTHONUNBUFFERED=1"
     ports:
-      - "9002:9002"
+      - "9003:9003"
       - "8889:8889/udp"
       - "8890:8890/udp"
       - "11111:11111/udp"
@@ -53,19 +25,6 @@ services:
       - ppmrob
     depends_on:
       - ros_master
-  battery:
-    build: ./battery
-    environment:
-      - "ROS_MASTER_URI=http://ros_master:11311"
-      - "ROS_LOG_LEVEL=info"
-      - "PYTHONUNBUFFERED=1"
-    ports:
-      - "9008:9008"
-    networks:
-      - ppmrob
-    depends_on:
-      - ros_master
-      - tello
 networks:
   ppmrob:
     driver: "bridge"

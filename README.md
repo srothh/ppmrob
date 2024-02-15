@@ -15,62 +15,113 @@ docker compose down
 To create custom nodes, recreate the folder structure for your node, edit the variables PACKAGE_NAME (name of the package/node you want to create) and LAUNCH_FILE(name of the launch file in your directory for this node) in the Dockerfile
 and add the node/service to the docker-compose.yml file.
 
-## Tello
+## Drone
 
 ### test
 
+#### tello cli
+to test sending commands and receiving responses
+
 ```bash
-#start servers
+/catkin_ws/src/drone/src# python3 tello_ctrl_obj.py
+```
 
-$ rosrun tello tello_node.py
+test protokol:
 
-# start state listener
+1 poweron drone
 
-$ rosrun tello state_listener.py
+2 connect to wifi
 
-# start action client
+3 start cli client
 
-$ rosrun tello launch_client.py
+4 'command' -> watch for receiving 'ok' and drone starts blinking green
 
-# view/save camera images
+5 'takeoff'
 
-$ rosrun tello image_listener.py
+6 'land' 
+
+
+#### tello status
+test receiving tello status messages on port 8890
+
+```bash
+/catkin_ws/src/drone/src# python3 tello_status.py
+```
+
+startup and test node
+
+```bash
+#configure ros environment
+
+$ source devel/setup.bash
+
+#start emergency safety node
+
+$ rosrun drone safety_node.py
+
+#start action servers
+
+$ rosrun drone drone_node.py
+
+# start image listener client
+
+$ rosrun drone image_listener.py
+
+# start movement action client
+
+$ rosrun drone action_client.py
 
 ```
-#### Notes
 
-* if battery < 70 strange things happen, 
-** error No valid imu
-** error no joystick
+#### Troubleshooting
+
+* error No valid imu
+
+* error no joystick
+
+** battery < 70
+
+** low light 
+
+* unstable flight
+
+** low light
 
 ### Actions
 
 | action  | argument  |   |
 |---|---|---|
 | launch  | bool order  | true: takeoff <br> false: land  |
-| rotate |  int bearing  | negative: ccw <br> positive cw  |
-| x |  int distance  | negative: back <br> positive forward  |
-| y |  int distance  | negative: left <br> positive right  |
-| z |  int distance  | negative: down <br> positive up  |
-|  command | string  | execute command  | 
+| move |  geometry_msgs/Transform  | movement in x,y,z and rotation in z |
+|  command | string  | execute sdk command  | 
 
 ### Sensors
 
 sensordata published in topics
 
-| publisher  | topic | comment |
+| publisher  | topic | msg type |comment |
 |---|---|---|
-| TelemetrySensor  | telemetry  | all state fields |
-| BatteryPublisher  | battery | battery status |
-| ImageSensor  | camera/forward | image data |
+| TelemetrySensor  | /drone/odometry |  nav_msgs/Odometry | TBD |
+| BatterySensor  | /drone/battery | std_msgs/Int32 | battery status TBD |
+| ImageSensor  | /drone/camera | Image | Image data | 
 
 #### BatteryPublisher 
 
-queries actively the status of the battery (command 'battery?') to prevent safety hutdown after 15 sec. NOT WORKING
+pubishes the status of the battery read from the tello status string
+
+- bat:%d
+
 
 #### TelemetrySensor
 
-contains all fields from the status string broadcasted by the drone
+reads fields from the status string broadcasted by the drone
+
+- vgx:%d
+- vgy%d
+- vgz:%d
+
+
+#### available fields from the tello status string
 
 - pitch:%d
 - roll:%d
