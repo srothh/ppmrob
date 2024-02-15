@@ -2,7 +2,6 @@
 
 import rospy
 from std_msgs.msg import String
-from tello.msg import Battery
 
 def callback(data):
     rospy.loginfo(f"Received message: {data.data}")
@@ -12,7 +11,7 @@ def listener_node():
     rospy.init_node('listener', anonymous=True)
 
     # Subscribe to the 'chatter' topic and register the callback function
-    rospy.Subscriber('battery', Battery, callback)
+    rospy.Subscriber('chatter', String, callback)
 
     # Spin to keep the script from exiting
     rospy.spin()
