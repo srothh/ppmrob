@@ -18,8 +18,9 @@ def recv():
             data, server = sock.recvfrom(1518)
             print("UDP ",count," from ", server, ": ", data.decode(encoding="utf-8"))
             count += 1
-        except Exception:
-            print ('\nExit . . .\n')
+        except Exception as e:
+            
+            print ('\nExit . . .\n', e)
             break
 
 

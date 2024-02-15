@@ -8,6 +8,8 @@ from action import MoveAction
 from action import EmergencyAction
 from action import CommandAction
 from sensor import ImageSensor
+from sensor import TwistSensor
+from sensor import BatterySensor
 
 
 
@@ -20,7 +22,7 @@ def drone_node():
     drone = Tello()
 
     drone.connect()
-
+    
     emergency_server = EmergencyAction('emergency', drone)
     rospy.loginfo("emergency server created")
 
@@ -37,6 +39,12 @@ def drone_node():
     img = ImageSensor(drone)
     rospy.Timer(rospy.Duration(0.5), img.publish)
     rospy.loginfo("image publisher started")
+
+    twist = TwistSensor()
+    drone.registerStateHandler(twist.publish)
+
+    battery = BatterySensor()
+    drone.registerStateHandler(battery.publish)
 
     rospy.spin()
 

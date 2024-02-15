@@ -1,4 +1,5 @@
 import socket, select
+import threading
 import time
 import rospy
 from threading import Thread, Lock
@@ -6,12 +7,18 @@ from collections import deque
 import av
 import numpy as np
 from typing import Optional, Union, Type, Dict
+import socketserver
+
 
 
 class Tello:
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     tello_address = ('192.168.10.1', 8889)
-    locaddr = ('',8889) 
+    locaddr = ('',8889)
+
+    state_port = 8890 
+    state_recv_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    state_handlers = []
 
     # VideoCapture object
     background_frame_read: Optional['BackgroundFrameRead'] = None
@@ -19,10 +26,9 @@ class Tello:
 
     def __init__(self):
         self.sock.setblocking(0)
-        self.sock.bind(self.locaddr)
-        
+        self.sock.bind(self.locaddr)  
 
-        
+        self.state_recv_socket.bind(('', self.state_port))      
 
     def connect(self):
         self.connected = False
@@ -33,6 +39,32 @@ class Tello:
         
         self.connected = True
         rospy.loginfo("connected, battery: %s" % self.send_command_with_return('battery?'))
+
+        thread = threading.Thread(target = self.stateWorker)
+        thread.start()
+
+    def registerStateHandler(self, callback):
+        self.state_handlers.append(callback)
+
+    def stateHandler(self, callbacks):
+        rospy.loginfo('starting state handler')
+        self.stateHandler = StateHandler(callbacks)
+        with socketserver.UDPServer(('', self.state_port), self.stateHandler) as server:
+            server.serve_forever()
+
+    def stateWorker(self):
+        rospy.loginfo("listening for state")
+        while True:
+            try:
+                data, server = self.state_recv_socket.recvfrom(1518)
+                state = State(data.decode(encoding="utf-8"))
+                for callback in self.state_handlers:
+                    if callback is not None:
+                        callback(state=state)
+            except Exception as e:                
+                rospy.loginfo('\nError %s' % e)
+                break
+
 
     ## blocking method to send command and return with boolen success
     def command(self, cmd, timeout=10) -> bool:
@@ -104,6 +136,8 @@ class Tello:
                 self.background_frame_read = BackgroundFrameRead(self, address, with_queue, max_queue_len)
                 self.background_frame_read.start()
             return self.background_frame_read
+
+
 
 
 class BackgroundFrameRead:
@@ -184,3 +218,79 @@ class BackgroundFrameRead:
         Internal method, you normally wouldn't call this yourself.
         """
         self.stopped = True
+
+class State:
+
+    state_dict = {}
+
+
+    # Conversion functions for state protocol fields
+    INT_STATE_FIELDS = (
+        # Tello EDU with mission pads enabled only
+        'mid', 'x', 'y', 'z',
+        # 'mpry': (custom format 'x,y,z')
+        # Common entries
+        'pitch', 'roll', 'yaw',
+        'vgx', 'vgy', 'vgz',
+        'templ', 'temph',
+        'tof', 'h', 'bat', 'time'
+    )
+    FLOAT_STATE_FIELDS = ('baro', 'agx', 'agy', 'agz')
+
+    state_field_converters: Dict[str, Union[Type[int], Type[float]]]
+    state_field_converters = {key : int for key in INT_STATE_FIELDS}
+    state_field_converters.update({key : float for key in FLOAT_STATE_FIELDS})
+        
+
+    def __init__(self, raw=''):
+        self.state_dict = self.parse(raw)
+
+    def get(self, key):
+        return self.state_dict.get(key)
+
+    def parse(self, state: str) -> Dict[str, Union[int, float, str]]:
+        """Parse a state line to a dictionary
+        Internal method, you normally wouldn't call this yourself.
+        """
+        state = state.strip()
+        #print('Raw state data: {}'.format(state))
+
+        if state == 'ok':
+            return {}
+
+        self.state_dict = {}
+        for field in state.split(';'):
+            split = field.split(':')
+            if len(split) < 2:
+                continue
+
+            key = split[0]
+            value: Union[int, float, str] = split[1]
+
+            if key in self.state_field_converters:
+                num_type = self.state_field_converters[key]
+                try:
+                    value = num_type(value)
+                except ValueError as e:
+                    print('Error parsing state value for {}: {} to {}'
+                                       .format(key, value, num_type))
+                    print(e)
+                    continue
+
+            self.state_dict[key] = value
+
+        return self.state_dict
+    
+    def __str__(self):
+        return str(self.state_dict)
+
+class StateHandler(socketserver.BaseRequestHandler):
+
+    def __init__(self, callbacks):
+        self._callbacks = callbacks
+
+    def handle(self):
+        data = self.request[0].strip()
+        state = State(data)
+        for callback in self._callbacks:
+            callback(state)

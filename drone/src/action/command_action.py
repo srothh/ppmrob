@@ -23,7 +23,7 @@ class CommandAction(object):
 
     def execute_cb(self, goal):
         # publish info to the console for the user
-        rospy.loginfo('%s' % (self._action_name))
+        rospy.loginfo('%s: %s' % (self._action_name, goal.command))
 
         # start executing
 
