@@ -20,13 +20,12 @@ def img_processing(frame,window):
     # Check if a victim was detected
     # victim_detected = bool(classify_image(frame).item()) # not using classification anymore
     # Perform yolo object detection
-    rgb_image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
     # Convert NumPy array to PIL Image
-    pil_image = Image.fromarray(rgb_image)
+    pil_image = Image.fromarray(frame)
     detected = yolo_detection(pil_image, confidence_threshold=0.9)
-    rgb_image = detect_lines(rgb_image)
+    line_frame = detect_lines(frame)
     # Display the image
-    display_object_detection(detected, window, rgb_image, 10, (0, 255, 0))
+    display_object_detection(detected, window, line_frame, 10, (0, 255, 0))
 def callback(data, args):
     rospy.loginfo("Received image frame: %d %dx%d" % (data.height, data.height, data.width))
     br = CvBridge()

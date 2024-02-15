@@ -10,24 +10,26 @@ upper_beige = np.array([40, 150, 255])
 
 # Detect lines in the image
 def detect_lines(image):
-    hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
-    mask = cv2.inRange(hsv, lower_beige, upper_beige)
-    kernel = np.ones((5, 5), np.uint8)
-    mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel, iterations=2)
-    mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel, iterations=3)
-    contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-    min_contour_area = 4000  # Adjust as needed
-    min_aspect_ratio = 0.5  # Adjust as needed
-    filtered_contours = []
-    for cnt in contours:
-        area = cv2.contourArea(cnt)
-        x, y, w, h = cv2.boundingRect(cnt)
-        aspect_ratio = float(w) / h
-        hull = cv2.convexHull(cnt)
-        hull_area = cv2.contourArea(hull)
-        solidity = float(area) / hull_area
-        extent = float(area) / (w * h)
-        if area > min_contour_area and aspect_ratio > min_aspect_ratio and solidity > 0.6 and extent > 0.1:
-            filtered_contours.append(cnt)
-    cv2.drawContours(image, filtered_contours, -1, (0, 0, 255), 20)
-    return image
+    # Convert the frame to grayscale
+    # For testing with different cam uncomment the 2 lines below
+    # frame = cv2.resize(image, (320, 240))
+    # gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    # TEST ALSO GRAYSCALE
+    (thresh, im_bw) = cv2.threshold(gray, 175, 255, cv2.THRESH_BINARY)
+    # FOR TESTING
+    cv2.imshow('gray', im_bw)
+    # Apply Gaussian blur to reduce noise
+    blurred = cv2.GaussianBlur(im_bw, (5, 5), 0)
+    # Apply Canny edge detection
+    edges = cv2.Canny(blurred, 250, 150)
+    # Detect lines using Hough Line Transform
+    lines = cv2.HoughLinesP(edges, rho=1, theta=np.pi / 180, threshold=45, minLineLength=80, maxLineGap=100)
+    # Draw detected lines on the original frame
+    if lines is not None:
+        for line in lines:
+            x1, y1, x2, y2 = line[0]
+            cv2.line(image, (x1, y1), (x2, y2), (0, 0, 255), 3)
+
+    # Display the frame with detected lines
+    cv2.imshow('Frame with Detected Lines', image)
+    cv2.imshow('Canny', edges)
