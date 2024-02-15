@@ -21,7 +21,9 @@ RUN dos2unix /catkin_ws/src/$PACKAGE_NAME/src/*
 RUN dos2unix /catkin_ws/src/$PACKAGE_NAME/src/image_processing/*
 
 RUN pip install --upgrade pip
-RUN pip install matplotlib Pillow numpy
+RUN pip install -r /catkin_ws/src/$PACKAGE_NAME/requirements.txt
+RUN pip install dill
+
 # Change back to the root of the workspace
 WORKDIR /catkin_ws
 
