@@ -219,14 +219,16 @@
     <visual>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <cylinder length="0.01" radius="0.07"/>
+        <!-- <cylinder radius="${propeller_radius_smaller}" length="${propeller_height}"/> -->
+        <box size="0.011006666666666666 0.16000000000000003 0.001"/>
       </geometry>
       <material name="propeller_material"/>
     </visual>
     <collision>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <cylinder length="0.01" radius="0.07"/>
+        <!-- <cylinder radius="${propeller_radius_smaller}" length="${propeller_height}"/> -->
+        <box size="0.011006666666666666 0.16000000000000003 0.001"/>
       </geometry>
     </collision>
     <inertial>
@@ -240,20 +242,32 @@
     <child link="propeller1"/>
     <origin rpy="0 0 0" xyz="0.15588457268119896 0.08999999999999998 0.015"/>
     <axis xyz="0 0 1"/>
-    <limit effort="0" lower="0" upper="0" velocity="0"/>
+    <limit effort="1000" lower="-2.0" upper="2.0" velocity="3.0"/>
   </joint>
+  <!-- <transmission name="transmission_propeller${i}">
+      <type>transmission_interface/SimpleTransmission</type>
+      <joint name="arm${i}_propeller${i}">
+        <hardwareInterface>EffortJointInterface</hardwareInterface>
+      </joint>
+      <actuator name="propeller${i}_motor">
+        <hardwareInterface>EffortJointInterface</hardwareInterface>
+        <mechanicalReduction>1</mechanicalReduction>
+      </actuator>
+    </transmission> -->
   <link name="propeller3">
     <visual>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <cylinder length="0.01" radius="0.07"/>
+        <!-- <cylinder radius="${propeller_radius_smaller}" length="${propeller_height}"/> -->
+        <box size="0.011006666666666666 0.16000000000000003 0.001"/>
       </geometry>
       <material name="propeller_material"/>
     </visual>
     <collision>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <cylinder length="0.01" radius="0.07"/>
+        <!-- <cylinder radius="${propeller_radius_smaller}" length="${propeller_height}"/> -->
+        <box size="0.011006666666666666 0.16000000000000003 0.001"/>
       </geometry>
     </collision>
     <inertial>
@@ -267,20 +281,32 @@
     <child link="propeller3"/>
     <origin rpy="0 0 0" xyz="-0.15588457268119893 0.09000000000000005 0.015"/>
     <axis xyz="0 0 1"/>
-    <limit effort="0" lower="0" upper="0" velocity="0"/>
+    <limit effort="1000" lower="-2.0" upper="2.0" velocity="3.0"/>
   </joint>
+  <!-- <transmission name="transmission_propeller${i}">
+      <type>transmission_interface/SimpleTransmission</type>
+      <joint name="arm${i}_propeller${i}">
+        <hardwareInterface>EffortJointInterface</hardwareInterface>
+      </joint>
+      <actuator name="propeller${i}_motor">
+        <hardwareInterface>EffortJointInterface</hardwareInterface>
+        <mechanicalReduction>1</mechanicalReduction>
+      </actuator>
+    </transmission> -->
   <link name="propeller4">
     <visual>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <cylinder length="0.01" radius="0.07"/>
+        <!-- <cylinder radius="${propeller_radius_smaller}" length="${propeller_height}"/> -->
+        <box size="0.011006666666666666 0.16000000000000003 0.001"/>
       </geometry>
       <material name="propeller_material"/>
     </visual>
     <collision>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <cylinder length="0.01" radius="0.07"/>
+        <!-- <cylinder radius="${propeller_radius_smaller}" length="${propeller_height}"/> -->
+        <box size="0.011006666666666666 0.16000000000000003 0.001"/>
       </geometry>
     </collision>
     <inertial>
@@ -294,20 +320,32 @@
     <child link="propeller4"/>
     <origin rpy="0 0 0" xyz="-0.15588457268119899 -0.08999999999999994 0.015"/>
     <axis xyz="0 0 1"/>
-    <limit effort="0" lower="0" upper="0" velocity="0"/>
+    <limit effort="1000" lower="-2.0" upper="2.0" velocity="3.0"/>
   </joint>
+  <!-- <transmission name="transmission_propeller${i}">
+      <type>transmission_interface/SimpleTransmission</type>
+      <joint name="arm${i}_propeller${i}">
+        <hardwareInterface>EffortJointInterface</hardwareInterface>
+      </joint>
+      <actuator name="propeller${i}_motor">
+        <hardwareInterface>EffortJointInterface</hardwareInterface>
+        <mechanicalReduction>1</mechanicalReduction>
+      </actuator>
+    </transmission> -->
   <link name="propeller6">
     <visual>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <cylinder length="0.01" radius="0.07"/>
+        <!-- <cylinder radius="${propeller_radius_smaller}" length="${propeller_height}"/> -->
+        <box size="0.011006666666666666 0.16000000000000003 0.001"/>
       </geometry>
       <material name="propeller_material"/>
     </visual>
     <collision>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <cylinder length="0.01" radius="0.07"/>
+        <!-- <cylinder radius="${propeller_radius_smaller}" length="${propeller_height}"/> -->
+        <box size="0.011006666666666666 0.16000000000000003 0.001"/>
       </geometry>
     </collision>
     <inertial>
@@ -321,15 +359,175 @@
     <child link="propeller6"/>
     <origin rpy="0 0 0" xyz="0.15588457268119899 -0.08999999999999994 0.015"/>
     <axis xyz="0 0 1"/>
-    <limit effort="0" lower="0" upper="0" velocity="0"/>
+    <limit effort="1000" lower="-2.0" upper="2.0" velocity="3.0"/>
   </joint>
+  <!-- <transmission name="transmission_propeller${i}">
+      <type>transmission_interface/SimpleTransmission</type>
+      <joint name="arm${i}_propeller${i}">
+        <hardwareInterface>EffortJointInterface</hardwareInterface>
+      </joint>
+      <actuator name="propeller${i}_motor">
+        <hardwareInterface>EffortJointInterface</hardwareInterface>
+        <mechanicalReduction>1</mechanicalReduction>
+      </actuator>
+    </transmission> -->
+  <!-- Transmissions -->
+  <transmission name="transmission_propeller1">
+    <type>transmission_interface/SimpleTransmission</type>
+    <joint name="arm1_propeller1">
+      <hardwareInterface>EffortJointInterface</hardwareInterface>
+    </joint>
+    <actuator name="propeller1_motor">
+      <hardwareInterface>EffortJointInterface</hardwareInterface>
+      <mechanicalReduction>1</mechanicalReduction>
+    </actuator>
+  </transmission>
+  <transmission name="transmission_propeller1">
+    <type>transmission_interface/SimpleTransmission</type>
+    <joint name="arm1_propeller1">
+      <hardwareInterface>EffortJointInterface</hardwareInterface>
+    </joint>
+    <actuator name="propeller1_motor">
+      <hardwareInterface>EffortJointInterface</hardwareInterface>
+      <mechanicalReduction>1</mechanicalReduction>
+    </actuator>
+  </transmission>
+  <transmission name="transmission_propeller3">
+    <type>transmission_interface/SimpleTransmission</type>
+    <joint name="arm3_propeller3">
+      <hardwareInterface>EffortJointInterface</hardwareInterface>
+    </joint>
+    <actuator name="propeller3_motor">
+      <hardwareInterface>EffortJointInterface</hardwareInterface>
+      <mechanicalReduction>1</mechanicalReduction>
+    </actuator>
+  </transmission>
+  <transmission name="transmission_propeller4">
+    <type>transmission_interface/SimpleTransmission</type>
+    <joint name="arm4_propeller4">
+      <hardwareInterface>EffortJointInterface</hardwareInterface>
+    </joint>
+    <actuator name="propeller4_motor">
+      <hardwareInterface>EffortJointInterface</hardwareInterface>
+      <mechanicalReduction>1</mechanicalReduction>
+    </actuator>
+  </transmission>
+  <transmission name="transmission_propeller6">
+    <type>transmission_interface/SimpleTransmission</type>
+    <joint name="arm6_propeller6">
+      <hardwareInterface>EffortJointInterface</hardwareInterface>
+    </joint>
+    <actuator name="propeller6_motor">
+      <hardwareInterface>EffortJointInterface</hardwareInterface>
+      <mechanicalReduction>1</mechanicalReduction>
+    </actuator>
+  </transmission>
   <!-- Tello plugin for Gazebo -->
   <gazebo>
-    <plugin filename="libcontrol_plugin.so" name="ControlPlugin">
-      <parameter name="use_sim_time" type="bool">1</parameter>
-      <link_name>body</link_name>
-      <center_of_mass>0 0 0</center_of_mass>
+    <!-- <gazebo>
+        <plugin name="gazebo_ros_control" filename="libgazebo_ros_control.so">
+          <robotNamespace>gazebo</robotNamespace>
+          <robotSimType>gazebo_ros_control/DefaultRobotHWSim</robotSimType>
+        </plugin>
+      </gazebo> -->
+    <!-- <plugin name="ControlPlugin" filename="libcontrol_plugin.so">
+          <parameter name="use_sim_time" type="bool">1</parameter>
+          <link_name>body</link_name>
+          <center_of_mass>0 0 0</center_of_mass>
+      </plugin>
+      <plugin name="BatteryPlugin" filename="libbattery_plugin.so">
+          <parameter name="use_sim_time" type="bool">1</parameter>
+          <link_name>body</link_name>
+          <center_of_mass>0 0 0</center_of_mass>
+      </plugin> -->
+    <plugin filename="libgazebo_ros_control.so" name="gazebo_ros_control">
+      <robotNamespace>gazebo</robotNamespace>
+      <controlPeriod>0.002</controlPeriod>
+      <robotSimType>gazebo_ros_control/DefaultRobotHWSim</robotSimType>
+      <legacyModeNS>true</legacyModeNS>
+      <alwaysOn>true</alwaysOn>
+      <updateRate>1000.0</updateRate>
+      <joint name="arm1_propeller1">
+        <pid>
+          <p>1000.0</p>
+          <i>0.01</i>
+          <d>0.01</d>
+          <iMax>1000.0</iMax>
+          <iMin>-1000.0</iMin>
+          <cmdMax>1000.0</cmdMax>
+          <cmdMin>-1000.0</cmdMin>
+        </pid>
+      </joint>
+      <joint name="arm3_propeller3">
+        <pid>
+          <p>1000.0</p>
+          <i>0.01</i>
+          <d>0.01</d>
+          <iMax>1000.0</iMax>
+          <iMin>-1000.0</iMin>
+          <cmdMax>1000.0</cmdMax>
+          <cmdMin>-1000.0</cmdMin>
+        </pid>
+      </joint>
+      <joint name="arm4_propeller4">
+        <pid>
+          <p>1000.0</p>
+          <i>0.01</i>
+          <d>0.01</d>
+          <iMax>1000.0</iMax>
+          <iMin>-1000.0</iMin>
+          <cmdMax>1000.0</cmdMax>
+          <cmdMin>-1000.0</cmdMin>
+        </pid>
+      </joint>
+      <joint name="arm6_propeller6">
+        <pid>
+          <p>1000.0</p>
+          <i>0.01</i>
+          <d>0.01</d>
+          <iMax>1000.0</iMax>
+          <iMin>-1000.0</iMin>
+          <cmdMax>1000.0</cmdMax>
+          <cmdMin>-1000.0</cmdMin>
+        </pid>
+      </joint>
     </plugin>
+  </gazebo>
+  <gazebo reference="camera_link">
+    <sensor name="camera1" type="camera">
+      <update_rate>30.0</update_rate>
+      <camera name="head">
+        <horizontal_fov>1.3962634</horizontal_fov>
+        <image>
+          <width>800</width>
+          <height>800</height>
+          <format>R8G8B8</format>
+        </image>
+        <clip>
+          <near>0.02</near>
+          <far>300</far>
+        </clip>
+        <noise>
+          <type>gaussian</type>
+          <mean>0.0</mean>
+          <stddev>0.007</stddev>
+        </noise>
+      </camera>
+      <plugin filename="libgazebo_ros_camera.so" name="camera_controller">
+        <alwaysOn>true</alwaysOn>
+        <updateRate>0.0</updateRate>
+        <cameraName>gazebo/camera1</cameraName>
+        <imageTopicName>image_raw</imageTopicName>
+        <cameraInfoTopicName>camera_info</cameraInfoTopicName>
+        <frameName>camera_link</frameName>
+        <hackBaseline>0.07</hackBaseline>
+        <distortionK1>0.0</distortionK1>
+        <distortionK2>0.0</distortionK2>
+        <distortionK3>0.0</distortionK3>
+        <distortionT1>0.0</distortionT1>
+        <distortionT2>0.0</distortionT2>
+      </plugin>
+    </sensor>
   </gazebo>
 </robot>
 

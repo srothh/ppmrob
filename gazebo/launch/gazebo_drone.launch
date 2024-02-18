@@ -3,12 +3,30 @@
   <include file="$(find gazebo_ros)/launch/empty_world.launch">
     <arg name="world_name" value="$(find gazebo)/worlds/empty.world"/>
   </include>
-  <!--><include file="$(find gazebo)/launch/main_launch.launch"/>-->
-
-  <!-- Load urdf model -->
-  <!--><param name="robot_description" command="$(find xacro)/xacro '$(find gazebo)/urdf/drone.xacro'"/>-->
+  
   <param name="robot_description" command="cat '$(find gazebo)/urdf/drone.urdf'"/>
 
   <node name="spawn_urdf" pkg="gazebo_ros" type="spawn_model" respawn="false" output="screen"
         args="-urdf -model tello_model -param robot_description"/>
+        
+  <!-- Load gazebo_ros_control plugin -->
+  <!-- <include file="$(find gazebo_ros_control)/launch/gazebo_ros_control.launch">
+    <arg name="robot_description" value="$(arg robot_description)"/>
+  </include> -->
+
+  <!-- <include file="$(find gazebo_ros_control)/launch/gazebo_ros_control.launch">
+    <arg name="robot_description" value="$(arg robot_description)" />
+  </include> -->
+
+  <rosparam file="$(find gazebo)/config/drone_control.yaml" command="load"/>
+
+  <node name="controller_spawner" pkg="controller_manager" type="spawner" respawn="false"
+    output="screen" args="propeller1_position_controller propeller3_position_controller 
+    propeller4_position_controller propeller6_position_controller joint_state_controller"/>
+  
+  <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher"
+    respawn="false" output="screen">
+    <remap from="/joint_states" to="/gazebo/joint_states" />
+  </node>
+
 </launch>

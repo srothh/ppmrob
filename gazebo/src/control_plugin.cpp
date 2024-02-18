@@ -1,6 +1,5 @@
 #include <gazebo/gazebo.hh>
 #include <ros/ros.h>
-#include <std_srvs/Empty.h>
 
 namespace gazebo
 {

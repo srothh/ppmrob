@@ -8,8 +8,36 @@ project(gazebo)
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
-  rospy
-  std_msgs
+  roscpp
+  gazebo_ros
+)
+
+find_package(gazebo REQUIRED)
+include_directories(${catkin_INCLUDE_DIRS} ${GAZEBO_INCLUDE_DIRS})
+
+catkin_package(
+  DEPENDS
+    roscpp
+    gazebo_ros
+)
+
+link_directories(${GAZEBO_LIBRARY_DIRS})
+list(APPEND CMAKE_CXX_FLAGS "${GAZEBO_CXX_FLAGS}")
+
+add_library(control_plugin SHARED src/control_plugin.cpp)
+target_link_libraries(control_plugin ${GAZEBO_LIBRARIES} ${catkin_LIBRARIES})
+
+add_library(battery_plugin SHARED src/battery_plugin.cpp)
+target_link_libraries(battery_plugin ${GAZEBO_LIBRARIES} ${catkin_LIBRARIES})
+
+add_library(cv_plugin SHARED src/cv_plugin.cpp)
+target_link_libraries(cv_plugin ${catkin_LIBRARIES} ${GAZEBO_LIBRARIES})
+
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${GAZEBO_CXX_FLAGS}")
+
+execute_process(
+    COMMAND echo "export GAZEBO_PLUGIN_PATH=\${GAZEBO_PLUGIN_PATH}:${CATKIN_DEVEL_PREFIX}/lib" >> ~/.bashrc
+    WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
 )
 
 ## System dependencies are found with CMake's conventions
@@ -104,7 +132,7 @@ find_package(catkin REQUIRED COMPONENTS
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES gazebo
-#  CATKIN_DEPENDS rospy std_msgs
+#  CATKIN_DEPENDS rospy std_msgs gazebo_ros
 #  DEPENDS system_lib
 )
 
@@ -114,10 +142,7 @@ catkin_package(
 
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
-include_directories(
-# include
-  ${catkin_INCLUDE_DIRS}
-)
+
 
 ## Declare a C++ library
 # add_library(${PROJECT_NAME}

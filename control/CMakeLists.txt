@@ -12,17 +12,17 @@ find_package(catkin REQUIRED COMPONENTS
   std_msgs
 )
 
-# Find Gazebo
-find_package(gazebo REQUIRED)
-include_directories(
-  ${catkin_INCLUDE_DIRS}
-  ${GAZEBO_INCLUDE_DIRS}
-)
+# # Find Gazebo
+# find_package(gazebo REQUIRED)
+# include_directories(
+#   ${catkin_INCLUDE_DIRS}
+#   ${GAZEBO_INCLUDE_DIRS}
+# )
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${GAZEBO_CXX_FLAGS}")
+# set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${GAZEBO_CXX_FLAGS}")
 
-add_library(control_plugin src/control_plugin.cpp)
-target_link_libraries(control_plugin ${GAZEBO_LIBRARIES} ${catkin_LIBRARIES})
+# add_library(control_plugin src/control_plugin.cpp)
+# target_link_libraries(control_plugin ${GAZEBO_LIBRARIES} ${catkin_LIBRARIES})
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
