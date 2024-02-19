@@ -1,8 +1,4 @@
-"""
-Grid based sweep planner
-
-author: Atsushi Sakai
-"""
+#!/usr/bin/env python3
 
 import math
 from enum import IntEnum
@@ -307,37 +303,49 @@ def planning_animation(ox, oy, resolution):  # pragma: no cover
     moveclient = actionlib.SimpleActionClient('move', drone.msg.MoveAction)
     moveclient.wait_for_server()
 
-    last_x, last_y = 0, 0
+    last_x, last_y = 60, 60
     # send coordinate data to drone
-    for ipx, ipy in zip(px, py):
-        moveclient.send_goal_and_wait(drone.msg.MoveGoal(target=Transform(Vector3(ipx-last_x, ipy-last_y, 0), Quaternion(0, 0, 0, 0))))
-        time.sleep(10)
-        last_x = ipx
-        last_y = ipy
+    #for ipx, ipy in zip(px, py):
     
     # animation
-    # if do_animation:
-    #     for ipx, ipy in zip(px, py):
-    #         plt.cla()
-    #         # for stopping simulation with the esc key.
-    #         plt.gcf().canvas.mpl_connect(
-    #             'key_release_event',
-    #             lambda event: [exit(0) if event.key == 'escape' else None])
-    #         plt.plot(ox, oy, "-xb")
-    #         plt.plot(px, py, "-r")
-    #         plt.plot(ipx, ipy, "or")
-    #         print('x: %.2f y: %.2f' % (ipx, ipy))
-    #         plt.axis("equal")
-    #         plt.grid(True)
-    #         plt.pause(2.0)
+    if do_animation:
+        for ipx, ipy in zip(px, py):
 
-    #     plt.cla()
-    #     plt.plot(ox, oy, "-xb")
-    #     plt.plot(px, py, "-r")
-    #     plt.axis("equal")
-    #     plt.grid(True)
-    #     plt.pause(0.1)
-    #     plt.close()
+
+            plt.cla()
+            # for stopping simulation with the esc key.
+            plt.gcf().canvas.mpl_connect(
+                'key_release_event',
+                lambda event: [exit(0) if event.key == 'escape' else None])
+            plt.plot(ox, oy, "-xb")
+            plt.plot(px, py, "-r")
+            plt.plot(ipx, ipy, "or")
+            print('x: %.2f y: %.2f' % (ipx, ipy))
+            plt.axis("equal")
+            plt.grid(True)
+            plt.pause(2.0)
+
+            if (ipy-last_y < 0):
+                moveclient.send_goal_and_wait(drone.msg.MoveGoal(target=Transform(Vector3(0, 0, 0), Quaternion(0, 0, -90, 0))))
+                time.sleep(5)
+                moveclient.send_goal_and_wait(drone.msg.MoveGoal(target=Transform(Vector3(ipy-last_y, 0, 0), Quaternion(0, 0, 0, 0))))
+            elif (ipy-last_y > 0):
+                moveclient.send_goal_and_wait(drone.msg.MoveGoal(target=Transform(Vector3(0, 0, 0), Quaternion(0, 0, 90, 0))))
+                time.sleep(5)
+                moveclient.send_goal_and_wait(drone.msg.MoveGoal(target=Transform(Vector3(ipy-last_y, 0, 0), Quaternion(0, 0, 0, 0))))
+            else:
+                moveclient.send_goal_and_wait(drone.msg.MoveGoal(target=Transform(Vector3(ipx-last_x, 0, 0), Quaternion(0, 0, 0, 0))))
+            time.sleep(5)
+            last_x = ipx
+            last_y = ipy
+
+        plt.cla()
+        plt.plot(ox, oy, "-xb")
+        plt.plot(px, py, "-r")
+        plt.axis("equal")
+        plt.grid(True)
+        plt.pause(0.1)
+        plt.close()
 
 def main():  # pragma: no cover
     print("start!!")
@@ -348,9 +356,9 @@ def main():  # pragma: no cover
     # planning_animation(ox, oy, resolution)
 
     #rectangle map
-    ox = [0.0, 100.0, 100.0, 0.0, 0.0]
-    oy = [0.0, 0.0, 100.0, 100.0, 0.0]
-    resolution = 20.0
+    ox = [0.0, 200.0, 200.0, 0.0, 0.0]
+    oy = [0.0, 0.0, 200.0, 200.0, 0.0]
+    resolution = 40.0
     planning_animation(ox, oy, resolution)
 
     # ox = [0.0, 20.0, 50.0, 200.0, 130.0, 40.0, 0.0]
@@ -363,5 +371,4 @@ def main():  # pragma: no cover
     print("done!!")
 
 
-if __name__ == '__main__':
-    main()
+if __name__ == '__main
