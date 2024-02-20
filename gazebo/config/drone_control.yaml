@@ -1,23 +1,25 @@
-joint_state_controller:
-  type: joint_state_controller/JointStateController
-  publish_rate: 50  
+/control:
+  gazebo_ros_control:   
+    pid_gains:
+      arm1_propeller1: {p: 100.0, i: 0.1, d: 10.0}
+      arm3_propeller3: {p: 100.0, i: 0.1, d: 10.0}
+      arm4_propeller4: {p: 100.0, i: 0.1, d: 10.0}
+      arm6_propeller6: {p: 100.0, i: 0.1, d: 10.0}
+    joint_state_controller:
+      type: joint_state_controller/JointStateController
+      publish_rate: 10
 
-propeller1_position_controller:
-  type: effort_controllers/JointPositionController
-  joint: arm1_propeller1
-  pid: {p: 100.0, i: 0.01, d: 0.01, i_clamp: 1.0}
-
-propeller3_position_controller:
-  type: effort_controllers/JointPositionController
-  joint: arm3_propeller3
-  pid: {p: 100.0, i: 0.01, d: 0.01, i_clamp: 1.0}
-
-propeller4_position_controller:
-  type: effort_controllers/JointPositionController
-  joint: arm4_propeller4
-  pid: {p: 100.0, i: 0.01, d: 0.01, i_clamp: 1.0}
-
-propeller6_position_controller:
-  type: effort_controllers/JointPositionController
-  joint: arm6_propeller6
-  pid: {p: 100.0, i: 0.01, d: 0.01, i_clamp: 1.0}
+    joint_motor_controller:
+      type: velocity_controllers/JointGroupVelocityController
+      joints:
+        - arm1_propeller1
+        - arm3_propeller3
+        - arm4_propeller4
+        - arm6_propeller6
+  joint_velocity_controller:
+    type: velocity_controllers/JointGroupVelocityController
+    joints:
+      - arm1_propeller1
+      - arm3_propeller3
+      - arm4_propeller4
+      - arm6_propeller6
