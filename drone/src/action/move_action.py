@@ -58,7 +58,7 @@ class MoveAction(object):
                 else:
                     raise Exception("invalid movement distance: %d" % distance)                                        
             else:
-                raise Exception("invalid movement axis: %s" % axis)
+                raise Exception("invalid movement axis: %s" % translation)
         
         except Exception as e:
             rospy.loginfo(e)

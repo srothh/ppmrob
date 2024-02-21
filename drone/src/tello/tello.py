@@ -1,7 +1,7 @@
 import socket, select
 import time
 import rospy
-from threading import Thread, Lock
+from threading import Event, Thread, Lock
 from collections import deque
 import av
 import numpy as np
@@ -16,26 +16,91 @@ class Tello:
     # VideoCapture object
     background_frame_read: Optional['BackgroundFrameRead'] = None
 
+    response_received = Event()
+    responses = []
+    commands = []
+
+    response_thread = None
+    state_thread = None
 
     def __init__(self):
-        self.sock.setblocking(0)
+        #self.sock.setblocking(0)
         self.sock.bind(self.locaddr)
         
 
-        
-
-    def connect(self):
+    def connect(self) -> bool:
         self.connected = False
+        
+        response_thread = Thread(target = self.responseWorker)
+        response_thread.start()
         # block till drone is connected
         while not self.connected:
             self.connected = self.command('command', timeout=1) 
             time.sleep(1)
-        
         self.connected = True
-        rospy.loginfo("connected, battery: %s" % self.send_command_with_return('battery?'))
+        rospy.loginfo("connected, battery: %s" % self.command_str('battery?'))
+        rospy.loginfo("set speed: %s" % self.command_str('speed 20'))
+
+        state_thread = Thread(target = self.stateWorker)
+        state_thread.start()
+
+        return self.connected
+
+    def responseWorker(self):
+        print ("Listener is waiting for responses...")
+        while True:
+            try:
+                data, server = self.sock.recvfrom(1518)
+                response = data.decode(encoding="utf-8")
+                #print(response)
+                self.responses.append(response)
+                self.response_received.set()
+            except Exception as e:
+                print('\nError %s' % e)
+                #break
+    
+
+    def registerStateHandler(self, callback):
+        self.state_handlers.append(callback)
+
+    def stateWorker(self):
+        rospy.loginfo("listening for state")
+        while True:
+            try:
+                data, server = self.state_recv_socket.recvfrom(1518)
+                state = State(data.decode(encoding="utf-8"))
+                for callback in self.state_handlers:
+                    if callback is not None:
+                        callback(state=state)
+            except Exception as e:                
+                rospy.loginfo('\nError %s' % e)
+                break
+
+
+    # blocking method to send command and return with the string result
+    # wait for response by pulling event
+    # TODO progress callback
+    def command_str(self, cmd, timeout=10) -> str:
+        result = None
+        self.send_command(cmd)
+        self.response_received.wait(timeout=timeout)
+        if self.responses:
+            result = self.responses.pop()
+            cmd = self.commands.pop()
+            print('\n%s -> %s' % (cmd, result))
+        else:
+            print ('\n timeout')
+        return result
+
+
+    # blocking method sends command and returns True if success
+    def command(self, cmd, timeout=10) -> bool:
+        result = False
+        return True if self.command_str(cmd, timeout) == 'ok' else False
 
     ## blocking method to send command and return with boolen success
-    def command(self, cmd, timeout=10) -> bool:
+    ## wait for response 
+    def command_sync(self, cmd, timeout=10) -> bool:
         result = False
         # send command
         self.send_command(cmd)
@@ -84,7 +149,10 @@ class Tello:
     ## send command to drone and return imidiately
     def send_command(self, cmd):
         sent = self.sock.sendto(cmd.encode(encoding="utf-8"), self.tello_address)
+        self.commands.append(cmd)
+        self.response_received.clear()
         return sent
+    
     def execute_commands(self, cmds):
         for cmd in cmds:
             self.command(cmd)
@@ -104,6 +172,11 @@ class Tello:
                 self.background_frame_read = BackgroundFrameRead(self, address, with_queue, max_queue_len)
                 self.background_frame_read.start()
             return self.background_frame_read
+
+    def terminate(self):
+        self.response_thread.join()
+        self.state_thread.join()
+        self.background_frame_read.stop()
 
 
 class BackgroundFrameRead:
@@ -184,3 +257,29 @@ class BackgroundFrameRead:
         Internal method, you normally wouldn't call this yourself.
         """
         self.stopped = True
+
+def main():
+    print('\r\n\r\nTello Control.\r\n')
+    print('type quit to quit.\r\n')
+
+    tello = Tello()
+    tello.connect()
+
+    while True: 
+        try:
+            print ('$', end='', flush=True)
+            msg = input("")
+            if not msg:
+                break
+            if 'quit' in msg:
+                tello.end()
+                break
+            print(tello.command_str(msg))
+
+        except KeyboardInterrupt:
+            print ('\n . . .\n')
+            tello.end()
+            break
+
+if __name__ == '__main__':
+    main()
