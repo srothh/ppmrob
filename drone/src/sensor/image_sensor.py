@@ -24,6 +24,6 @@ class ImageSensor():
         self._drone = drone
         self._br = CvBridge()
         self._counter = 0
-        drone.command('streamon')
-        rospy.loginfo('ImageSensor initalized')
+        resp = drone.command('streamon')
+        rospy.loginfo('ImageSensor initalized: %s' % resp)
 

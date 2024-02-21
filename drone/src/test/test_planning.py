@@ -17,7 +17,6 @@ from scipy.spatial.transform import Rotation as Rot
 do_animation = True
 
 
-
 def rot_mat_2d(angle):
     """
     Create 2D rotation matrix from an angle
@@ -36,7 +35,7 @@ def rot_mat_2d(angle):
 
 
     """
-    return Rot.from_euler('z', angle).as_matrix()[0:2, 0:2]
+    return Rot.from_euler("z", angle).as_matrix()[0:2, 0:2]
 
 
 class SweepSearcher:
@@ -48,8 +47,7 @@ class SweepSearcher:
         RIGHT = 1
         LEFT = -1
 
-    def __init__(self,
-                 moving_direction, sweep_direction, x_inds_goal_y, goal_y):
+    def __init__(self, moving_direction, sweep_direction, x_inds_goal_y, goal_y):
         self.moving_direction = moving_direction
         self.sweep_direction = sweep_direction
         self.turing_window = []
@@ -66,17 +64,22 @@ class SweepSearcher:
             return n_x_index, n_y_index
         else:  # occupied
             next_c_x_index, next_c_y_index = self.find_safe_turning_grid(
-                c_x_index, c_y_index, grid_map)
+                c_x_index, c_y_index, grid_map
+            )
             if (next_c_x_index is None) and (next_c_y_index is None):
                 # moving backward
                 next_c_x_index = -self.moving_direction + c_x_index
                 next_c_y_index = c_y_index
-                if self.check_occupied(next_c_x_index, next_c_y_index, grid_map, FloatGrid(1.0)):
+                if self.check_occupied(
+                    next_c_x_index, next_c_y_index, grid_map, FloatGrid(1.0)
+                ):
                     # moved backward, but the grid is occupied by obstacle
                     return None, None
             else:
                 # keep moving until end
-                while not self.check_occupied(next_c_x_index + self.moving_direction, next_c_y_index, grid_map):
+                while not self.check_occupied(
+                    next_c_x_index + self.moving_direction, next_c_y_index, grid_map
+                ):
                     next_c_x_index += self.moving_direction
                 self.swap_moving_direction()
             return next_c_x_index, next_c_y_index
@@ -87,7 +90,7 @@ class SweepSearcher:
 
     def find_safe_turning_grid(self, c_x_index, c_y_index, grid_map):
 
-        for (d_x_ind, d_y_ind) in self.turing_window:
+        for d_x_ind, d_y_ind in self.turing_window:
 
             next_x_ind = d_x_ind + c_x_index
             next_y_ind = d_y_ind + c_y_index
@@ -124,11 +127,9 @@ class SweepSearcher:
         x_inds = []
         y_ind = 0
         if self.sweep_direction == self.SweepDirection.DOWN:
-            x_inds, y_ind = search_free_grid_index_at_edge_y(
-                grid_map, from_upper=True)
+            x_inds, y_ind = search_free_grid_index_at_edge_y(grid_map, from_upper=True)
         elif self.sweep_direction == self.SweepDirection.UP:
-            x_inds, y_ind = search_free_grid_index_at_edge_y(
-                grid_map, from_upper=False)
+            x_inds, y_ind = search_free_grid_index_at_edge_y(grid_map, from_upper=False)
 
         if self.moving_direction == self.MovingDirection.RIGHT:
             return min(x_inds), y_ind
@@ -210,10 +211,12 @@ def setup_grid_map(ox, oy, resolution, sweep_direction, offset_grid=10):
     goal_y = 0
     if sweep_direction == SweepSearcher.SweepDirection.UP:
         x_inds_goal_y, goal_y = search_free_grid_index_at_edge_y(
-            grid_map, from_upper=True)
+            grid_map, from_upper=True
+        )
     elif sweep_direction == SweepSearcher.SweepDirection.DOWN:
         x_inds_goal_y, goal_y = search_free_grid_index_at_edge_y(
-            grid_map, from_upper=False)
+            grid_map, from_upper=False
+        )
 
     return grid_map, x_inds_goal_y, goal_y
 
@@ -225,8 +228,7 @@ def sweep_path_search(sweep_searcher, grid_map, grid_search_animation=False):
         print("Cannot find start grid")
         return [], []
 
-    x, y = grid_map.calc_grid_central_xy_position_from_xy_index(c_x_index,
-                                                                c_y_index)
+    x, y = grid_map.calc_grid_central_xy_position_from_xy_index(c_x_index, c_y_index)
     px, py = [x], [y]
 
     fig, ax = None, None
@@ -234,21 +236,24 @@ def sweep_path_search(sweep_searcher, grid_map, grid_search_animation=False):
         fig, ax = plt.subplots()
         # for stopping simulation with the esc key.
         fig.canvas.mpl_connect(
-            'key_release_event',
-            lambda event: [exit(0) if event.key == 'escape' else None])
+            "key_release_event",
+            lambda event: [exit(0) if event.key == "escape" else None],
+        )
 
     while True:
-        c_x_index, c_y_index = sweep_searcher.move_target_grid(c_x_index,
-                                                               c_y_index,
-                                                               grid_map)
+        c_x_index, c_y_index = sweep_searcher.move_target_grid(
+            c_x_index, c_y_index, grid_map
+        )
 
         if sweep_searcher.is_search_done(grid_map) or (
-                c_x_index is None or c_y_index is None):
+            c_x_index is None or c_y_index is None
+        ):
             print("Done")
             break
 
         x, y = grid_map.calc_grid_central_xy_position_from_xy_index(
-            c_x_index, c_y_index)
+            c_x_index, c_y_index
+        )
 
         px.append(x)
         py.append(y)
@@ -262,82 +267,88 @@ def sweep_path_search(sweep_searcher, grid_map, grid_search_animation=False):
     return px, py
 
 
-def planning(ox, oy, resolution,
-             moving_direction=SweepSearcher.MovingDirection.RIGHT,
-             sweeping_direction=SweepSearcher.SweepDirection.UP,
-             ):
-    sweep_vec, sweep_start_position = find_sweep_direction_and_start_position(
-        ox, oy)
+def planning(
+    ox,
+    oy,
+    resolution,
+    moving_direction=SweepSearcher.MovingDirection.RIGHT,
+    sweeping_direction=SweepSearcher.SweepDirection.UP,
+):
+    sweep_vec, sweep_start_position = find_sweep_direction_and_start_position(ox, oy)
 
-    rox, roy = convert_grid_coordinate(ox, oy, sweep_vec,
-                                       sweep_start_position)
+    rox, roy = convert_grid_coordinate(ox, oy, sweep_vec, sweep_start_position)
 
-    grid_map, x_inds_goal_y, goal_y = setup_grid_map(rox, roy, resolution,
-                                                     sweeping_direction)
+    grid_map, x_inds_goal_y, goal_y = setup_grid_map(
+        rox, roy, resolution, sweeping_direction
+    )
 
-    sweep_searcher = SweepSearcher(moving_direction, sweeping_direction,
-                                   x_inds_goal_y, goal_y)
+    sweep_searcher = SweepSearcher(
+        moving_direction, sweeping_direction, x_inds_goal_y, goal_y
+    )
 
     px, py = sweep_path_search(sweep_searcher, grid_map)
 
-    rx, ry = convert_global_coordinate(px, py, sweep_vec,
-                                       sweep_start_position)
+    rx, ry = convert_global_coordinate(px, py, sweep_vec, sweep_start_position)
 
     print("Path length:", len(rx))
 
     return rx, ry
 
 
-def planning_animation(ox, oy, resolution):  # pragma: no cover
+def planning_animation(ox, oy, resolution, drone_enabled=True):  # pragma: no cover
     px, py = planning(ox, oy, resolution)
-    # action_client.py
-    print('start action')
-    client = actionlib.SimpleActionClient('launch', drone.msg.LaunchAction)
-    client.wait_for_server()
-    print('takeoff')
-    takeoffgoal = drone.msg.LaunchGoal(takeoff=True)
-    client.send_goal(takeoffgoal)
-    client.wait_for_result()
-    # Prints out the result of executing the action
-    print(client.get_result())
-    moveclient = actionlib.SimpleActionClient('move', drone.msg.MoveAction)
-    moveclient.wait_for_server()
+    if drone_enabled:
+        # action_client.py
+        print("start action")
+        client = actionlib.SimpleActionClient("launch", drone.msg.LaunchAction)
+        client.wait_for_server()
+        print("takeoff")
+        takeoffgoal = drone.msg.LaunchGoal(takeoff=True)
+        client.send_goal(takeoffgoal)
+        client.wait_for_result()
+        # Prints out the result of executing the action
+        print(client.get_result())
+        moveclient = actionlib.SimpleActionClient("move", drone.msg.MoveAction)
+        moveclient.wait_for_server()
 
-    last_x, last_y = 60, 60
-    # send coordinate data to drone
-    #for ipx, ipy in zip(px, py):
-    
+    last_x, last_y = px[0], py[0]
+    last_course = 0
+
     # animation
     if do_animation:
         for ipx, ipy in zip(px, py):
 
-
             plt.cla()
             # for stopping simulation with the esc key.
             plt.gcf().canvas.mpl_connect(
-                'key_release_event',
-                lambda event: [exit(0) if event.key == 'escape' else None])
+                "key_release_event",
+                lambda event: [exit(0) if event.key == "escape" else None],
+            )
             plt.plot(ox, oy, "-xb")
             plt.plot(px, py, "-r")
             plt.plot(ipx, ipy, "or")
-            print('x: %.2f y: %.2f' % (ipx, ipy))
+            course = calc_course(last_x, last_y, ipx, ipy)
+            rbearing = course - last_course
+            rbearing = normalize_angle(rbearing)
+
+            distance = euclidean_distance(last_x, last_y, ipx, ipy)
+            print("x1: %.2f y1: %.2f x2: %.2f y2: %.2f course: %.2f bear: %.2f dist: %.2f" % (last_x, last_y, ipx, ipy, course, rbearing, distance))
             plt.axis("equal")
             plt.grid(True)
             plt.pause(2.0)
 
-            if (ipy-last_y < 0):
-                moveclient.send_goal_and_wait(drone.msg.MoveGoal(target=Transform(Vector3(0, 0, 0), Quaternion(0, 0, -90, 0))))
-                time.sleep(5)
-                moveclient.send_goal_and_wait(drone.msg.MoveGoal(target=Transform(Vector3(ipy-last_y, 0, 0), Quaternion(0, 0, 0, 0))))
-            elif (ipy-last_y > 0):
-                moveclient.send_goal_and_wait(drone.msg.MoveGoal(target=Transform(Vector3(0, 0, 0), Quaternion(0, 0, 90, 0))))
-                time.sleep(5)
-                moveclient.send_goal_and_wait(drone.msg.MoveGoal(target=Transform(Vector3(ipy-last_y, 0, 0), Quaternion(0, 0, 0, 0))))
-            else:
-                moveclient.send_goal_and_wait(drone.msg.MoveGoal(target=Transform(Vector3(ipx-last_x, 0, 0), Quaternion(0, 0, 0, 0))))
-            time.sleep(5)
+            if drone_enabled:
+                #rotate
+                if (rbearing > 0):
+                    moveclient.send_goal_and_wait(drone.msg.MoveGoal(target=Transform(Vector3(0, 0, 0), Quaternion(0, 0, rbearing, 0))))
+                #move
+                moveclient.send_goal_and_wait(drone.msg.MoveGoal(target=Transform(Vector3(distance, 0, 0), Quaternion(0, 0, 0, 0))))
+            
+            
             last_x = ipx
             last_y = ipy
+            last_bearing = rbearing 
+            last_course = course
 
         plt.cla()
         plt.plot(ox, oy, "-xb")
@@ -346,6 +357,7 @@ def planning_animation(ox, oy, resolution):  # pragma: no cover
         plt.grid(True)
         plt.pause(0.1)
         plt.close()
+
 
 def main():  # pragma: no cover
     print("start!!")
@@ -356,10 +368,18 @@ def main():  # pragma: no cover
     # planning_animation(ox, oy, resolution)
 
     #rectangle map
-    ox = [0.0, 200.0, 200.0, 0.0, 0.0]
-    oy = [0.0, 0.0, 200.0, 200.0, 0.0]
-    resolution = 40.0
-    planning_animation(ox, oy, resolution)
+    #ox = [0.0, 200.0, 200.0, 0.0, 0.0]
+    #oy = [0.0, 0.0, 200.0, 200.0, 0.0]
+
+    ox = [0.0, 0.0, 300.0, 300.0, 200.0, 200.0, 100.0, 100.0, 0.0]
+    oy = [0.0, 300.0, 300.0, 0.0, 0.0, 100.0, 100.0, 0.0, 0.0]
+
+    #ox = [0.0, 200.0, 200.0, 100.0, 100.0, 0.0,   0]
+    #oy = [0.0, 0,     200.0, 200.0, 100.0, 100.0, 0]
+
+
+    resolution = 20.0
+    planning_animation(ox, oy, resolution, False)
 
     # ox = [0.0, 20.0, 50.0, 200.0, 130.0, 40.0, 0.0]
     # oy = [0.0, -80.0, 0.0, 30.0, 60.0, 80.0, 0.0]
@@ -371,4 +391,27 @@ def main():  # pragma: no cover
     print("done!!")
 
 
-if __name__ == '__main
+# calculate euclidian distance between coordinates x1,y1 and x2,y2
+def euclidean_distance(x1, y1, x2, y2):
+    return math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2)
+    #return math.sqrt((20) ** 2 + (140) ** 2)
+
+# calculate angle between two coordinates x1,y1 and x2,y2
+def calc_course(x1, y1, x2, y2):
+    #return math.atan2(y2 - y1, x2 - x1) * 180 / math.pi;
+    return (math.degrees(math.atan2(y2 - y1, x2 - x1)) *(-1)) % 360;
+
+
+def normalize_angle(angle):
+    if angle > 180.0:
+        angle -= 360.0
+    elif angle < -180.0:
+        angle += 360.0
+    return angle
+
+if __name__ == "__main__":
+    try:
+        rospy.init_node("test_planning")
+        main()
+    except rospy.ROSInterruptException:
+        pass

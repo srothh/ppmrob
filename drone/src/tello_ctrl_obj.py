@@ -1,10 +1,6 @@
 # tello SDK boiler plate
+# usig tello library
 
-import threading 
-import socket
-import sys
-import time
-import select
 from tello import Tello
 
 def main():
@@ -12,6 +8,7 @@ def main():
     print('type quit to quit.\r\n')
 
     tello = Tello()
+    tello.connect()
 
     while True: 
         try:
@@ -22,7 +19,7 @@ def main():
             if 'quit' in msg:
                 tello.end()
                 break
-            tello.command(msg)
+            print(tello.command_str(msg))
 
         except KeyboardInterrupt:
             print ('\n . . .\n')
