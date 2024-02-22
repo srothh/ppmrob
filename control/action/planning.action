@@ -1,0 +1,3 @@
+float32[] waypoints    # list of waypoints from the planning
+---
+bool success

@@ -218,7 +218,7 @@
     <child link="propeller1"/>
     <origin rpy="0 0 0" xyz="0.15588457268119896 0.08999999999999998 0.016"/>
     <axis xyz="0 0 1"/>
-    <limit effort="0" lower="-6.2830" upper="6.283" velocity="0.0"/>
+    <limit effort="2" lower="-6.2830" upper="6.283" velocity="2.0"/>
   </joint>
   <link name="propeller3">
     <visual>
@@ -245,7 +245,7 @@
     <child link="propeller3"/>
     <origin rpy="0 0 0" xyz="-0.15588457268119893 0.09000000000000005 0.016"/>
     <axis xyz="0 0 1"/>
-    <limit effort="0" lower="-6.2830" upper="6.283" velocity="0.0"/>
+    <limit effort="2" lower="-6.2830" upper="6.283" velocity="2.0"/>
   </joint>
   <link name="propeller4">
     <visual>
@@ -272,7 +272,7 @@
     <child link="propeller4"/>
     <origin rpy="0 0 0" xyz="-0.15588457268119899 -0.08999999999999994 0.016"/>
     <axis xyz="0 0 1"/>
-    <limit effort="0" lower="-6.2830" upper="6.283" velocity="0.0"/>
+    <limit effort="2" lower="-6.2830" upper="6.283" velocity="2.0"/>
   </joint>
   <link name="propeller6">
     <visual>
@@ -299,7 +299,7 @@
     <child link="propeller6"/>
     <origin rpy="0 0 0" xyz="0.15588457268119899 -0.08999999999999994 0.016"/>
     <axis xyz="0 0 1"/>
-    <limit effort="0" lower="-6.2830" upper="6.283" velocity="0.0"/>
+    <limit effort="2" lower="-6.2830" upper="6.283" velocity="2.0"/>
   </joint>
   <!-- Transmissions -->
   <transmission name="transmission_propeller1">

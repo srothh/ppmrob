@@ -1,0 +1,5 @@
+float32[] start_pose    # start position
+float32[] goal_pose     # temporal goal
+---
+float32[] planned_path  # the temporal planned path
+bool success

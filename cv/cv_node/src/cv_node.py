@@ -42,13 +42,13 @@ def cv_node():
     rospy.init_node('cv_node', anonymous=True)
     # UNCOMMENT THIS TO TEST THE CLASSIFY_IMAGE FUNCTION (or0001.jpg needs to be in src directory)
     # DELETE THIS FOR TESTING WITH DRONE
-    frame = cv2.imread('/catkin_ws/src/cv/src/or0001.jpg')
-    window_name = 'contours'
-    cv2.namedWindow(window_name, cv2.WINDOW_NORMAL)
-    img_processing(frame, window_name)
+    # frame = cv2.imread('/catkin_ws/src/cv/src/or0001.jpg')
+    # window_name = 'contours'
+    # cv2.namedWindow(window_name, cv2.WINDOW_NORMAL)
+    # img_processing(frame, window_name)
     # STOP DELETE
     # Subscribe to the 'chatter' topic and register the callback function
-    rospy.Subscriber('camera/forward', Image, callback, window_name)
+    # rospy.Subscriber('camera/forward', Image, callback, window_name)
     print("Started CV NODE")
     # Spin to keep the script from exiting
     rospy.spin()
