@@ -11,7 +11,7 @@ from sensor import ImageSensor
 
 
 
-def drone_node(tello):
+def drone_node(drone):
     # Initialize the ROS node
     rospy.init_node('drone', anonymous=True)
     rospy.loginfo("starting drone node")
