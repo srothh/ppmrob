@@ -92,7 +92,7 @@ class Tello:
     # blocking method to send command and return with the string result
     # wait for response by pulling event
     # TODO progress callback
-    def command_str(self, cmd, timeout=10) -> str:
+    def command_str(self, cmd, timeout=30) -> str:
         result = None
         self.send_command(cmd)
         self.response_received.wait(timeout=timeout)
@@ -106,7 +106,7 @@ class Tello:
 
 
     # blocking method sends command and returns True if success
-    def command(self, cmd, timeout=10) -> bool:
+    def command(self, cmd, timeout=30) -> bool:
         result = False
         return True if self.command_str(cmd, timeout) == 'ok' else False
 
