@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+import math
+
 import rospy
 from control.scripts.action.drone_action_command import DroneActionCommand
 from std_msgs.msg import String
@@ -7,6 +9,8 @@ from std_msgs.msg import String
 class DroneControl:
     def __init__(self):
         # Class Variables from different nodes
+        self.prev_x = None
+        self.prev_y = None
         self.drone_data = None
         self.planning_data = None
         self.mapping_data = None
@@ -25,14 +29,33 @@ class DroneControl:
 
     def planning_callback(self, planning_data):
         for point in planning_data:
-            x1, y1, x2, y2, course, bear, dist = point
-            if bear == 0:
-                self.drone_action_command.send_action_command(dist, 0.0, 0.0, 0.0, 0.0, 0.0)
-            elif bear != 0:
-                self.drone_action_command.send_action_command(0.0, 0.0, 0.0, 0.0, 0.0, bear)
+            x1, y1 = point
+            degree_angle, distance = self.calculate_rotation_and_translation(x1, y1)
+            if degree_angle == 0.0:
+                self.drone_action_command.send_action_command(distance, 0.0, 0.0, 0.0, 0.0, 0.0)
+            else:
+                self.drone_action_command.send_action_command(0.0, 0.0, 0.0, 0.0, 0.0, degree_angle)
 
-            ##TODO: Hier weitere Bedingunge hinzufügen
+            ##TODO: Hier evtl weitere Bedingunge hinzufügen
 
+    def calculate_rotation_and_translation(self, current_x, current_y):
+        if self.prev_x is None or self.prev_y is None:
+            self.prev_x = current_x
+            self.prev_y = current_y
+            degree_angle = 0.0
+            distance = 0
+        else:
+            dx = current_x - self.prev_x
+            dy = current_y - self.prev_y
+            hypoth = math.sqrt(dx ** 2 + dy ** 2)
+            sine = dy / hypoth
+            rad_angle = math.asin(sine)
+            degree_angle = math.degrees(rad_angle)
+            distance = dy
+
+            self.prev_x = current_x
+            self.prev_y = current_y
+        return degree_angle, distance
 
     def main_process(self):
         # 10 Hz Rate
