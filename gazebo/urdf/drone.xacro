@@ -1,0 +1,390 @@
+<?xml version="1.0"?>
+
+<robot name="custom_drone" xmlns:xacro="http://www.ros.org/wiki/xacro">
+<!-- Materials -->
+  <material name="gray">
+      <color rgba="0.5 0.5 0.5 1.0"/>
+  </material>
+  <material name="white">
+      <color rgba="0.9 0.9 0.9 1.0"/>
+  </material>
+  <material name="red">
+      <color rgba="1.0 0 0 1.0"/>
+  </material>
+  <material name="black" >
+    <color rgba="0.0274 0.0509 0.0509 1.0" />
+  </material>
+  <material name="orange">
+    <color rgba="${255/255} ${108/255} ${10/255} 1.0"/>
+  </material>
+  <material name="arm_material">
+    <color rgba="0.0274 0.0509 0.0509 1.0"/>
+  </material>
+
+  <!-- properties -->
+  <xacro:property name="propeller_radius" value="0.1"/>
+  <xacro:property name="propeller_radius_smaller" value="0.07"/>
+  <xacro:property name="propeller_height" value="0.01"/>
+  <xacro:property name="propeller_height_offset" value="0.025"/>
+  <xacro:property name="propeller_mass" value="0.01"/>
+  <xacro:property name="frame_radius" value="0.1"/>
+  <xacro:property name="arm_radius" value="0.005"/>
+  <xacro:property name="arm_length" value="0.15"/>
+  <xacro:property name="arm_mass" value="0.01"/>
+  <xacro:property name="frame_height" value="0.05"/>
+  <xacro:property name="frame_mass" value="0.88"/>
+  <xacro:property name="arm_length_y" value="0.10"/>
+  <xacro:property name="body_height" value="0.02"/>
+
+  <!-- Body link -->
+  <link name="body">
+      <visual>
+          <origin xyz="0 0 0.01"/>
+          <geometry>
+              <box size="0.07 0.02 0.02"/>
+          </geometry>
+          <material name="white"/>
+      </visual>
+      <visual>
+          <origin xyz="0 0 -0.01"/>
+          <geometry>
+              <box size="0.07 0.02 0.02"/>
+          </geometry>
+          <material name="white"/>
+      </visual>
+      <!-- <visual>
+          <origin xyz="0.05 -0.05 0"/>
+          <geometry>
+              <cylinder length="0.01" radius="0.045"/>
+          </geometry>
+          <material name="Gazebo/black"/>
+      </visual>
+      <visual>
+          <origin xyz="-0.05 0.05 0"/>
+          <geometry>
+              <cylinder length="0.01" radius="0.045"/>
+          </geometry>
+          <material name="black"/>
+      </visual>
+      <visual>
+          <origin xyz="-0.05 -0.05 0"/>
+          <geometry>
+              <cylinder length="0.01" radius="0.045"/>
+          </geometry>
+          <material name="black"/>
+      </visual>
+      <visual>
+          <origin xyz="0.05 0.05 0"/>
+          <geometry>
+              <cylinder length="0.01" radius="0.045"/>
+          </geometry>
+          <material name="black"/>
+      </visual> -->
+      <inertial>
+          <mass value="0.1"/>
+          <inertia ixx="0.000290833" ixy="0" ixz="0" iyy="0.00054" iyz="0" izz="0.000290833"/>
+      </inertial>
+      <collision name="collision">
+          <geometry>
+              <box size="0.18 0.18 0.05"/>
+          </geometry>
+      </collision>
+  </link>
+
+  <!-- Camera link -->
+  <link name="camera_link">
+      <visual>
+          <origin xyz="0 0 0"/>
+          <geometry>
+              <sphere radius="0.01"/>
+          </geometry>
+          <material name="red"/>
+      </visual>
+      <collision>
+          <geometry>
+              <sphere radius="0.01"/>
+          </geometry>
+      </collision>
+      <inertial>
+          <mass value="1e-5"/>
+          <inertia ixx="1e-6" ixy="0" ixz="0" iyy="1e-6" iyz="0" izz="1e-6"/>
+      </inertial>
+  </link>
+
+  <xacro:macro name="cylinder_inertial" params="radius height mass *origin">
+    <inertial>
+      <mass value="${mass}"/>
+      <xacro:insert_block name="origin"/>
+      <inertia
+        ixx="${0.0833333 * mass * (3 * radius * radius + height * height)}"
+        ixy="0.0"
+        ixz="0.0"
+        iyy="${0.0833333 * mass * (3 * radius * radius + height * height)}"
+        iyz="0.0"
+        izz="${0.5 * mass * radius * radius}"
+      />
+    </inertial>
+  </xacro:macro>
+
+  <!-- Propeller -->
+  <xacro:macro name="propeller" params="i">
+    <link name="propeller${i}">
+      <visual>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry>
+          <!-- <cylinder radius="${propeller_radius_smaller}" length="${propeller_height}"/> -->
+          <box size="${0.03302/3} ${0.20*0.8} ${0.001}" />
+        </geometry>
+        <material name="propeller_material"/>
+      </visual>
+      <collision>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry>
+          <!-- <cylinder radius="${propeller_radius_smaller}" length="${propeller_height}"/> -->
+          <box size="${0.03302/3} ${0.20*0.8} ${0.001}" />
+        </geometry>
+      </collision>
+      <xacro:cylinder_inertial radius="${propeller_radius_smaller}" height="${propeller_height}" mass="${propeller_mass}">
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+      </xacro:cylinder_inertial>
+    </link>
+    <joint name="arm${i}_propeller${i}" type="revolute">
+      <parent link="arm${i}"/>
+      <child link="propeller${i}"/>
+      <origin xyz="${cos((i-1)*pi/3+pi/6)*(frame_radius+0.08)} ${sin((i-1)*pi/3+pi/6)*(0.08+arm_length_y)} ${0.04/2-arm_radius}" rpy="0 0 0"/>
+      <axis xyz="0 0 1"/>
+      <limit lower="-2.0" upper="2.0" effort="1000" velocity="3.0"/>
+    </joint>
+    <!-- <transmission name="transmission_propeller${i}">
+      <type>transmission_interface/SimpleTransmission</type>
+      <joint name="arm${i}_propeller${i}">
+        <hardwareInterface>EffortJointInterface</hardwareInterface>
+      </joint>
+      <actuator name="propeller${i}_motor">
+        <hardwareInterface>EffortJointInterface</hardwareInterface>
+        <mechanicalReduction>1</mechanicalReduction>
+      </actuator>
+    </transmission> -->
+  </xacro:macro>
+
+  <xacro:macro name="arm" params="i">
+    <link name="arm${i}">
+      <visual>
+        <origin xyz="${cos((i-1)*pi/3+pi/6)*(frame_radius+0.10/8)} ${sin((i-1)*pi/3+pi/6)*(0.05+arm_length_y/2)} ${body_height/2-arm_radius}" rpy="0 ${pi/2} ${(i-1)*pi/3+pi/6}"/>
+        <geometry>
+          <cylinder radius="${arm_radius}" length="${arm_length}"/>
+        </geometry>
+        <material name="arm_material"/>
+      </visual>
+      <collision>
+        <origin xyz="${cos((i-1)*pi/3+pi/6)*(frame_radius+0.10/8)} ${sin((i-1)*pi/3+pi/6)*(0.05+arm_length_y/2)} ${body_height/2-arm_radius}" rpy="0 ${pi/2} ${(i-1)*pi/3+pi/6}"/>
+        <geometry>
+          <cylinder radius="${arm_radius}" length="${arm_length}"/>
+        </geometry>
+      </collision>
+      <xacro:cylinder_inertial radius="${arm_radius}" height="${arm_length}" mass="${arm_mass}">
+        <origin xyz="${cos((i-1)*pi/3+pi/6)*(frame_radius+0.10/8)} ${sin((i-1)*pi/3+pi/6)*(0.05+arm_length_y/2)} ${body_height/2-arm_radius}" rpy="0 ${pi/2} ${(i-1)*pi/3+pi/6}"/>
+      </xacro:cylinder_inertial>
+    </link>
+   
+    <joint name="frame_arm${i}" type="fixed">
+      <parent link="body"/>
+      <child link="arm${i}"/>
+    </joint>
+   
+    <gazebo reference="arm${i}">
+      <material>Gazebo/Grey</material>
+    </gazebo>
+  </xacro:macro>
+
+  <!-- Fixed joint -->
+  <joint name="camera_joint" type="fixed">
+      <origin xyz="0.035 0 0" rpy="0 0 0"/>  <!-- TODO fix origin -->
+      <parent link="body"/>
+      <child link="camera_link"/>
+  </joint>
+
+  <!-- Gazebo references -->
+  <gazebo reference="body">
+    <material>Gazebo/Orange</material>
+  </gazebo>
+
+  <!--Drone arms -->
+  <xacro:arm i="1"/>
+  <xacro:arm i="3"/>
+  <xacro:arm i="4"/>
+  <!-- <xacro:arm i="2"/> -->
+  <!-- <xacro:arm i="5"/> -->
+  <xacro:arm i="6"/>
+
+  <xacro:propeller i="1"/>
+  <xacro:propeller i="3"/>
+  <xacro:propeller i="4"/>
+  <xacro:propeller i="6"/>
+
+  <!-- Transmissions -->
+
+  <transmission name="transmission_propeller1">
+    <type>transmission_interface/SimpleTransmission</type>
+    <joint name="arm1_propeller1">
+      <hardwareInterface>EffortJointInterface</hardwareInterface>
+    </joint>
+    <actuator name="propeller1_motor">
+      <hardwareInterface>EffortJointInterface</hardwareInterface>
+      <mechanicalReduction>1</mechanicalReduction>
+    </actuator>
+  </transmission>
+
+  <transmission name="transmission_propeller1">
+    <type>transmission_interface/SimpleTransmission</type>
+    <joint name="arm1_propeller1">
+      <hardwareInterface>EffortJointInterface</hardwareInterface>
+    </joint>
+    <actuator name="propeller1_motor">
+      <hardwareInterface>EffortJointInterface</hardwareInterface>
+      <mechanicalReduction>1</mechanicalReduction>
+    </actuator>
+  </transmission>
+
+  <transmission name="transmission_propeller3">
+    <type>transmission_interface/SimpleTransmission</type>
+    <joint name="arm3_propeller3">
+      <hardwareInterface>EffortJointInterface</hardwareInterface>
+    </joint>
+    <actuator name="propeller3_motor">
+      <hardwareInterface>EffortJointInterface</hardwareInterface>
+      <mechanicalReduction>1</mechanicalReduction>
+    </actuator>
+  </transmission>
+
+  <transmission name="transmission_propeller4">
+    <type>transmission_interface/SimpleTransmission</type>
+    <joint name="arm4_propeller4">
+      <hardwareInterface>EffortJointInterface</hardwareInterface>
+    </joint>
+    <actuator name="propeller4_motor">
+      <hardwareInterface>EffortJointInterface</hardwareInterface>
+      <mechanicalReduction>1</mechanicalReduction>
+    </actuator>
+  </transmission>
+
+  <transmission name="transmission_propeller6">
+    <type>transmission_interface/SimpleTransmission</type>
+    <joint name="arm6_propeller6">
+      <hardwareInterface>EffortJointInterface</hardwareInterface>
+    </joint>
+    <actuator name="propeller6_motor">
+      <hardwareInterface>EffortJointInterface</hardwareInterface>
+      <mechanicalReduction>1</mechanicalReduction>
+    </actuator>
+  </transmission>
+
+
+  <!-- Tello plugin for Gazebo -->
+  <gazebo>
+      <!-- <gazebo>
+        <plugin name="gazebo_ros_control" filename="libgazebo_ros_control.so">
+          <robotNamespace>gazebo</robotNamespace>
+          <robotSimType>gazebo_ros_control/DefaultRobotHWSim</robotSimType>
+        </plugin>
+      </gazebo> -->
+      <!-- <plugin name="ControlPlugin" filename="libcontrol_plugin.so">
+          <parameter name="use_sim_time" type="bool">1</parameter>
+          <link_name>body</link_name>
+          <center_of_mass>0 0 0</center_of_mass>
+      </plugin>
+      <plugin name="BatteryPlugin" filename="libbattery_plugin.so">
+          <parameter name="use_sim_time" type="bool">1</parameter>
+          <link_name>body</link_name>
+          <center_of_mass>0 0 0</center_of_mass>
+      </plugin> -->
+      <plugin name="gazebo_ros_control" filename="libgazebo_ros_control.so">
+        <robotNamespace>gazebo</robotNamespace>
+        <controlPeriod>0.002</controlPeriod>
+        <robotSimType>gazebo_ros_control/DefaultRobotHWSim</robotSimType>
+        <legacyModeNS>true</legacyModeNS>
+        <alwaysOn>true</alwaysOn>
+        <updateRate>1000.0</updateRate>
+        <joint name="arm${1}_propeller${1}">
+          <pid>
+            <p>1000.0</p>
+            <i>0.01</i>
+            <d>0.01</d>
+            <iMax>1000.0</iMax>
+            <iMin>-1000.0</iMin>
+            <cmdMax>1000.0</cmdMax>
+            <cmdMin>-1000.0</cmdMin>
+          </pid>
+        </joint>
+        <joint name="arm${3}_propeller${3}">
+          <pid>
+            <p>1000.0</p>
+            <i>0.01</i>
+            <d>0.01</d>
+            <iMax>1000.0</iMax>
+            <iMin>-1000.0</iMin>
+            <cmdMax>1000.0</cmdMax>
+            <cmdMin>-1000.0</cmdMin>
+          </pid>
+        </joint>
+        <joint name="arm${4}_propeller${4}">
+          <pid>
+            <p>1000.0</p>
+            <i>0.01</i>
+            <d>0.01</d>
+            <iMax>1000.0</iMax>
+            <iMin>-1000.0</iMin>
+            <cmdMax>1000.0</cmdMax>
+            <cmdMin>-1000.0</cmdMin>
+          </pid>
+        </joint>
+        <joint name="arm${6}_propeller${6}">
+          <pid>
+            <p>1000.0</p>
+            <i>0.01</i>
+            <d>0.01</d>
+            <iMax>1000.0</iMax>
+            <iMin>-1000.0</iMin>
+            <cmdMax>1000.0</cmdMax>
+            <cmdMin>-1000.0</cmdMin>
+          </pid>
+        </joint>
+      </plugin>
+  </gazebo>
+  <gazebo reference="camera_link">
+    <sensor type="camera" name="camera1">
+      <update_rate>30.0</update_rate>
+      <camera name="head">
+        <horizontal_fov>1.3962634</horizontal_fov>
+        <image>
+          <width>800</width>
+          <height>800</height>
+          <format>R8G8B8</format>
+        </image>
+        <clip>
+          <near>0.02</near>
+          <far>300</far>
+        </clip>
+        <noise>
+          <type>gaussian</type>
+          <mean>0.0</mean>
+          <stddev>0.007</stddev>
+        </noise>
+      </camera>
+      <plugin name="camera_controller" filename="libgazebo_ros_camera.so">
+        <alwaysOn>true</alwaysOn>
+        <updateRate>0.0</updateRate>
+        <cameraName>gazebo/camera1</cameraName>
+        <imageTopicName>image_raw</imageTopicName>
+        <cameraInfoTopicName>camera_info</cameraInfoTopicName>
+        <frameName>camera_link</frameName>
+        <hackBaseline>0.07</hackBaseline>
+        <distortionK1>0.0</distortionK1>
+        <distortionK2>0.0</distortionK2>
+        <distortionK3>0.0</distortionK3>
+        <distortionT1>0.0</distortionT1>
+        <distortionT2>0.0</distortionT2>
+      </plugin>
+    </sensor>
+  </gazebo>
+</robot>

@@ -9,7 +9,7 @@ BATTERY_THRESHOLD_IN_PERCENT = 10
 BATTERY_DEFAULT_RATE = 0.20  # Send every 5 seconds
 
 
-class BatterySubscriber:
+class BatteryManager:
 
     def start(self):
         pub = rospy.Publisher('/battery/return_signal', Bool, queue_size=10) # Bool is the message type
@@ -33,8 +33,8 @@ class BatterySubscriber:
 
 if __name__ == '__main__':
     try:
-        rospy.init_node('battery_node')  # register the node with roscore, allowing it to communicate with other nodes
-        battery_subscriber = BatterySubscriber()
+        rospy.init_node('battery')  # register the node with roscore, allowing it to communicate with other nodes
+        battery_subscriber = BatteryManager()
         battery_subscriber.start()
     except rospy.ROSInterruptException:
         pass

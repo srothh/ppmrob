@@ -67,6 +67,7 @@ $ rosrun drone drone_node.py
 
 $ rosrun drone image_listener.py
 
+$ rosrun tello cv_node.py
 # start movement action client
 
 $ rosrun drone action_client.py
