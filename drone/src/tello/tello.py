@@ -2,7 +2,7 @@ import socket, select
 import threading
 import time
 import rospy
-from threading import Thread, Lock
+from threading import Event, Thread, Lock
 from collections import deque
 import av
 import numpy as np
@@ -23,38 +23,70 @@ class Tello:
     # VideoCapture object
     background_frame_read: Optional['BackgroundFrameRead'] = None
 
+    response_received = Event()
+    responses = []
+    commands = []
 
-    def __init__(self):
-        self.sock.setblocking(0)
-        self.sock.bind(self.locaddr)  
+    response_thread = None
+    state_thread = None
 
-        self.state_recv_socket.bind(('', self.state_port))      
+    command_timeout = 10
 
-    def connect(self):
+    running = True
+
+    def __init__(self, command_timeout = 10):
+        
+        self.command_timeout = command_timeout
+
+        # only words with thread.select
+        #self.sock.setblocking(0)
+        self.sock.bind(self.locaddr)
+
+        self.state_recv_socket.bind(('', self.state_port))
+        
+
+    def connect(self) -> bool:
         self.connected = False
+        
+        response_thread = Thread(target = self.responseWorker)
+        response_thread.start()
         # block till drone is connected
         while not self.connected:
             self.connected = self.command('command', timeout=1) 
             time.sleep(1)
-        
         self.connected = True
-        rospy.loginfo("connected, battery: %s" % self.send_command_with_return('battery?'))
+        rospy.loginfo("connected, battery: %s" % self.command_str('battery?'))
+        #rospy.loginfo("set speed: %s" % self.command_str('speed 20'))
 
-        thread = threading.Thread(target = self.stateWorker)
-        thread.start()
+        state_thread = Thread(target = self.stateWorker)
+        state_thread.start()
+
+        return self.connected
+
+    # thread worder receiving responses to commands
+    # if response received sets event
+    def responseWorker(self):
+        print ("Listener is waiting for responses...")
+        while self.running:
+            try:
+                data, server = self.sock.recvfrom(1518)
+                response = data.decode(encoding="utf-8")
+                #print(response)
+                self.responses.append(response.strip())
+                self.response_received.set()
+            except Exception as e:
+                print('\nError %s' % e)
+                #break
+    
 
     def registerStateHandler(self, callback):
         self.state_handlers.append(callback)
 
-    def stateHandler(self, callbacks):
-        rospy.loginfo('starting state handler')
-        self.stateHandler = StateHandler(callbacks)
-        with socketserver.UDPServer(('', self.state_port), self.stateHandler) as server:
-            server.serve_forever()
-
+    # thread worder for processing state messages
+    # calls registered callbacks every time a state message arrives
     def stateWorker(self):
-        rospy.loginfo("listening for state")
-        while True:
+        rospy.loginfo("listening for state on port %d" % self.state_port)
+        while self.running:
             try:
                 data, server = self.state_recv_socket.recvfrom(1518)
                 state = State(data.decode(encoding="utf-8"))
@@ -66,8 +98,31 @@ class Tello:
                 break
 
 
+    # blocking method to send command and return with the string result
+    # wait for response by pulling event
+    # TODO progress callback
+    def command_str(self, cmd, timeout=30) -> str:
+        result = None
+        self.send_command(cmd)
+        self.response_received.wait(timeout=timeout)
+        if self.responses:
+            result = self.responses.pop()
+            cmd = self.commands.pop()
+            print('\n%s -> %s' % (cmd, result))
+        else:
+            print ('\n timeout')
+        return result
+
+
+    # blocking method sends command and returns True if success
+    def command(self, cmd, timeout=30) -> bool:
+        result = False
+        return True if self.command_str(cmd, timeout) == 'ok' else False
+
     ## blocking method to send command and return with boolen success
-    def command(self, cmd, timeout=10) -> bool:
+    ## wait for response using thread.select
+    ## deprecated: use command() instead
+    def command_sync(self, cmd, timeout=10) -> bool:
         result = False
         # send command
         self.send_command(cmd)
@@ -95,6 +150,8 @@ class Tello:
         return result
 
     ## blocking method to send command and return with the string result
+    ## deprecated: use command_str() instead
+
     def send_command_with_return(self, cmd, timeout=10) -> str:
         result = ''
         self.send_command(cmd)
@@ -116,11 +173,15 @@ class Tello:
     ## send command to drone and return imidiately
     def send_command(self, cmd):
         sent = self.sock.sendto(cmd.encode(encoding="utf-8"), self.tello_address)
+        self.commands.append(cmd)
+        self.response_received.clear()
         return sent
-    def execute_commands(self, cmds):
+    
+    ## execute multiple commands after each other
+    def execute_commands(self, cmds, sleep=1):
         for cmd in cmds:
             self.command(cmd)
-            time.sleep(1)
+            time.sleep(sleep)
         return True
 
     #image frame getter copied from dijtello lib
@@ -137,8 +198,78 @@ class Tello:
                 self.background_frame_read.start()
             return self.background_frame_read
 
+    # TODO: test
+    def terminate(self):
+        #self.response_thread.join()
+        #self.state_thread.join()
+        self.running = False
+        self.background_frame_read.stop()
 
 
+class State:
+
+    state_dict = {}
+
+
+    # Conversion functions for state protocol fields
+    INT_STATE_FIELDS = (
+        # Tello EDU with mission pads enabled only
+        'mid', 'x', 'y', 'z',
+        # 'mpry': (custom format 'x,y,z')
+        # Common entries
+        'pitch', 'roll', 'yaw',
+        'vgx', 'vgy', 'vgz',
+        'templ', 'temph',
+        'tof', 'h', 'bat', 'time'
+    )
+    FLOAT_STATE_FIELDS = ('baro', 'agx', 'agy', 'agz')
+
+    state_field_converters: Dict[str, Union[Type[int], Type[float]]]
+    state_field_converters = {key : int for key in INT_STATE_FIELDS}
+    state_field_converters.update({key : float for key in FLOAT_STATE_FIELDS})
+        
+
+    def __init__(self, raw=''):
+        self.state_dict = self.parse(raw)
+
+    def get(self, key):
+        return self.state_dict.get(key)
+
+    def parse(self, state: str) -> Dict[str, Union[int, float, str]]:
+        """Parse a state line to a dictionary
+        Internal method, you normally wouldn't call this yourself.
+        """
+        state = state.strip()
+        #print('Raw state data: {}'.format(state))
+
+        if state == 'ok':
+            return {}
+
+        self.state_dict = {}
+        for field in state.split(';'):
+            split = field.split(':')
+            if len(split) < 2:
+                continue
+
+            key = split[0]
+            value: Union[int, float, str] = split[1]
+
+            if key in self.state_field_converters:
+                num_type = self.state_field_converters[key]
+                try:
+                    value = num_type(value)
+                except ValueError as e:
+                    print('Error parsing state value for {}: {} to {}'
+                                       .format(key, value, num_type))
+                    print(e)
+                    continue
+
+            self.state_dict[key] = value
+
+        return self.state_dict
+    
+    def __str__(self):
+        return str(self.state_dict)
 
 class BackgroundFrameRead:
     """
@@ -219,78 +350,28 @@ class BackgroundFrameRead:
         """
         self.stopped = True
 
-class State:
+def main():
+    print('\r\n\r\nTello Control.\r\n')
+    print('type quit to quit.\r\n')
 
-    state_dict = {}
+    tello = Tello()
+    tello.connect()
 
+    while True: 
+        try:
+            print ('$', end='', flush=True)
+            msg = input("")
+            if not msg:
+                break
+            if 'quit' in msg:
+                tello.end()
+                break
+            print(tello.command_str(msg))
 
-    # Conversion functions for state protocol fields
-    INT_STATE_FIELDS = (
-        # Tello EDU with mission pads enabled only
-        'mid', 'x', 'y', 'z',
-        # 'mpry': (custom format 'x,y,z')
-        # Common entries
-        'pitch', 'roll', 'yaw',
-        'vgx', 'vgy', 'vgz',
-        'templ', 'temph',
-        'tof', 'h', 'bat', 'time'
-    )
-    FLOAT_STATE_FIELDS = ('baro', 'agx', 'agy', 'agz')
+        except KeyboardInterrupt:
+            print ('\n . . .\n')
+            tello.end()
+            break
 
-    state_field_converters: Dict[str, Union[Type[int], Type[float]]]
-    state_field_converters = {key : int for key in INT_STATE_FIELDS}
-    state_field_converters.update({key : float for key in FLOAT_STATE_FIELDS})
-        
-
-    def __init__(self, raw=''):
-        self.state_dict = self.parse(raw)
-
-    def get(self, key):
-        return self.state_dict.get(key)
-
-    def parse(self, state: str) -> Dict[str, Union[int, float, str]]:
-        """Parse a state line to a dictionary
-        Internal method, you normally wouldn't call this yourself.
-        """
-        state = state.strip()
-        #print('Raw state data: {}'.format(state))
-
-        if state == 'ok':
-            return {}
-
-        self.state_dict = {}
-        for field in state.split(';'):
-            split = field.split(':')
-            if len(split) < 2:
-                continue
-
-            key = split[0]
-            value: Union[int, float, str] = split[1]
-
-            if key in self.state_field_converters:
-                num_type = self.state_field_converters[key]
-                try:
-                    value = num_type(value)
-                except ValueError as e:
-                    print('Error parsing state value for {}: {} to {}'
-                                       .format(key, value, num_type))
-                    print(e)
-                    continue
-
-            self.state_dict[key] = value
-
-        return self.state_dict
-    
-    def __str__(self):
-        return str(self.state_dict)
-
-class StateHandler(socketserver.BaseRequestHandler):
-
-    def __init__(self, callbacks):
-        self._callbacks = callbacks
-
-    def handle(self):
-        data = self.request[0].strip()
-        state = State(data)
-        for callback in self._callbacks:
-            callback(state)
+if __name__ == '__main__':
+    main()

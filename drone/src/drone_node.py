@@ -10,16 +10,14 @@ from action import CommandAction
 from sensor import ImageSensor
 from sensor import TwistSensor
 from sensor import BatterySensor
+import common.config.defaults
 
 
-
-def drone_node():
+def drone_node(drone):
     # Initialize the ROS node
     rospy.init_node('drone', anonymous=True)
     rospy.loginfo("starting drone node")
 
-    # init tello driver
-    drone = Tello()
 
     drone.connect()
     
@@ -49,7 +47,12 @@ def drone_node():
     rospy.spin()
 
 if __name__ == '__main__':
+    drone = None
     try:
-        drone_node()
+        # init tello driver
+        drone = Tello(command_timeout = common.config.defaults.drone_command_timeout)
+        drone_node(drone)
     except rospy.ROSInterruptException:
+        drone.terminate()
+        rospy.loginfo("drone node terminated")
         pass

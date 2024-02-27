@@ -3,6 +3,7 @@
 import rospy
 from sensor_msgs.msg import Image
 from cv_bridge import CvBridge, CvBridgeError
+import common.config.defaults
 
 class ImageSensor():
 
@@ -20,10 +21,11 @@ class ImageSensor():
 
 
     def __init__(self, drone):
-        self._publisher = rospy.Publisher('/drone/camera', Image, queue_size=10)
+        self._publish_to_topic = common.config.defaults.drone_image_sensor_publish_topic_name
+        self._publisher = rospy.Publisher(self._publish_to_topic, Image, queue_size=10)
         self._drone = drone
         self._br = CvBridge()
         self._counter = 0
-        drone.command('streamon')
-        rospy.loginfo('ImageSensor initalized')
+        resp = drone.command('streamon')
+        rospy.loginfo('ImageSensor initalized: %s' % resp)
 

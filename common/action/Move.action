@@ -1,7 +1,0 @@
-geometry_msgs/Transform target
----
-#result definition
-bool success
----
-#feedback
-bool progress

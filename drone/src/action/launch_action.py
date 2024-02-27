@@ -2,18 +2,18 @@ import rospy
 
 
 import actionlib 
-import drone.msg
+import common.msg
 
 
 class LaunchAction(object):
 
     # create messages that are used to publish feedback/result
-    _feedback = drone.msg.LaunchFeedback()
-    _result = drone.msg.LaunchResult()
+    _feedback = common.msg.LaunchFeedback()
+    _result = common.msg.LaunchResult()
 
     def __init__(self, name, tello):
         self._action_name = name
-        self._as = actionlib.SimpleActionServer(self._action_name, drone.msg.LaunchAction, execute_cb=self.execute_cb, auto_start = False)
+        self._as = actionlib.SimpleActionServer(self._action_name, common.msg.LaunchAction, execute_cb=self.execute_cb, auto_start = False)
         self._as.start()
         self._tello = tello
 
