@@ -12,12 +12,12 @@ RUN /bin/bash -c "source /opt/ros/noetic/setup.bash && catkin_create_pkg $PACKAG
 # Copy the src of package into the container
 COPY . /catkin_ws/src/$PACKAGE_NAME/
 
-RUN add-apt-repository ppa:deadsnakes/ppa
-RUN apt-get update && apt-get install -y dos2unix python3.11 python3-pip netcat net-tools
+#RUN add-apt-repository ppa:deadsnakes/ppa
+RUN apt-get update && apt-get install -y dos2unix python3.10 python3-pip netcat net-tools
 RUN pip3 install av image
 
 # Convert line endings in the Python script
-RUN find /catkin_ws/src/$PACKAGE_NAME -type f -print0 | xargs -0 dos2unix -
+#RUN find /catkin_ws/src/$PACKAGE_NAME -type f -print0 | xargs -0 dos2unix -
 
 # Change back to the root of the workspace
 WORKDIR /catkin_ws

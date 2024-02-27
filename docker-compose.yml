@@ -25,6 +25,16 @@ services:
       - ppmrob
     depends_on:
       - ros_master
+  odometry:
+    build: ./odometry
+    environment:
+      - "ROS_MASTER_URI=http://ros_master:11311"
+      - "ROS_LOG_LEVEL=info"
+      - "PYTHONUNBUFFERED=1"
+    networks:
+      - ppmrob
+    depends_on:
+      - ros_master
 networks:
   ppmrob:
     driver: "bridge"

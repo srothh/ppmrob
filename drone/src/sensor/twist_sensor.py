@@ -9,7 +9,7 @@ class TwistSensor():
     _drone = None
 
     def __init__(self, drone=None):
-        self._publisher = rospy.Publisher('/drone/twist', TwistStamped, queue_size=10)
+        self._publisher = rospy.Publisher('/drone/twist', TwistStamped, queue_size=2)
         self._drone = drone        
         self._counter = 0
         #self.drone.startStateHandler(self.process)
