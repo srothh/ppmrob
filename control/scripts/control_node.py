@@ -11,6 +11,9 @@ class DroneControl:
         # Class Variables from different nodes
         self.prev_x = None
         self.prev_y = None
+        self.target_x = None
+        self.target_y = None
+        self.course = None
         self.drone_data = None
         self.planning_data = None
         self.mapping_data = None
@@ -26,41 +29,38 @@ class DroneControl:
 
         self.drone_action_command = DroneActionCommand()
 
-    def mapping_callback(self, data):
-        self.mapping_data = data.data
+    def mapping_callback(self, mapping_data):
+        self.prev_x = mapping_data.x1
+        self.prev_y = mapping_data.x1
 
     def drone_callback(self, data):
         self.drone_data = data.data
 
     def planning_callback(self, planning_data):
-        for point in planning_data:
-            x1, y1 = point
-            degree_angle, distance = self.calculate_rotation_and_translation(x1, y1)
-            if degree_angle == 0.0:
-                self.drone_action_command.send_action_command(distance, 0.0, 0.0, 0.0, 0.0, 0.0)
-            else:
-                self.drone_action_command.send_action_command(0.0, 0.0, 0.0, 0.0, 0.0, degree_angle)
+        self.target_x = planning_data.x2
+        self.target_y = planning_data.y2
 
-            ##TODO: Hier evtl weitere Bedingunge hinzufügen
-
-    def calculate_rotation_and_translation(self, current_x, current_y):
-        if self.prev_x is None or self.prev_y is None:
-            self.prev_x = current_x
-            self.prev_y = current_y
+    def calculate_rotation_and_translation(self):
+        if self.prev_x is None or self.prev_y is None or self.target_x is None or self.target_y is None:
             degree_angle = 0.0
             distance = 0
         else:
-            dx = abs(current_x - self.prev_x)
-            dy = abs(current_y - self.prev_y)
+            dx = abs(self.target_x - self.prev_x)
+            dy = abs(self.target_y - self.prev_y)
             hypoth = math.sqrt(dx ** 2 + dy ** 2)
             sine = dy / hypoth
             rad_angle = math.asin(sine)
             degree_angle = math.degrees(rad_angle)
             distance = dy
 
-            self.prev_x = current_x
-            self.prev_y = current_y
         return degree_angle, distance
+
+    def execute_cb(self):
+        degree_angle, distance = self.calculate_rotation_and_translation()
+        if degree_angle == 0.0:
+            self.drone_action_command.send_action_command(distance, 0.0, 0.0, 0.0, 0.0, 0.0)
+        else:
+            self.drone_action_command.send_action_command(0.0, 0.0, 0.0, 0.0, 0.0, degree_angle)
 
     def main_process(self):
         # 10 Hz Rate
@@ -68,7 +68,8 @@ class DroneControl:
 
         while not rospy.is_shutdown():
 
-            ## TODO: Implementation of the logic for executing control data to tello
+            self.execute_cb()
+
             if self.drone_data is not None:
                 rospy.loginfo(f"Received drone_data: {self.drone_data}")
 
