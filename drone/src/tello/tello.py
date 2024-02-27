@@ -30,10 +30,19 @@ class Tello:
     response_thread = None
     state_thread = None
 
-    def __init__(self):
+    command_timeout = 10
+
+    running = True
+
+    def __init__(self, command_timeout = 10):
+        
+        self.command_timeout = command_timeout
+
         # only words with thread.select
         #self.sock.setblocking(0)
         self.sock.bind(self.locaddr)
+
+        self.state_recv_socket.bind(('', self.state_port))
         
 
     def connect(self) -> bool:
@@ -58,12 +67,12 @@ class Tello:
     # if response received sets event
     def responseWorker(self):
         print ("Listener is waiting for responses...")
-        while True:
+        while self.running:
             try:
                 data, server = self.sock.recvfrom(1518)
                 response = data.decode(encoding="utf-8")
                 #print(response)
-                self.responses.append(response)
+                self.responses.append(response.strip())
                 self.response_received.set()
             except Exception as e:
                 print('\nError %s' % e)
@@ -76,8 +85,8 @@ class Tello:
     # thread worder for processing state messages
     # calls registered callbacks every time a state message arrives
     def stateWorker(self):
-        rospy.loginfo("listening for state")
-        while True:
+        rospy.loginfo("listening for state on port %d" % self.state_port)
+        while self.running:
             try:
                 data, server = self.state_recv_socket.recvfrom(1518)
                 state = State(data.decode(encoding="utf-8"))
@@ -191,8 +200,9 @@ class Tello:
 
     # TODO: test
     def terminate(self):
-        self.response_thread.join()
-        self.state_thread.join()
+        #self.response_thread.join()
+        #self.state_thread.join()
+        self.running = False
         self.background_frame_read.stop()
 
 

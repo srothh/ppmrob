@@ -4,18 +4,18 @@ import rospy
 
 
 import actionlib 
-import drone.msg
+import common.msg
 
 
 class EmergencyAction(object):
 
     # create messages that are used to publish feedback/result
-    _feedback = drone.msg.EmergencyFeedback()
-    _result = drone.msg.EmergencyResult()
+    _feedback = common.msg.EmergencyFeedback()
+    _result = common.msg.EmergencyResult()
 
     def __init__(self, name, tello):
         self._action_name = name
-        self._as = actionlib.SimpleActionServer(self._action_name, drone.msg.EmergencyAction, execute_cb=self.execute_cb, auto_start = False)
+        self._as = actionlib.SimpleActionServer(self._action_name, common.msg.EmergencyAction, execute_cb=self.execute_cb, auto_start = False)
         self._as.start()
         self._tello = tello
 

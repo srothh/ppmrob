@@ -3,7 +3,7 @@
 import rospy
 import actionlib
 import time
-import drone.msg
+import common.msg
 from tello import Tello
 #from geometry_msgs.msg import Transform, Translation, Quaternion
 
@@ -13,12 +13,12 @@ class MoveAction(object):
     def __init__(self, name, tello):
         #start action server
         self._action_name = name
-        self._as = actionlib.SimpleActionServer(self._action_name, drone.msg.MoveAction, execute_cb=self.execute_cb, auto_start = False)
+        self._as = actionlib.SimpleActionServer(self._action_name, common.msg.MoveAction, execute_cb=self.execute_cb, auto_start = False)
         self._as.start()
         self._drone = tello
 
-        self._feedback = drone.msg.MoveFeedback()
-        self._result = drone.msg.MoveResult() 
+        self._feedback = common.msg.MoveFeedback()
+        self._result = common.msg.MoveResult() 
 
     def execute_cb(self, goal):
         rospy.loginfo('%s %s' % (self._action_name, goal.target))

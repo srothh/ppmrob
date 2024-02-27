@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 import rospy
 import actionlib
 import time
-import drone.msg
+import common.msg
 from geometry_msgs.msg import Transform, Vector3, Quaternion
 
 from grid_map_lib import GridMap, FloatGrid
@@ -300,15 +300,15 @@ def planning_animation(ox, oy, resolution, drone_enabled=True):  # pragma: no co
     if drone_enabled:
         # action_client.py
         print("start action")
-        client = actionlib.SimpleActionClient("launch", drone.msg.LaunchAction)
+        client = actionlib.SimpleActionClient("launch", common.msg.LaunchAction)
         client.wait_for_server()
         print("takeoff")
-        takeoffgoal = drone.msg.LaunchGoal(takeoff=True)
+        takeoffgoal = common.msg.LaunchGoal(takeoff=True)
         client.send_goal(takeoffgoal)
         client.wait_for_result()
         # Prints out the result of executing the action
         print(client.get_result())
-        moveclient = actionlib.SimpleActionClient("move", drone.msg.MoveAction)
+        moveclient = actionlib.SimpleActionClient("move", common.msg.MoveAction)
         moveclient.wait_for_server()
 
     last_x, last_y = px[0], py[0]
@@ -340,9 +340,9 @@ def planning_animation(ox, oy, resolution, drone_enabled=True):  # pragma: no co
             if drone_enabled:
                 #rotate
                 if (rbearing > 0):
-                    moveclient.send_goal_and_wait(drone.msg.MoveGoal(target=Transform(Vector3(0, 0, 0), Quaternion(0, 0, rbearing, 0))))
+                    moveclient.send_goal_and_wait(common.msg.MoveGoal(target=Transform(Vector3(0, 0, 0), Quaternion(0, 0, rbearing, 0))))
                 #move
-                moveclient.send_goal_and_wait(drone.msg.MoveGoal(target=Transform(Vector3(distance, 0, 0), Quaternion(0, 0, 0, 0))))
+                moveclient.send_goal_and_wait(common.msg.MoveGoal(target=Transform(Vector3(distance, 0, 0), Quaternion(0, 0, 0, 0))))
             
             
             last_x = ipx
