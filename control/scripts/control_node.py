@@ -14,9 +14,11 @@ class DroneControl:
         self.drone_data = None
         self.planning_data = None
         self.mapping_data = None
-        rospy.init_node("drone_control_node", anonymous=True)
+        rospy.init_node("control_node_listener", anonymous=True)
 
-        rospy.Subscriber("mapping_data", String, self.cv_callback)
+        rospy.Subscriber("drone", String, self.drone_callback)
+
+        rospy.Subscriber("mapping_data", String, self.mapping_callback)
 
         rospy.Subscriber("planning_data", String, self.planning_callback)
 
@@ -24,8 +26,11 @@ class DroneControl:
 
         self.drone_action_command = DroneActionCommand()
 
-    def cv_callback(self, data):
-        self.cv_data = data.data
+    def mapping_callback(self, data):
+        self.mapping_data = data.data
+
+    def drone_callback(self, data):
+        self.drone_data = data.data
 
     def planning_callback(self, planning_data):
         for point in planning_data:
@@ -45,8 +50,8 @@ class DroneControl:
             degree_angle = 0.0
             distance = 0
         else:
-            dx = current_x - self.prev_x
-            dy = current_y - self.prev_y
+            dx = abs(current_x - self.prev_x)
+            dy = abs(current_y - self.prev_y)
             hypoth = math.sqrt(dx ** 2 + dy ** 2)
             sine = dy / hypoth
             rad_angle = math.asin(sine)
@@ -64,9 +69,11 @@ class DroneControl:
         while not rospy.is_shutdown():
 
             ## TODO: Implementation of the logic for executing control data to tello
+            if self.drone_data is not None:
+                rospy.loginfo(f"Received drone_data: {self.drone_data}")
 
             if self.mapping_data is not None:
-                rospy.loginfo(f"Received cv_data: {self.cv_data}")
+                rospy.loginfo(f"Received mapping_data: {self.mapping_data}")
 
             if self.planning_data is not None:
                 rospy.loginfo(f"Received planning_data: {self.planning_data}")
