@@ -30,20 +30,38 @@ class DroneControl:
         self.drone_action_command = DroneActionCommand()
 
     def mapping_callback(self, mapping_data):
+        """ Returns the data from the mapping node
+
+        @param mapping_data:
+        """
         self.prev_x = mapping_data.x1
         self.prev_y = mapping_data.x1
 
     def drone_callback(self, data):
+        """ Returns the data from the drone node
+
+        @param data:
+        """
         self.drone_data = data.data
 
     def planning_callback(self, planning_data):
+        """ Returns the data from the planning node
+
+        @param planning_data
+        @rtype: object
+        """
         self.target_x = planning_data.x2
         self.target_y = planning_data.y2
 
     def calculate_rotation_and_translation(self):
+        """ Calculates the rotation angle and translation for the drone node
+        Return the angle in degrees and the translation as float
+
+        @rtype: object
+        """
         if self.prev_x is None or self.prev_y is None or self.target_x is None or self.target_y is None:
             degree_angle = 0.0
-            distance = 0
+            distance = 0.0
         else:
             dx = abs(self.target_x - self.prev_x)
             dy = abs(self.target_y - self.prev_y)
@@ -51,11 +69,16 @@ class DroneControl:
             sine = dy / hypoth
             rad_angle = math.asin(sine)
             degree_angle = math.degrees(rad_angle)
-            distance = dy
+            distance = float(dy)
 
         return degree_angle, distance
 
     def execute_cb(self):
+        """ Sends the calculated rotation and translation values as action messages to
+        the drone node
+
+        @rtype: object
+        """
         degree_angle, distance = self.calculate_rotation_and_translation()
         if degree_angle == 0.0:
             self.drone_action_command.send_action_command(distance, 0.0, 0.0, 0.0, 0.0, 0.0)
@@ -63,6 +86,10 @@ class DroneControl:
             self.drone_action_command.send_action_command(0.0, 0.0, 0.0, 0.0, 0.0, degree_angle)
 
     def main_process(self):
+        """ The function where several functions run in a loop and are executed
+
+        @rtype: object
+        """
         # 10 Hz Rate
         rate = rospy.Rate(10)
 
