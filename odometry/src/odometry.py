@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import rospy  # the library should be added as package dependency for the package on which working here
 from geometry_msgs.msg import TwistStamped
 from geometry_msgs.msg import PoseStamped

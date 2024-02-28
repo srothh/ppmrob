@@ -9,4 +9,4 @@
 - [ ] integrate the downloaded ROS node with written KeyboardManagerNode
 
 ## Common
-- [ ] create python file(-s) containing constants with values of different topic etc. names! per package?
+- [x] create python file(-s) containing constants with values of different topic etc. names! per package?
