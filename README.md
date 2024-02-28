@@ -1,12 +1,12 @@
 # ppmrob
 ## Initial docker setup
-Currently listener + publisher example. To run use
+To run use
 
 ``
 docker compose up --build
 ``
 
-To exit run
+To exit send `Ctrl+C` or run
 
 ``
 docker compose down
