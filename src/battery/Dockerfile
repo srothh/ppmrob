@@ -25,6 +25,8 @@ WORKDIR /catkin_ws
 SHELL ["/bin/bash", "-c"]
 RUN source /opt/ros/noetic/setup.bash  && catkin_make && source /catkin_ws/devel/setup.bash
 
+RUN chmod +x /catkin_ws/src/${PACKAGE_NAME}/scripts/*
+
 # Set up environment variables for ROS
 ENV ROS_DISTRO noetic
 ENV ROS_WORKSPACE /catkin_ws
