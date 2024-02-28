@@ -17,7 +17,7 @@ COPY . /catkin_ws/src/$PACKAGE_NAME/
 RUN apt-get update && apt-get install -y dos2unix
 RUN apt-get update && apt-get install -y python3
 # Convert line endings in the Python script
-RUN dos2unix /catkin_ws/src/$PACKAGE_NAME/src/*
+RUN dos2unix /catkin_ws/src/$PACKAGE_NAME/scripts/*
 
 
 # Change back to the root of the workspace
@@ -31,6 +31,7 @@ RUN source /opt/ros/noetic/setup.bash && catkin_make && source /catkin_ws/devel/
 ENV ROS_DISTRO noetic
 ENV ROS_WORKSPACE /catkin_ws
 
-RUN chmod +x /catkin_ws/src/listener/src/listener_node.py
+RUN chmod +x /catkin_ws/src/${PACKAGE_NAME}/scripts/*
+
 # Source the ROS setup file every time a new container is run
 ENTRYPOINT ["/bin/bash", "-c", "source /opt/ros/$ROS_DISTRO/setup.bash && source /catkin_ws/devel/setup.bash && roslaunch $PACKAGE_NAME $LAUNCH_FILE --wait"]

@@ -18,7 +18,7 @@ RUN apt-get update && apt-get install -y dos2unix python3 python3-pip ros-noetic
 RUN pip3 install av image
 
 # Convert line endings in the Python script
-RUN dos2unix /catkin_ws/src/$PACKAGE_NAME/src/*
+RUN dos2unix /catkin_ws/src/$PACKAGE_NAME/scripts/*
 
 # Change back to the root of the workspace
 WORKDIR /catkin_ws
@@ -28,6 +28,8 @@ SHELL ["/bin/bash", "-c"]
 #RUN /bin/bash -c "source /opt/ros/noetic/setup.bash"
 RUN source /opt/ros/noetic/setup.bash  && catkin_make && source /catkin_ws/devel/setup.bash
 
+RUN chmod +x /catkin_ws/src/${PACKAGE_NAME}/scripts/*
+
 # Set up environment variables for ROS
 ENV ROS_DISTRO noetic
 ENV ROS_WORKSPACE /catkin_ws
@@ -35,4 +37,3 @@ ENV ROS_WORKSPACE /catkin_ws
 ENTRYPOINT ["/bin/bash", "-c", "source /opt/ros/$ROS_DISTRO/setup.bash && source /catkin_ws/devel/setup.bash && roslaunch $PACKAGE_NAME $LAUNCH_FILE --wait"]
 #ENTRYPOINT ["/bin/bash", "-c", "while true; do sleep 1000; done"]
 #ENTRYPOINT ["/bin/bash"]
- 
