@@ -9,7 +9,7 @@ ENV PACKAGE_NAME cv
 ENV LAUNCH_FILE cv.launch
 
 # Create a new ROS package for the listener
-RUN /bin/bash -c "source /opt/ros/noetic/setup.bash && catkin_create_pkg $PACKAGE_NAME rospy std_msgs"
+RUN /bin/bash -c "source /opt/ros/noetic/setup.bash && catkin_create_pkg $PACKAGE_NAME rospy std_msgs geometry_msgs"
 
 # Copy the listener package into the container
 COPY . /catkin_ws/src/$PACKAGE_NAME/

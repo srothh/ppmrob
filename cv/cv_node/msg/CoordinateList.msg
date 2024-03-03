@@ -1,1 +1,1 @@
-Coordinate[] coordinates
+cv/PointPair[] point_pairs
