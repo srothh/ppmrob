@@ -35,7 +35,7 @@ def callback(data, args):
     # cv2.imwrite('lastframe.png', frame)
     detected, lines = img_processing(frame, args[0])
     # publish
-    if pub_lines is not None and lines is not None:
+    if pub_lines is not None:
         lines_msg = CoordinateList()
         lines_msg.point_pairs = []
         if lines is not None:
