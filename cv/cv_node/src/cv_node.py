@@ -8,6 +8,7 @@ import os
 parent_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 sys.path.append(parent_dir)
 from PIL import Image
+from sensor_msgs.msg import Image as Image_msg
 from image_processing.detect_line import detect_lines
 from image_processing.detect_victim import classify_image, yolo_detection
 from image_processing.display_image import display_image, display_object_detection
@@ -15,7 +16,7 @@ import cv2
 #from PIL import Image
 
 
-def img_processing(frame,window):
+def img_processing(frame,window=None):
     # Detect lines in the image
     # Check if a victim was detected
     # victim_detected = bool(classify_image(frame).item()) # not using classification anymore
@@ -24,8 +25,8 @@ def img_processing(frame,window):
     pil_image = Image.fromarray(frame)
     detected = yolo_detection(pil_image, confidence_threshold=0.9)
     line_frame = detect_lines(frame)
-    # Display the image
-    display_object_detection(detected, window, line_frame, 10, (0, 255, 0))
+    # Display the image (needs to have image server when run from docker)
+    # display_object_detection(detected, window, line_frame, 10, (0, 255, 0))
 def callback(data, args):
     rospy.loginfo("Received image frame: %d %dx%d" % (data.height, data.height, data.width))
     br = CvBridge()
@@ -42,13 +43,13 @@ def cv_node():
     rospy.init_node('cv_node', anonymous=True)
     # UNCOMMENT THIS TO TEST THE CLASSIFY_IMAGE FUNCTION (or0001.jpg needs to be in src directory)
     # DELETE THIS FOR TESTING WITH DRONE
-    frame = cv2.imread('/catkin_ws/src/cv/src/or0001.jpg')
-    window_name = 'contours'
-    cv2.namedWindow(window_name, cv2.WINDOW_NORMAL)
-    img_processing(frame, window_name)
+#    frame = cv2.imread('/catkin_ws/src/cv/src/or0001.jpg')
+#    window_name = 'contours'
+#    cv2.namedWindow(window_name, cv2.WINDOW_NORMAL)
+#    img_processing(frame, window_name)
     # STOP DELETE
     # Subscribe to the 'chatter' topic and register the callback function
-    rospy.Subscriber('camera/forward', Image, callback, window_name)
+    rospy.Subscriber('camera/forward', Image_msg, callback)
     print("Started CV NODE")
     # Spin to keep the script from exiting
     rospy.spin()

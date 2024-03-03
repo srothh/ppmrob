@@ -13,67 +13,12 @@ services:
       - "ROS_MASTER_URI=http://ros_master:11311"
       - "ROS_LOG_LEVEL=info"
       - "PYTHONUNBUFFERED=1"
-      - DISPLAY=host.docker.internal:0 # Uncomment only if running VcXsrv on Windows (https://sourceforge.net/projects/vcxsrv/), it will show gui things like imshow(). Will cause crash without it.
+#      - DISPLAY=host.docker.internal:0 # Uncomment only if running VcXsrv on Windows (https://sourceforge.net/projects/vcxsrv/), it will show gui things like imshow(). Will cause crash without it.
     #      - "NVIDIA_VISIBLE_DEVICES=all" GPU needs extra work
     networks:
       - ppmrob
     depends_on:
       - ros_master
-  listener:
-    environment:
-      - "ROS_MASTER_URI=http://ros_master:11311"
-      - "ROS_LOG_LEVEL=info"
-      - "PYTHONUNBUFFERED=1"
-    build: ./listener
-    ports:
-      - "6000:6000"
-    #    runtime: nvidia GPU needs extra work
-    depends_on:
-      - ros_master
-  drone:
-    build: ./drone
-    environment:
-      - "ROS_MASTER_URI=http://ros_master:11311"
-      - "ROS_LOG_LEVEL=debug"
-      - "PYTHONUNBUFFERED=1"
-    ports:
-      - "9003:9003"
-      - "8889:8889/udp"
-      - "8890:8890/udp"
-      - "11111:11111/udp"
-    networks:
-      - ppmrob
-    depends_on:
-      - ros_master
-  battery:
-    build: ./battery
-    environment:
-      - "ROS_MASTER_URI=http://ros_master:11311"
-      - "ROS_LOG_LEVEL=info"
-      - "PYTHONUNBUFFERED=1"
-    ports:
-      - "9007:9007"
-    networks:
-      - ppmrob
-    depends_on:
-      - ros_master
-      - drone
-  ros_gui:
-    image: osrf/ros:noetic-desktop-full
-    command: rqt
-    environment:
-      - "ROS_MASTER_URI=http://ros_master:11311"
-      - "DISPLAY"
-      - "QT_X11_NO_MITSHM=1"
-    depends_on:
-      - ros_master
-    ports:
-      - "9004:9004"
-    networks:
-      - ppmrob
-    volumes:
-      - /tmp/.X11-unix:/tmp/.X11-unix:rw
-    restart: always
 networks:
   ppmrob:
     driver: "bridge"
