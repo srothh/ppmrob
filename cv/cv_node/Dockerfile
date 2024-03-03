@@ -14,9 +14,6 @@ RUN /bin/bash -c "source /opt/ros/noetic/setup.bash && catkin_create_pkg $PACKAG
 # Copy the listener package into the container
 COPY . /catkin_ws/src/$PACKAGE_NAME/
 
-# Copy the message definition file into the container
-COPY msg/Coordinate.msg /catkin_ws/src/$PACKAGE_NAME/msg/
-
 RUN apt-get update && apt-get install -y dos2unix
 
 # Convert line endings in the Python script

@@ -1,6 +1,6 @@
 from PIL import Image
-from cv.cv_node.src.image_processing.detect_line import detect_lines
-from cv.cv_node.src.image_processing.detect_victim import yolo_detection
+from .detect_line import detect_lines
+from .detect_victim import yolo_detection
 
 
 def img_processing(frame, window=None, confidence_threshhold=0.9):
