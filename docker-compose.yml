@@ -52,7 +52,7 @@ services:
       - "ROS_LOG_LEVEL=info"
       - "PYTHONUNBUFFERED=1"
     ports:
-      - "9003:9003"
+      - "9007:9007"
     networks:
       - ppmrob
     depends_on:
