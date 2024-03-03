@@ -1,9 +1,12 @@
 #!/usr/bin/env python3
 import math
 
+import actionlib
 import rospy
 from control.scripts.action.drone_action_command import DroneActionCommand
 from std_msgs.msg import String
+import control.msg
+from control.msg import DroneActionCommandAction, DroneActionCommandResult
 
 
 class DroneControl:
@@ -27,6 +30,17 @@ class DroneControl:
 
         self.drone_command_pub = rospy.Publisher("drone_node", String, queue_size=10)
 
+        _feedback = control.msg.CommandFeedback()
+        _result = control.msg.CommandResult()
+
+        # Action Server
+        self.server = actionlib.SimpleActionServer(
+            'Movement-Server',
+            control.msg.DroneActionCommandAction,
+            execute_cb=self.execute_cb,
+            auto_start=False
+        )
+
         self.drone_action_command = DroneActionCommand()
 
     def mapping_callback(self, mapping_data):
@@ -35,7 +49,7 @@ class DroneControl:
         @param mapping_data:
         """
         self.prev_x = mapping_data.x1
-        self.prev_y = mapping_data.x1
+        self.prev_y = mapping_data.y1
 
     def drone_callback(self, data):
         """ Returns the data from the drone node
@@ -65,10 +79,11 @@ class DroneControl:
         else:
             dx = abs(self.target_x - self.prev_x)
             dy = abs(self.target_y - self.prev_y)
-            hypoth = math.sqrt(dx ** 2 + dy ** 2)
-            sine = dy / hypoth
-            rad_angle = math.asin(sine)
-            degree_angle = math.degrees(rad_angle)
+            # hypoth = math.sqrt(dx ** 2 + dy ** 2)
+            # sine = dy / hypoth
+            # rad_angle = math.asin(sine)
+            angle = math.atan2(dy, dx)
+            degree_angle = math.degrees(angle)
             distance = float(dy)
 
         return degree_angle, distance
@@ -85,11 +100,19 @@ class DroneControl:
         else:
             self.drone_action_command.send_action_command(0.0, 0.0, 0.0, 0.0, 0.0, degree_angle)
 
+        result = DroneActionCommandResult()
+        result.success = True
+        self.server.set_succeeded(result)
+
     def main_process(self):
         """ The function where several functions run in a loop and are executed
 
         @rtype: object
         """
+
+        # Start the action server
+        self.server.start()
+
         # 10 Hz Rate
         rate = rospy.Rate(10)
 

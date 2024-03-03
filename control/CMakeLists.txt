@@ -10,6 +10,8 @@ project(control)
 find_package(catkin REQUIRED COMPONENTS
   rospy
   std_msgs
+  actionlib_msgs
+  geometry_msgs
 )
 
 # # Find Gazebo
@@ -81,7 +83,9 @@ find_package(catkin REQUIRED COMPONENTS
 ## Generate added messages and services with any dependencies listed here
 # generate_messages(
 #   DEPENDENCIES
-#   std_msgs
+    std_msgs
+    actionlib_msgs
+    geometry_msgs
 # )
 
 ################################################
@@ -116,7 +120,7 @@ find_package(catkin REQUIRED COMPONENTS
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES control
-#  CATKIN_DEPENDS rospy std_msgs
+   CATKIN_DEPENDS rospy std_msgs actionlib_msgs
 #  DEPENDS system_lib
 )
 
