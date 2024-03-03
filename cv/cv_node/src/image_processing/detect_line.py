@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 lower_beige = np.array([0, 10, 180])
 upper_beige = np.array([40, 150, 255])
 
+
 # Detect lines in the image
 def detect_lines(image):
     # Convert the frame to grayscale
@@ -33,3 +34,4 @@ def detect_lines(image):
     # Display the frame with detected lines
     cv2.imshow('Frame with Detected Lines', image)
     cv2.imshow('Canny', edges)
+    return lines

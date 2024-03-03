@@ -40,7 +40,7 @@ def classify_image(frame):
 
 # Performs object detection with our YOLO model.
 # Requires a PIL image for the model task
-def yolo_detection(frame,confidence_threshold=0.9):
+def yolo_detection(frame, confidence_threshold=0.9):
     results = yolo_model(frame)  # Perform inference
     filtered_results = results.xyxy[0][
         results.xyxy[0][:, 4] > confidence_threshold]  # Filter detections by confidence threshold
