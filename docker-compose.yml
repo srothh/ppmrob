@@ -57,7 +57,7 @@ services:
       - ppmrob
     depends_on:
       - ros_master
-      - tello
+      - drone
   ros_gui:
     image: osrf/ros:noetic-desktop-full
     command: rqt
