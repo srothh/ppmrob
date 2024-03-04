@@ -3,10 +3,10 @@ import math
 
 import actionlib
 import rospy
-from control.scripts.action.drone_action_command import DroneActionCommand
+from action import DroneActionCmd
 from std_msgs.msg import String
-import control.msg
-from control.msg import DroneActionCommandAction, DroneActionCommandResult
+import control.action
+from control.action import DroneActionCommandAction, DroneActionCommandResult
 
 
 class DroneControl:
@@ -41,7 +41,7 @@ class DroneControl:
             auto_start=False
         )
 
-        self.drone_action_command = DroneActionCommand()
+        self.drone_action_command = DroneActionCmd()
 
     def mapping_callback(self, mapping_data):
         """ Returns the data from the mapping node
@@ -118,7 +118,7 @@ class DroneControl:
 
         while not rospy.is_shutdown():
 
-            self.execute_cb()
+            # self.execute_cb()
 
             if self.drone_data is not None:
                 rospy.loginfo(f"Received drone_data: {self.drone_data}")

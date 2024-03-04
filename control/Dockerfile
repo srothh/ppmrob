@@ -17,13 +17,8 @@ RUN apt-get update && apt-get install -y dos2unix python3
 
 # Convert line endings in the Python script
 RUN dos2unix /catkin_ws/src/$PACKAGE_NAME/action/*
-RUN dos2unix /catkin_ws/src/$PACKAGE_NAME/msg/*
-RUN dos2unix /catkin_ws/src/$PACKAGE_NAME/src/*
-RUN dos2unix /catkin_ws/src/$PACKAGE_NAME/src/action/*
-RUN dos2unix /catkin_ws/src/$PACKAGE_NAME/src/djitellopy/*
-RUN dos2unix /catkin_ws/src/$PACKAGE_NAME/src/sensor/*
-RUN dos2unix /catkin_ws/src/$PACKAGE_NAME/src/server/*
-RUN dos2unix /catkin_ws/src/$PACKAGE_NAME/src/util/*
+RUN dos2unix /catkin_ws/src/$PACKAGE_NAME/scripts/*
+RUN dos2unix /catkin_ws/src/$PACKAGE_NAME/service/*
 
 # Change back to the root of the workspace
 WORKDIR /catkin_ws
