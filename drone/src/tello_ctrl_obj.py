@@ -1,5 +1,9 @@
 # tello SDK boiler plate
 # usig tello library
+import sys
+sys.path.append('..')
+print('Updated sys.path:', sys.path)
+
 
 from tello import Tello
 

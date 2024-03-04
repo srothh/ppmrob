@@ -7,6 +7,8 @@ services:
     command: roscore
     stdin_open: true
     tty: true
+    ports:
+      - "11311:11311"
     networks:
       - ppmrob
   cv:
@@ -41,6 +43,8 @@ services:
       - "ROS_MASTER_URI=http://ros_master:11311"
       - "ROS_LOG_LEVEL=debug"
       - "PYTHONUNBUFFERED=1"
+      - "DISPLAY"
+      - "QT_X11_NO_MITSHM=1"
     ports:
       - "9003:9003"
       - "8889:8889/udp"
@@ -48,6 +52,8 @@ services:
       - "11111:11111/udp"
     networks:
       - ppmrob
+    volumes:
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
     depends_on:
       - ros_master
   gazebo:

@@ -50,7 +50,7 @@ class OdometrySubscriber:
             except Exception as e:
                 rospy.loginfo(e)
     def odometry_callback(self, data: TwistStamped): # never call this func. yourself, called when msg arrives
-        rospy.loginfo("velocity: %s" % data)
+        #rospy.loginfo("velocity: %s" % data)
         #self._messages = rospy.wait_for_message(common.config.defaults.drone_twist_sensor_publish_topic_name, TwistStamped)  # Read all messages currently in the queue
         self._messages.append(data)
         #rospy.loginfo("messages: %s", self._messages)

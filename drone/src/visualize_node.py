@@ -36,6 +36,7 @@ if __name__ == '__main__':
             #plt.plot(ipx, ipy, "or")
             plt.axis("equal")
             plt.grid(True)
+            plt.savefig("/tmp/viz.png")
             plt.pause(1.0)    
 #        rospy.spin()
     except rospy.ROSInterruptException:
