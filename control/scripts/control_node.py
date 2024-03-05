@@ -5,8 +5,7 @@ import actionlib
 import rospy
 from action import DroneActionCmd
 from std_msgs.msg import String
-import control.action
-from control.action import DroneActionCommandAction, DroneActionCommandResult
+from control.msg import DroneActionCommandAction, DroneActionCommandResult, DroneActionCommandFeedback
 
 
 class DroneControl:
@@ -30,13 +29,10 @@ class DroneControl:
 
         self.drone_command_pub = rospy.Publisher("drone_node", String, queue_size=10)
 
-        _feedback = control.msg.CommandFeedback()
-        _result = control.msg.CommandResult()
-
         # Action Server
         self.server = actionlib.SimpleActionServer(
             'Movement-Server',
-            control.msg.DroneActionCommandAction,
+            DroneActionCommandAction,
             execute_cb=self.execute_cb,
             auto_start=False
         )

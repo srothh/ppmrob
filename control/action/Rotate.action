@@ -1,3 +1,5 @@
 float64 angle     # The rotation angle
 ---
 bool success
+---
+bool feedback

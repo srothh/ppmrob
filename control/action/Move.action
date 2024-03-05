@@ -2,3 +2,5 @@ float32 distance       # the distance of the movement
 int32 duration         # the duration of the movement
 ---
 int32 result           # the result of the movement
+---
+bool feedback
