@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+import sys
+print('sys.path:', sys.path)
 
 import math
 from enum import IntEnum
@@ -8,11 +10,9 @@ import matplotlib.pyplot as plt
 import rospy
 import actionlib
 import time
-import common.msg
+import control.msg
 from geometry_msgs.msg import Transform, Vector3, Quaternion
-
-from grid_map_lib import GridMap, FloatGrid
-
+from functools import total_ordering
 from scipy.spatial.transform import Rotation as Rot
 
 do_animation = True
@@ -37,6 +37,263 @@ def rot_mat_2d(angle):
 
     """
     return Rot.from_euler("z", angle).as_matrix()[0:2, 0:2]
+
+
+@total_ordering
+class FloatGrid:
+
+    def __init__(self, init_val=0.0):
+        self.data = init_val
+
+    def get_float_data(self):
+        return self.data
+
+    def __eq__(self, other):
+        if not isinstance(other, FloatGrid):
+            return NotImplemented
+        return self.get_float_data() == other.get_float_data()
+
+    def __lt__(self, other):
+        if not isinstance(other, FloatGrid):
+            return NotImplemented
+        return self.get_float_data() < other.get_float_data()
+
+
+class GridMap:
+    """
+    GridMap class
+    """
+
+    def __init__(self, width, height, resolution,
+                 center_x, center_y, init_val=FloatGrid(0.0)):
+        """__init__
+
+        :param width: number of grid for width
+        :param height: number of grid for height
+        :param resolution: grid resolution [m]
+        :param center_x: center x position  [m]
+        :param center_y: center y position [m]
+        :param init_val: initial value for all grid
+        """
+        self.width = width
+        self.height = height
+        self.resolution = resolution
+        self.center_x = center_x
+        self.center_y = center_y
+
+        self.left_lower_x = self.center_x - self.width / 2.0 * self.resolution
+        self.left_lower_y = self.center_y - self.height / 2.0 * self.resolution
+
+        self.n_data = self.width * self.height
+        self.data = [init_val] * self.n_data
+        self.data_type = type(init_val)
+
+    def get_value_from_xy_index(self, x_ind, y_ind):
+        """get_value_from_xy_index
+
+        when the index is out of grid map area, return None
+
+        :param x_ind: x index
+        :param y_ind: y index
+        """
+
+        grid_ind = self.calc_grid_index_from_xy_index(x_ind, y_ind)
+
+        if 0 <= grid_ind < self.n_data:
+            return self.data[grid_ind]
+        else:
+            return None
+
+    def get_xy_index_from_xy_pos(self, x_pos, y_pos):
+        """get_xy_index_from_xy_pos
+
+        :param x_pos: x position [m]
+        :param y_pos: y position [m]
+        """
+        x_ind = self.calc_xy_index_from_position(
+            x_pos, self.left_lower_x, self.width)
+        y_ind = self.calc_xy_index_from_position(
+            y_pos, self.left_lower_y, self.height)
+
+        return x_ind, y_ind
+
+    def set_value_from_xy_pos(self, x_pos, y_pos, val):
+        """set_value_from_xy_pos
+
+        return bool flag, which means setting value is succeeded or not
+
+        :param x_pos: x position [m]
+        :param y_pos: y position [m]
+        :param val: grid value
+        """
+
+        x_ind, y_ind = self.get_xy_index_from_xy_pos(x_pos, y_pos)
+
+        if (not x_ind) or (not y_ind):
+            return False  # NG
+
+        flag = self.set_value_from_xy_index(x_ind, y_ind, val)
+
+        return flag
+
+    def set_value_from_xy_index(self, x_ind, y_ind, val):
+        """set_value_from_xy_index
+
+        return bool flag, which means setting value is succeeded or not
+
+        :param x_ind: x index
+        :param y_ind: y index
+        :param val: grid value
+        """
+
+        if (x_ind is None) or (y_ind is None):
+            return False, False
+
+        grid_ind = int(y_ind * self.width + x_ind)
+
+        if 0 <= grid_ind < self.n_data and isinstance(val, self.data_type):
+            self.data[grid_ind] = val
+            return True  # OK
+        else:
+            return False  # NG
+
+    def set_value_from_polygon(self, pol_x, pol_y, val, inside=True):
+        """set_value_from_polygon
+
+        Setting value inside or outside polygon
+
+        :param pol_x: x position list for a polygon
+        :param pol_y: y position list for a polygon
+        :param val: grid value
+        :param inside: setting data inside or outside
+        """
+
+        # making ring polygon
+        if (pol_x[0] != pol_x[-1]) or (pol_y[0] != pol_y[-1]):
+            np.append(pol_x, pol_x[0])
+            np.append(pol_y, pol_y[0])
+
+        # setting value for all grid
+        for x_ind in range(self.width):
+            for y_ind in range(self.height):
+                x_pos, y_pos = self.calc_grid_central_xy_position_from_xy_index(
+                    x_ind, y_ind)
+
+                flag = self.check_inside_polygon(x_pos, y_pos, pol_x, pol_y)
+
+                if flag is inside:
+                    self.set_value_from_xy_index(x_ind, y_ind, val)
+
+    def calc_grid_index_from_xy_index(self, x_ind, y_ind):
+        grid_ind = int(y_ind * self.width + x_ind)
+        return grid_ind
+
+    def calc_xy_index_from_grid_index(self, grid_ind):
+        y_ind, x_ind = divmod(grid_ind, self.width)
+        return x_ind, y_ind
+
+    def calc_grid_index_from_xy_pos(self, x_pos, y_pos):
+        """get_xy_index_from_xy_pos
+
+        :param x_pos: x position [m]
+        :param y_pos: y position [m]
+        """
+        x_ind = self.calc_xy_index_from_position(
+            x_pos, self.left_lower_x, self.width)
+        y_ind = self.calc_xy_index_from_position(
+            y_pos, self.left_lower_y, self.height)
+
+        return self.calc_grid_index_from_xy_index(x_ind, y_ind)
+
+    def calc_grid_central_xy_position_from_grid_index(self, grid_ind):
+        x_ind, y_ind = self.calc_xy_index_from_grid_index(grid_ind)
+        return self.calc_grid_central_xy_position_from_xy_index(x_ind, y_ind)
+
+    def calc_grid_central_xy_position_from_xy_index(self, x_ind, y_ind):
+        x_pos = self.calc_grid_central_xy_position_from_index(
+            x_ind, self.left_lower_x)
+        y_pos = self.calc_grid_central_xy_position_from_index(
+            y_ind, self.left_lower_y)
+
+        return x_pos, y_pos
+
+    def calc_grid_central_xy_position_from_index(self, index, lower_pos):
+        return lower_pos + index * self.resolution + self.resolution / 2.0
+
+    def calc_xy_index_from_position(self, pos, lower_pos, max_index):
+        ind = int(np.floor((pos - lower_pos) / self.resolution))
+        if 0 <= ind <= max_index:
+            return ind
+        else:
+            return None
+
+    def check_occupied_from_xy_index(self, x_ind, y_ind, occupied_val):
+
+        val = self.get_value_from_xy_index(x_ind, y_ind)
+
+        if val is None or val >= occupied_val:
+            return True
+        else:
+            return False
+
+    def expand_grid(self, occupied_val=FloatGrid(1.0)):
+        x_inds, y_inds, values = [], [], []
+
+        for ix in range(self.width):
+            for iy in range(self.height):
+                if self.check_occupied_from_xy_index(ix, iy, occupied_val):
+                    x_inds.append(ix)
+                    y_inds.append(iy)
+                    values.append(self.get_value_from_xy_index(ix, iy))
+
+        for (ix, iy, value) in zip(x_inds, y_inds, values):
+            self.set_value_from_xy_index(ix + 1, iy, val=value)
+            self.set_value_from_xy_index(ix, iy + 1, val=value)
+            self.set_value_from_xy_index(ix + 1, iy + 1, val=value)
+            self.set_value_from_xy_index(ix - 1, iy, val=value)
+            self.set_value_from_xy_index(ix, iy - 1, val=value)
+            self.set_value_from_xy_index(ix - 1, iy - 1, val=value)
+
+    @staticmethod
+    def check_inside_polygon(iox, ioy, x, y):
+
+        n_point = len(x) - 1
+        inside = False
+        for i1 in range(n_point):
+            i2 = (i1 + 1) % (n_point + 1)
+
+            if x[i1] >= x[i2]:
+                min_x, max_x = x[i2], x[i1]
+            else:
+                min_x, max_x = x[i1], x[i2]
+            if not min_x <= iox < max_x:
+                continue
+
+            tmp1 = (y[i2] - y[i1]) / (x[i2] - x[i1])
+            if (y[i1] + tmp1 * (iox - x[i1]) - ioy) > 0.0:
+                inside = not inside
+
+        return inside
+
+    def print_grid_map_info(self):
+        print("width:", self.width)
+        print("height:", self.height)
+        print("resolution:", self.resolution)
+        print("center_x:", self.center_x)
+        print("center_y:", self.center_y)
+        print("left_lower_x:", self.left_lower_x)
+        print("left_lower_y:", self.left_lower_y)
+        print("n_data:", self.n_data)
+
+    def plot_grid_map(self, ax=None):
+        float_data_array = np.array([d.get_float_data() for d in self.data])
+        grid_data = np.reshape(float_data_array, (self.height, self.width))
+        if not ax:
+            fig, ax = plt.subplots()
+        heat_map = ax.pcolor(grid_data, cmap="Blues", vmin=0.0, vmax=1.0)
+        plt.axis("equal")
+
+        return heat_map
 
 
 class SweepSearcher:
@@ -296,70 +553,6 @@ def planning(
     return rx, ry
 
 
-def planning_animation(ox, oy, resolution, drone_enabled=True):  # pragma: no cover
-    px, py = planning(ox, oy, resolution)
-    if drone_enabled:
-        # action_client.py
-        print("start action")
-        client = actionlib.SimpleActionClient("launch", drone.msg.LaunchAction)
-        client.wait_for_server()
-        print("takeoff")
-        takeoffgoal = drone.msg.LaunchGoal(takeoff=True)
-        client.send_goal(takeoffgoal)
-        client.wait_for_result()
-        # Prints out the result of executing the action
-        print(client.get_result())
-        moveclient = actionlib.SimpleActionClient("move", drone.msg.MoveAction)
-        moveclient.wait_for_server()
-
-    last_x, last_y = px[0], py[0]
-    last_course = 0
-
-    # animation
-    if do_animation:
-        for ipx, ipy in zip(px, py):
-
-            plt.cla()
-            # for stopping simulation with the esc key.
-            plt.gcf().canvas.mpl_connect(
-                "key_release_event",
-                lambda event: [exit(0) if event.key == "escape" else None],
-            )
-            plt.plot(ox, oy, "-xb")
-            plt.plot(px, py, "-r")
-            plt.plot(ipx, ipy, "or")
-            course = calc_course(last_x, last_y, ipx, ipy)
-            rbearing = course - last_course
-            rbearing = normalize_angle(rbearing)
-
-            distance = euclidean_distance(last_x, last_y, ipx, ipy)
-            print("x1: %.2f y1: %.2f x2: %.2f y2: %.2f course: %.2f bear: %.2f dist: %.2f" % (last_x, last_y, ipx, ipy, course, rbearing, distance))
-            plt.axis("equal")
-            plt.grid(True)
-            plt.pause(2.0)
-
-            if drone_enabled:
-                #rotate
-                if (rbearing > 0):
-                    moveclient.send_goal_and_wait(drone.msg.MoveGoal(target=Transform(Vector3(0, 0, 0), Quaternion(0, 0, rbearing, 0))))
-                #move
-                moveclient.send_goal_and_wait(drone.msg.MoveGoal(target=Transform(Vector3(distance, 0, 0), Quaternion(0, 0, 0, 0))))
-            
-            
-            last_x = ipx
-            last_y = ipy
-            last_bearing = rbearing 
-            last_course = course
-
-        plt.cla()
-        plt.plot(ox, oy, "-xb")
-        plt.plot(px, py, "-r")
-        plt.axis("equal")
-        plt.grid(True)
-        plt.pause(0.1)
-        plt.close()
-
-
 def main():  # pragma: no cover
     print("start!!")
 
@@ -379,40 +572,41 @@ def main():  # pragma: no cover
     #oy = [0.0, 0,     200.0, 200.0, 100.0, 100.0, 0]
 
 
-    resolution = 20.0
-    planning_animation(ox, oy, resolution, False)
+    resolution = 40.0
+    px, py = planning(ox, oy, resolution)
+#    if do_animation:
+#        plt.cla()
+#        plt.plot(px, py, "-r")
+#        plt.axis("equal")
+#        plt.grid(True)
+#        plt.savefig("plan.png")
+#        plt.close()
 
-    # ox = [0.0, 20.0, 50.0, 200.0, 130.0, 40.0, 0.0]
-    # oy = [0.0, -80.0, 0.0, 30.0, 60.0, 80.0, 0.0]
-    # resolution = 5.0
-    # planning_animation(ox, oy, resolution)
+    # action_client.py
+    # print("start action")
+    # client = actionlib.SimpleActionClient("launch", drone.msg.LaunchAction)
+    # client.wait_for_server()
+    # print("takeoff")
+    # takeoffgoal = drone.msg.LaunchGoal(takeoff=True)
+    # client.send_goal(takeoffgoal)
+    # client.wait_for_result()
+    # # Prints out the result of executing the action
+    # print(client.get_result())
 
-    if do_animation:
-        plt.show()
+    control_transform_client = actionlib.SimpleActionClient("TransformActionServer", control.msg.TransformAction)
+    control_transform_client.wait_for_server()
+
+    for ipx, ipy in zip(px, py):
+        rospy.loginfo('waypoint: %d %d' % (ipx, ipy))
+        success = control_transform_client.send_goal_and_wait(control.msg.TransformGoal(target=Transform(Vector3(ipx, ipy, 0), Quaternion(0, 0, 0, 0))))
+        print('s:%s' % success)
+
     print("done!!")
 
 
-# calculate euclidian distance between coordinates x1,y1 and x2,y2
-def euclidean_distance(x1, y1, x2, y2):
-    return math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2)
-    #return math.sqrt((20) ** 2 + (140) ** 2)
-
-# calculate angle between two coordinates x1,y1 and x2,y2
-def calc_course(x1, y1, x2, y2):
-    #return math.atan2(y2 - y1, x2 - x1) * 180 / math.pi;
-    return (math.degrees(math.atan2(y2 - y1, x2 - x1)) *(-1)) % 360;
-
-
-def normalize_angle(angle):
-    if angle > 180.0:
-        angle -= 360.0
-    elif angle < -180.0:
-        angle += 360.0
-    return angle
-
 if __name__ == "__main__":
     try:
-        rospy.init_node("test_planning")
+        rospy.init_node("planning_node")
         main()
     except rospy.ROSInterruptException:
         pass

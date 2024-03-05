@@ -2,6 +2,7 @@ import rospy
 
 
 import actionlib 
+import time
 import drone.msg 
 
 class LaunchAction(object):
@@ -18,21 +19,13 @@ class LaunchAction(object):
 
     def execute_cb(self, goal):
         # helper variables
-        r = rospy.Rate(1)
         success = True
+        time.sleep(1)
 
         # publish info to the console for the user
         rospy.loginfo('%s: Executing, launching drone' % (self._action_name))
 
         # start executing
-
-        success = False
-        if goal.takeoff:
-            # takeoff
-            success = self._tello.command('takeoff')
-        else:
-            # land
-            success = self._tello.command('land')
 
         self._result.success = success
         self._as.set_succeeded(self._result)

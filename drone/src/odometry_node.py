@@ -34,9 +34,9 @@ class OdometrySubscriber:
                 for mess in messages:
                     # queue size of twiststamped should be = 2
                     times.append(mess.header.stamp.to_sec())
-                    vx.append(mess.twist.linear.x)
-                    vy.append(mess.twist.linear.y)
-                    vz.append(mess.twist.linear.z)
+                    vx.append(mess.twist.linear.x * 10)
+                    vy.append(mess.twist.linear.y * 10)
+                    vz.append(mess.twist.linear.z * 10)
                     
                 if (len(times) > 2):
                     deltaTimeS=np.diff(times)

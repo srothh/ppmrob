@@ -25,13 +25,7 @@ class EmergencyAction(object):
 
         # start executing
 
-        success = False
-        if goal.soft:
-            # soft landing
-            success = self._tello.execute_commands(['stop', 'land'])
-        else:
-            # hard landing
-            success = self._tello.send_command('emergency')
+        success = True
 
         self._result.success = success
         self._as.set_succeeded(self._result)

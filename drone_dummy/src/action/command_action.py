@@ -28,11 +28,8 @@ class CommandAction(object):
         rospy.loginfo('%s: %s' % (self._action_name, goal.command))
 
         # start executing
+        time.sleep(1)
 
-        success = False
-        if goal.command:
-            success = self._tello.command(goal.command)
-        else:
-            rospy.loginfo('No command given')
+        success = True
         self._result.success = success
         self._as.set_succeeded(self._result)

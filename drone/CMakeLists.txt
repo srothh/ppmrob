@@ -62,18 +62,18 @@ find_package(catkin REQUIRED COMPONENTS
 # )
 
 ## Generate actions in the 'action' folder
-# add_action_files(
-#   FILES
-#   Launch.action Emergency.action Move.action Command.action
-# )
+ add_action_files(
+   FILES
+   Launch.action Emergency.action Move.action Command.action
+ )
 
 ## Generate added messages and services with any dependencies listed here
-# generate_messages(
-#   DEPENDENCIES
-#   std_msgs
-#   actionlib_msgs
-#   geometry_msgs
-# )
+ generate_messages(
+   DEPENDENCIES
+   std_msgs
+   actionlib_msgs
+   geometry_msgs
+ )
 
 ################################################
 ## Declare ROS dynamic reconfigure parameters ##
@@ -106,7 +106,7 @@ find_package(catkin REQUIRED COMPONENTS
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
 #  INCLUDE_DIRS include
-#  LIBRARIES drone
+  LIBRARIES drone
   CATKIN_DEPENDS rospy std_msgs actionlib_msgs
 #  DEPENDS system_lib
 )

@@ -1,0 +1,23 @@
+#!/usr/bin/env python3
+
+import rospy
+from std_msgs.msg import UInt8
+
+class BatterySensor():
+
+    _drone = None
+
+    def __init__(self, drone=None):
+        self._publisher = rospy.Publisher('/drone/battery', UInt8, queue_size=10)
+        self._counter = 0
+
+    def publish(self, event=None, state=None):
+        try:
+            msg = UInt8()
+            msg.data = 99
+            self._publisher.publish(msg)
+            self._counter += 1
+        except Exception as e:
+            rospy.loginfo(e)
+    
+

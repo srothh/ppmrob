@@ -3,8 +3,8 @@
 import rospy
 import actionlib
 import time
-import common.msg
-from tello import Tello
+ 
+import drone.msg
 #from geometry_msgs.msg import Transform, Translation, Quaternion
 
 class MoveAction(object):
@@ -13,45 +13,47 @@ class MoveAction(object):
     def __init__(self, name, tello):
         #start action server
         self._action_name = name
-        self._as = actionlib.SimpleActionServer(self._action_name, common.msg.MoveAction, execute_cb=self.execute_cb, auto_start = False)
+        self._as = actionlib.SimpleActionServer(self._action_name, drone.msg.MoveAction, execute_cb=self.execute_cb, auto_start = False)
         self._as.start()
         self._drone = tello
 
-        self._feedback = common.msg.MoveFeedback()
-        self._result = common.msg.MoveResult() 
+        self._feedback = drone.msg.MoveFeedback()
+        self._result = drone.msg.MoveResult() 
 
     def execute_cb(self, goal):
         rospy.loginfo('%s %s' % (self._action_name, goal.target))
         success = False
         try:
-            translation = goal.target.translation
-            rotation = goal.target.rotation
+            x = round(goal.target.translation.x)
+            y = round(goal.target.translation.y)
+            z = round(goal.target.translation.z)
+            rotation = round(goal.target.rotation.z)
 
-            if rotation.z != 0:
-                if (0 <= rotation.z <= 360):
-                    success = self.command('cw %d' % rotation.z)
-                elif (-360 <= rotation.z < 0):
-                    success = self.command('ccw %d' % abs(rotation.z))
+            if rotation != 0:
+                if (0 <= rotation <= 360):
+                    success = self.command('cw %d' % rotation)
+                elif (-360 <= rotation < 0):
+                    success = self.command('ccw %d' % abs(rotation))
                 else:
-                    raise Exception("invalid rotation bearing: %d" % rotation.z)
-            elif translation.x != 0:
-                distance = translation.x
+                    raise Exception("invalid rotation bearing: %d" % rotation)
+            elif x != 0:
+                distance = x
                 if (20 <= distance <= 500):
                     success = self.command('forward %d' % distance)
-                elif (-500 <= translation.x <= -20):
+                elif (-500 <= distance <= -20):
                     success = self.command('back %d' % abs(distance))
                 else:
                     raise Exception("invalid movement distance: %d" % distance)                                        
-            elif translation.y != 0:
-                distance = translation.y
+            elif y != 0:
+                distance = y
                 if (20 <= distance <= 500):
                     success = self.command('right %d' % distance)
                 elif (-500 <= distance <= -20):
                     success = self.command('left %d' % abs(distance))
                 else:
                     raise Exception("invalid movement distance: %d" % distance)                                        
-            elif translation.z != 0:
-                distance = translation.z
+            elif z != 0:
+                distance = z
                 if (20 <= distance <= 500):
                     success = self.command('up %d' % distance)
                 elif (-500 <= distance <= -20):
@@ -59,7 +61,7 @@ class MoveAction(object):
                 else:
                     raise Exception("invalid movement distance: %d" % distance)                                        
             else:
-                raise Exception("invalid movement axis: %s" % translation)
+                raise Exception("invalid movement axis: %s" % goal.target.translation)
         
         except Exception as e:
             rospy.loginfo(e)

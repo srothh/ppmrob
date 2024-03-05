@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.0.2)
-project(control)
+project(drone)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
 # add_compile_options(-std=c++11)
@@ -13,18 +13,6 @@ find_package(catkin REQUIRED COMPONENTS
   actionlib_msgs
   geometry_msgs
 )
-
-# # Find Gazebo
-# find_package(gazebo REQUIRED)
-# include_directories(
-#   ${catkin_INCLUDE_DIRS}
-#   ${GAZEBO_INCLUDE_DIRS}
-# )
-
-# set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${GAZEBO_CXX_FLAGS}")
-
-# add_library(control_plugin src/control_plugin.cpp)
-# target_link_libraries(control_plugin ${GAZEBO_LIBRARIES} ${catkin_LIBRARIES})
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
@@ -74,18 +62,18 @@ find_package(catkin REQUIRED COMPONENTS
 # )
 
 ## Generate actions in the 'action' folder
- add_action_files(
-   FILES
-    Transform.action
- )
+# add_action_files(
+#   FILES
+#   Launch.action Emergency.action Move.action Command.action
+# )
 
 ## Generate added messages and services with any dependencies listed here
- generate_messages(
-   DEPENDENCIES
-   std_msgs
-   actionlib_msgs
-   geometry_msgs
-       )
+ #generate_messages(
+ #  DEPENDENCIES
+ #  std_msgs
+ #  actionlib_msgs
+ #  geometry_msgs
+ #)
 
 ################################################
 ## Declare ROS dynamic reconfigure parameters ##
@@ -118,8 +106,8 @@ find_package(catkin REQUIRED COMPONENTS
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
 #  INCLUDE_DIRS include
-#  LIBRARIES control
-#  CATKIN_DEPENDS rospy std_msgs
+  LIBRARIES drone
+  CATKIN_DEPENDS rospy std_msgs actionlib_msgs
 #  DEPENDS system_lib
 )
 
@@ -136,7 +124,7 @@ include_directories(
 
 ## Declare a C++ library
 # add_library(${PROJECT_NAME}
-#   src/${PROJECT_NAME}/control.cpp
+#   src/${PROJECT_NAME}/drone.cpp
 # )
 
 ## Add cmake target dependencies of the library
@@ -147,7 +135,7 @@ include_directories(
 ## Declare a C++ executable
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
-# add_executable(${PROJECT_NAME}_node src/control_node.cpp)
+# add_executable(${PROJECT_NAME}_node src/drone_node.cpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -211,7 +199,7 @@ include_directories(
 #############
 
 ## Add gtest based cpp test target and link libraries
-# catkin_add_gtest(${PROJECT_NAME}-test test/test_control.cpp)
+# catkin_add_gtest(${PROJECT_NAME}-test test/test_drone.cpp)
 # if(TARGET ${PROJECT_NAME}-test)
 #   target_link_libraries(${PROJECT_NAME}-test ${PROJECT_NAME})
 # endif()
