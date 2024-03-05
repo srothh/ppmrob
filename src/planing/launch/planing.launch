@@ -1,0 +1,7 @@
+<launch>
+    <!-- Planner Node -->
+    <node pkg="planing" name="planner_node" type="planing.py" output="screen">
+        <!-- Add any necessary arguments here -->
+        <!-- Example: <param name="param_name" value="param_value"/> -->
+    </node>
+</launch>
