@@ -2,6 +2,7 @@
 
 import rospy
 from std_msgs.msg import UInt8
+import time
 
 class BatterySensor():
 
@@ -10,11 +11,13 @@ class BatterySensor():
     def __init__(self, drone=None):
         self._publisher = rospy.Publisher('/drone/battery', UInt8, queue_size=10)
         self._counter = 0
+        self._start_time = time.time()
 
     def publish(self, event=None, state=None):
         try:
             msg = UInt8()
-            msg.data = 99
+            val = round(99 - ((time.time() - self._start_time) / 6))
+            msg.data = val if val > 0 else 0
             self._publisher.publish(msg)
             self._counter += 1
         except Exception as e:

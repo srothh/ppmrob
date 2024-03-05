@@ -66,8 +66,7 @@ class MoveAction(object):
         except Exception as e:
             rospy.loginfo(e)
             self.success_cb(False)
-        
-        self.success_cb(True)
+        self.success_cb(success)
 
     def command(self, command):
         return self._drone.command(command)
