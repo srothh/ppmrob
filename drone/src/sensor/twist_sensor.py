@@ -9,8 +9,8 @@ class TwistSensor():
 
     _drone = None
 
-    def __init__(self, drone=None):
-        self._publish_to_topic = common.config.defaults.drone_twist_sensor_publish_topic_name
+    def __init__(self, drone=None, topic=None):
+        self._publish_to_topic = topic
         self._publisher = rospy.Publisher(self._publish_to_topic, TwistStamped, queue_size=10)
         self._drone = drone        
         self._counter = 0

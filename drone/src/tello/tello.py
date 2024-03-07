@@ -24,8 +24,8 @@ class Tello:
     background_frame_read: Optional['BackgroundFrameRead'] = None
 
     response_received = Event()
-    responses = []
-    commands = []
+    response_queue = []
+    command_queue = []
 
     response_thread = None
     state_thread = None
@@ -33,6 +33,8 @@ class Tello:
     command_timeout = 10
 
     running = True
+
+    last_command_ts = None
 
     def __init__(self, command_timeout = 10):
         
@@ -45,6 +47,8 @@ class Tello:
         self.state_recv_socket.bind(('', self.state_port))
         
 
+    # connect to drone
+    # blocks till connection is made
     def connect(self) -> bool:
         self.connected = False
         
@@ -72,13 +76,13 @@ class Tello:
                 data, server = self.sock.recvfrom(1518)
                 response = data.decode(encoding="utf-8")
                 #print(response)
-                self.responses.append(response.strip())
+                self.response_queue.append(response.strip())
                 self.response_received.set()
             except Exception as e:
                 print('\nError %s' % e)
                 #break
     
-
+    # registers callback for processing the state
     def registerStateHandler(self, callback):
         self.state_handlers.append(callback)
 
@@ -105,9 +109,9 @@ class Tello:
         result = None
         self.send_command(cmd)
         self.response_received.wait(timeout=timeout)
-        if self.responses:
-            result = self.responses.pop()
-            cmd = self.commands.pop()
+        if self.response_queue:
+            result = self.response_queue.pop()
+            cmd = self.command_queue.pop()
             print('\n%s -> %s' % (cmd, result))
         else:
             print ('\n timeout')
@@ -151,7 +155,6 @@ class Tello:
 
     ## blocking method to send command and return with the string result
     ## deprecated: use command_str() instead
-
     def send_command_with_return(self, cmd, timeout=10) -> str:
         result = ''
         self.send_command(cmd)
@@ -169,21 +172,14 @@ class Tello:
         self.sock.close()
 
 
-
     ## send command to drone and return imidiately
     def send_command(self, cmd):
         sent = self.sock.sendto(cmd.encode(encoding="utf-8"), self.tello_address)
-        self.commands.append(cmd)
+        self.command_queue.append(cmd)
         self.response_received.clear()
+        self.last_command_ts = time.time()
         return sent
     
-    ## execute multiple commands after each other
-    def execute_commands(self, cmds, sleep=1):
-        for cmd in cmds:
-            self.command(cmd)
-            time.sleep(sleep)
-        return True
-
     #image frame getter copied from dijtello lib
     def get_frame_read(self, with_queue = False, max_queue_len = 32) -> 'BackgroundFrameRead':
             """Get the BackgroundFrameRead object from the camera drone. Then, you just need to call
@@ -197,6 +193,11 @@ class Tello:
                 self.background_frame_read = BackgroundFrameRead(self, address, with_queue, max_queue_len)
                 self.background_frame_read.start()
             return self.background_frame_read
+
+    def keep_alive(self):
+        #print('ka: %d' % (time.time() - self.last_command_ts))
+        if (time.time() - self.last_command_ts) > 8:
+            self.command_str('time?')
 
     # TODO: test
     def terminate(self):

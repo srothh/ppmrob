@@ -21,29 +21,30 @@ def drone_node(drone):
 
     drone.connect()
     
-    emergency_server = EmergencyAction('emergency', drone)
+    emergency_server = EmergencyAction(common.config.defaults.drone_emergency_action_name, drone)
     rospy.loginfo("emergency server created")
 
-
-    launch_server = LaunchAction('launch', drone)
+    launch_server = LaunchAction(common.config.defaults.drone_launch_action_name, drone)
     rospy.loginfo("launch server created")
 
-    launch_server = MoveAction('move', drone)
+    move_server = MoveAction(common.config.defaults.drone_move_action_name, drone)
     rospy.loginfo("move server created")
 
-    launch_server = CommandAction('command', drone)
+    command_server = CommandAction(common.config.defaults.drone_command_action_name, drone)
     rospy.loginfo("command server created")
 
-    img = ImageSensor(drone)
+    img = ImageSensor(drone, topic=common.config.defaults.drone_image_sensor_publish_topic_name)
     rospy.Timer(rospy.Duration(0.5), img.publish)
     rospy.loginfo("image publisher started")
 
-    twist = TwistSensor()
+    twist = TwistSensor(topic=common.config.defaults.drone_twist_sensor_publish_topic_name)
     drone.registerStateHandler(twist.publish)
 
-    battery = BatterySensor()
+    battery = BatterySensor(topic=common.config.defaults.drone_battery_sensor_publish_topic_name)
     drone.registerStateHandler(battery.publish)
 
+    #keepalive
+    rospy.Timer(rospy.Duration(10), lambda x: drone.keep_alive())
 
     rospy.loginfo("drone_node started")
     rospy.spin()

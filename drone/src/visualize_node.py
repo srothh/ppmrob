@@ -9,6 +9,8 @@ from matplotlib import gridspec, transforms
 import numpy as np
 import control.msg
 import drone.msg
+import common.config.defaults
+
 
 positions = []
 targets = []
@@ -49,9 +51,9 @@ if __name__ == '__main__':
         rospy.init_node('visualize_node')  # register the node with roscore, allowing it to communicate with other nodes
         odo_subscriber = rospy.Subscriber('/odometry/return_signal', PoseStamped, callback=odometry_callback)
         control_subscriber = rospy.Subscriber('/TransformActionServer/goal', control.msg.TransformActionGoal, callback=control_callback)
-        drone_subscriber = rospy.Subscriber('/move/goal', drone.msg.MoveActionGoal, callback=drone_move_callback)
-        twist_subscriber = rospy.Subscriber('/drone/twist', TwistStamped, callback=drone_twist_callback)
-        battery_subscriber = rospy.Subscriber('/drone/battery', UInt8, callback=drone_battery_callback)
+        drone_subscriber = rospy.Subscriber('/'+common.config.defaults.drone_move_action_name + '/goal', drone.msg.MoveActionGoal, callback=drone_move_callback)
+        twist_subscriber = rospy.Subscriber(common.config.defaults.drone_twist_sensor_publish_topic_name, TwistStamped, callback=drone_twist_callback)
+        battery_subscriber = rospy.Subscriber(common.config.defaults.drone_battery_sensor_publish_topic_name, UInt8, callback=drone_battery_callback)
         
         targets.append((0,0,0))
 
@@ -64,7 +66,7 @@ if __name__ == '__main__':
         ax1.grid(True)
         ax1.set_ylim(-400, 400)
         ax1.set_xlim(-400, 400)
-        ax1.invert_xaxis()
+        #ax1.invert_xaxis()
         
         ax2 = plt.subplot(gs[0,1], projection='polar')
         ax3 = plt.subplot(gs[1,1])
@@ -90,12 +92,14 @@ if __name__ == '__main__':
                 ax3.set_ylim(0,100)
                 ax3.fill_between(np.arange(0, len(bats)), bats, color=color)
             if positions:
-                x, y, z = positions[-1]
-                ax1.plot(y, x, ".", color="blue")
+                #x, y, z = positions[-1]
+                x = [i for i, j, k in positions]
+                y = [j for i, j, k in positions]               
+                ax1.plot(x, y, ".", color="blue")
             if targets:
                 x = [i for i, j, k in targets]
                 y = [j for i, j, k in targets]               
-                ax1.plot(y, x, "-r")
+                ax1.plot(x, y, "-r")
             if moves:
                 x, y, z, r = moves[-1]                
                 ax2.cla()

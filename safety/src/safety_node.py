@@ -2,7 +2,7 @@
 
 import rospy 
 import actionlib  # the library should be added as package dependency for the package on which working here
-import common.msg
+import drone.msg
 
 
 if __name__ == '__main__':

@@ -20,8 +20,8 @@ class ImageSensor():
             rospy.loginfo(e)
 
 
-    def __init__(self, drone):
-        self._publish_to_topic = common.config.defaults.drone_image_sensor_publish_topic_name
+    def __init__(self, drone, topic=None):
+        self._publish_to_topic = topic
         self._publisher = rospy.Publisher(self._publish_to_topic, Image, queue_size=10)
         self._drone = drone
         self._br = CvBridge()

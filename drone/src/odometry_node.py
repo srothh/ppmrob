@@ -9,7 +9,7 @@ import common.config.defaults
 
 
 
-ODOMETRY_DEFAULT_RATE = 1  # Send every second
+ODOMETRY_DEFAULT_RATE = 10  # in Hz
 DEFAULT_POSITION = 0
 
 
@@ -40,9 +40,9 @@ class OdometrySubscriber:
                     
                 if (len(times) > 2):
                     deltaTimeS=np.diff(times)
-                    message.pose.position.x =  sum(vx[1:len(vx)]*deltaTimeS)
-                    message.pose.position.y =  sum(vy[1:len(vy)]*deltaTimeS)
-                    message.pose.position.z =  sum(vz[1:len(vz)]*deltaTimeS)
+                    message.pose.position.x =  sum(vx[1:len(vx)]*deltaTimeS)*(10)
+                    message.pose.position.y =  sum(vy[1:len(vy)]*deltaTimeS)*(-10)
+                    message.pose.position.z =  sum(vz[1:len(vz)]*deltaTimeS)*10
                     pub.publish(message) # publish the return signal
                     #self._messages = []
                     #rospy.loginfo("Publishing %s return signal", message.data)

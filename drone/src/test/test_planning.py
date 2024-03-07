@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 import rospy
 import actionlib
 import time
-import common.msg
+import drone.msg
 from geometry_msgs.msg import Transform, Vector3, Quaternion
 
 from grid_map_lib import GridMap, FloatGrid
@@ -369,17 +369,17 @@ def main():  # pragma: no cover
     # planning_animation(ox, oy, resolution)
 
     #rectangle map
-    #ox = [0.0, 200.0, 200.0, 0.0, 0.0]
-    #oy = [0.0, 0.0, 200.0, 200.0, 0.0]
+    ox = [0.0, 200.0, 200.0, 0.0, 0.0]
+    oy = [0.0, 0.0, 200.0, 200.0, 0.0]
 
-    ox = [0.0, 0.0, 300.0, 300.0, 200.0, 200.0, 100.0, 100.0, 0.0]
-    oy = [0.0, 300.0, 300.0, 0.0, 0.0, 100.0, 100.0, 0.0, 0.0]
+    #ox = [0.0, 0.0, 300.0, 300.0, 200.0, 200.0, 100.0, 100.0, 0.0]
+    #oy = [0.0, 300.0, 300.0, 0.0, 0.0, 100.0, 100.0, 0.0, 0.0]
 
     #ox = [0.0, 200.0, 200.0, 100.0, 100.0, 0.0,   0]
     #oy = [0.0, 0,     200.0, 200.0, 100.0, 100.0, 0]
 
 
-    resolution = 20.0
+    resolution = 40.0
     planning_animation(ox, oy, resolution, False)
 
     # ox = [0.0, 20.0, 50.0, 200.0, 130.0, 40.0, 0.0]

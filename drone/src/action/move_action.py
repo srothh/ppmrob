@@ -63,10 +63,11 @@ class MoveAction(object):
             else:
                 raise Exception("invalid movement axis: %s" % goal.target.translation)
         
+            self.success_cb(success)
+    
         except Exception as e:
             rospy.loginfo(e)
             self.success_cb(False)
-        self.success_cb(success)
 
     def command(self, command):
         return self._drone.command(command)
