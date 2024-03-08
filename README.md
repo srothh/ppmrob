@@ -15,8 +15,8 @@ docker compose down
 ## Development
 
     # in catkin workspace (i.e., ppmrob)
-    catkin_make
-    source devel/setup.bash
+    catkin_make # compile
+    source devel/setup.bash # update the workspace environment
 
 
 When successful you should be able to run, e.g., `roscd battery`.
