@@ -3,6 +3,7 @@
 import rospy  # the library should be added as package dependency for the package on which working here
 import cv2
 from geometry_msgs.msg import PoseStamped, TwistStamped
+from sensor_msgs.msg import Image
 from std_msgs.msg import UInt8, Bool
 import matplotlib.pyplot as plt
 from matplotlib import gridspec, transforms
@@ -10,7 +11,8 @@ import numpy as np
 import control.msg
 import drone.msg
 import common.config.defaults
-
+from cv_bridge import CvBridge, CvBridgeError
+import cv2
 
 positions = []
 targets = []
@@ -18,7 +20,8 @@ moves = []
 twists = []
 batteries = []
 battery_signal = True
-
+image = []
+br = CvBridge()
 
 
 def odometry_callback(data: PoseStamped):
@@ -50,6 +53,13 @@ def battery_signal_callback(data: Bool):
     global battery_signal
     bat = (data.data)
     battery_signal = bat
+
+def drone_camera_callback(data: Image):
+    global image, br
+    image = br.imgmsg_to_cv2(data, desired_encoding='bgr8')
+    #cv2.imshow("Image window", image)
+
+
     
 
 if __name__ == '__main__':
@@ -61,22 +71,23 @@ if __name__ == '__main__':
         twist_subscriber = rospy.Subscriber(common.config.defaults.drone_twist_sensor_publish_topic_name, TwistStamped, callback=drone_twist_callback)
         drone_battery_subscriber = rospy.Subscriber(common.config.defaults.drone_battery_sensor_publish_topic_name, UInt8, callback=drone_battery_callback)
         battery_signal_subscriber = rospy.Subscriber(common.config.defaults.battery_publish_topic_name, Bool, callback=battery_signal_callback)
+        drone_camera_subsriber = rospy.Subscriber(common.config.defaults.drone_image_sensor_publish_topic_name, Image, callback=drone_camera_callback)
 
         targets.append((0,0,0))
 
 
-        #fig, (ax1, ax2) = plt.subplots(2)
         fig = plt.figure(figsize=(10, 8)) 
-        gs = gridspec.GridSpec(3, 2) 
-        ax1 = fig.add_subplot(gs[:,0])
+        gs = gridspec.GridSpec(3, 4) 
+        ax1 = fig.add_subplot(gs[:,:-2])
         ax1.axis("equal")
         ax1.grid(True)
         #ax1.set_ylim(-400, 500)
         #ax1.set_xlim(-400, 500)
         #ax1.invert_xaxis()
         
-        ax2 = plt.subplot(gs[0,1], projection='polar')
-        ax4 = plt.subplot(gs[1,1], projection='polar')
+        
+
+        ax4 = plt.subplot(gs[0,2], projection='polar')
         ax4.set_theta_direction(-1)
         ax4.set_yticklabels([])
         ax4.set_rmax(1)
@@ -84,14 +95,21 @@ if __name__ == '__main__':
                         np.radians(360),
                         np.radians(10),
                        )) 
+        ax4.set_xticklabels(np.arange(0,360,10)[::-1], fontsize='small')
         ax4.grid(True)
-        ax4.tick_params(labelsize=5)
+        ax4.tick_params(labelsize=6)
 
-        ax3 = plt.subplot(gs[2,1])
+        ax2 = plt.subplot(gs[1:,2:])
+        ax2.set_xticklabels([])
+        ax2.set_yticklabels([])
+
+        ax3 = plt.subplot(gs[0,3])
         ax3.grid(True)
+        ax3.set_aspect(2)
         ax3.set_ylim(0,100)
         ax3.get_xaxis().set_visible(False)
-        
+        ax3.tick_params(labelbottom=False, labeltop=False, labelleft=False, labelright=True,
+                     bottom=False, top=False, left=False, right=True)
         
         #plt.cla()
         # for stopping simulation with the esc key.
@@ -103,6 +121,8 @@ if __name__ == '__main__':
         last_azim = None
         last_rot = None
         while not rospy.is_shutdown():
+            if len(image) > 0:
+                ax2.imshow(image)
             if batteries:
                 bats = batteries[-10:].copy()
                 ax3.cla()
@@ -118,11 +138,12 @@ if __name__ == '__main__':
                 ax1.plot(xp, yp, ".", color="blue")
                 # orinetation
                 if last_azim:
-                        last_azim.remove()
+                    ax4.lines.pop(0)
+                    #last_azim.pop()
                 #ax4.set_theta_zero_location('N')
                 ax4.set_theta_offset(np.deg2rad(ozcp)-np.pi/2)
-                last_azim = ax4.arrow(0,0,np.deg2rad(ozcp)-np.pi,0.8, alpha = 0.5, width = 0.02, edgecolor = 'black', facecolor = 'green', lw = 2, zorder = 5)
-                
+                #last_azim = ax4.arrow(0,0,np.deg2rad(ozcp)-np.pi,0.8, alpha = 0.5, width = 0.02, edgecolor = 'black', facecolor = 'green', lw = 2, zorder = 5)
+                last_azim = ax4.plot([0,np.deg2rad(ozcp)-np.pi], [0,1], color='red')
 
             if targets:
                 # current target
@@ -143,24 +164,6 @@ if __name__ == '__main__':
 
             if moves:
                 xm, ym, zm, rm = moves[-1]                
-                ax2.cla()
-                #ax2.set_rorigin(-1.0)
-                ax2.set_theta_zero_location('N')
-                ax2.set_theta_direction(-1)
-                ax2.set_yticklabels([])
-                ax2.set_thetamin(-180)
-                ax2.set_thetamax(180)
-                #ax2.set_theta_offset(ozcp)
-                ax2.set_xticks(np.arange(np.radians(-180),
-                        np.radians(180),
-                        np.radians(45),
-                       )) 
-                if xm > 0:
-                    ax2.arrow(0,0,np.deg2rad(rm),xm, width = 0.05)
-                else:
-                    ax2.arrow(0,0,np.deg2rad(rm),20, width = 0.05, color='r')
-                    #last_rot = ax4.arrow(0,0,np.deg2rad(rm)+np.deg2rad(ozcp)-np.pi,1, width = 0.005, color='r')
-
                 if xm > 0:
                     #movement
                     try:
@@ -173,12 +176,12 @@ if __name__ == '__main__':
                         last_rot.remove()
                     except Exception:
                         pass
-                    last_rot = ax4.fill_between(np.linspace(np.deg2rad(rm)+np.deg2rad(ozcp)-np.pi, np.deg2rad(ozcp)-np.pi, 100), 0, 0.8)
+                    last_rot = ax4.fill_between(np.linspace(np.deg2rad(rm)+np.deg2rad(ozcp)-np.pi, np.deg2rad(ozcp)-np.pi, 100), 0, 1, color='lightblue', alpha=0.9)
                 
 
             #plt.plot(ipx, ipy, "or")
             #ax1.savefig("/tmp/viz.png")
-            plt.pause(0.5)    
+            plt.pause(1)    
 #        rospy.spin()
     except rospy.ROSInterruptException:
         pass
