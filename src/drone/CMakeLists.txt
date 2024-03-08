@@ -8,10 +8,10 @@ project(drone)
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
-  rospy
-  std_msgs
   actionlib_msgs
   geometry_msgs
+  rospy
+  std_msgs
 )
 
 ## System dependencies are found with CMake's conventions
@@ -62,15 +62,15 @@ find_package(catkin REQUIRED COMPONENTS
 # )
 
 ## Generate actions in the 'action' folder
- add_action_files(
-   FILES
-   Launch.action Emergency.action Move.action Command.action
- )
+add_action_files(
+FILES
+Launch.action Emergency.action Move.action Command.action
+)
 
 ## Generate added messages and services with any dependencies listed here
- generate_messages(
-   DEPENDENCIES
-   std_msgs
+generate_messages(
+DEPENDENCIES
+std_msgs
    actionlib_msgs
    geometry_msgs
  )
@@ -106,8 +106,8 @@ find_package(catkin REQUIRED COMPONENTS
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
 #  INCLUDE_DIRS include
-  LIBRARIES drone
-  CATKIN_DEPENDS rospy std_msgs actionlib_msgs
+#  LIBRARIES drone
+#  CATKIN_DEPENDS actionlib_msgs geometry_msgs rospy std_msgs
 #  DEPENDS system_lib
 )
 

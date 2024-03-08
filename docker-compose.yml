@@ -36,8 +36,8 @@ services:
       - ros_master
   drone:
     build:
-      context: .
-      dockerfile: ./drone/Dockerfile
+      context: ./src
+      dockerfile: ./src/drone/Dockerfile
 #    entrypoint: /root/src/entrypoint.sh
     environment:
       - "ROS_MASTER_URI=http://ros_master:11311"

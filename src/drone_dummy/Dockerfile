@@ -5,14 +5,15 @@ FROM ros:noetic-perception
 WORKDIR /catkin_ws/src
 
 #edit these for custom nodes
-ENV PACKAGE_NAME drone
-ENV LAUNCH_FILE mobrob.launch
+ENV PACKAGE_NAME drone_dummy
+ENV LAUNCH_FILE drone_dummy.launch
 RUN /bin/bash -c "source /opt/ros/noetic/setup.bash && catkin_create_pkg $PACKAGE_NAME rospy std_msgs"
 
 # Copy the src of package into the container
 COPY ./$PACKAGE_NAME/ /catkin_ws/src/$PACKAGE_NAME/
 COPY ./common/ /catkin_ws/src/common/
-COPY ./drone/ /catkin_ws/src/drone/
+COPY ./drone/ /catkin_ws/src/common/
+#COPY ./control/ /catkin_ws/src/control/
 
 #RUN add-apt-repository ppa:deadsnakes/ppa
 RUN apt-get update && apt-get install -y dos2unix python3.10 python3-pip netcat net-tools python3-tk
