@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import functools
 import py_trees
 import py_trees_ros
 import rospy
@@ -112,9 +113,61 @@ class Leaf(py_trees.behaviour.Behaviour):
         )
 
 
+class MyDynamicActionClient(py_trees_ros.actions.ActionClient):
+    def initialise(self):
+        home_coords = py_trees.blackboard.Blackboard().get("home_coordinates")
+        self.action_goal = planner.msg.MoveGoal(
+            x=home_coords.x,  # FIXME
+            y=home_coords.y,  # FIXME
+        )
+        super().initialise()
+
+    def terminate(self, new_status):
+        if new_status == py_trees.common.Status.SUCCESS:
+            py_trees.blackboard.Blackboard().set("returned_home ", True)
+        super().terminate(new_status)
+
+
 def create_root():
     # TODO build the final tree as if executing tree traversal algorithm: from root to bottom left to bottom right
-    root = py_trees.composites.Sequence(name="Search & rescue N victims")
+
+    # nodes
+    root = py_trees.composites.Parallel("Mission")
+    topics2bb = py_trees.composites.Sequence("Topics2BB")
+    # TODO change the topic name and adjust our architecture to use this!
+    # TODO use the constant from common folder for threshold!
+    battery2bb = py_trees_ros.battery.ToBlackboard(
+        name="Battery2BB", topic_name="/battery/state", threshold=10.0
+    )  # see tut for on which topic to publish to and which msg (only percentage)
+    # TODO # replace with the actual topic name!
+    # home_coords2bb = py_trees_ros.subscribers.ToBlackboard(
+    #     name="HomeCoords2BB",
+    #     topic_name="/mapping/home_coordinates",
+    #     blackboard_variables={"home_coordinates": None},
+    # )
+    priorities = py_trees.composites.Selector("Priorities")
+    battery_check = py_trees.composites.Selector("Battery check")
+    battery_check_decorator = py_trees.decorators.SuccessIsFailure(child=battery_check)
+    is_battery_ok = py_trees.blackboard.CheckBlackboardVariable(
+        name="Is battery low?",
+        variable_name="battery_low_warning",
+        expected_value=False,
+    )
+    # FIXME in this case ask mapping for home coordinates and send them per move action to control node!
+    return_home = MyDynamicActionClient(
+        name="Return home",
+        action_spec=planner.msg.MoveAction,
+        action_namespace="move",
+    )
+    search_and_rescue = py_trees.composites.Sequence(name="Search & rescue victim")
+    search_subtree = py_trees.composites.Sequence(name="Search victim")
+    takeoff = py_trees_ros.actions.ActionClient(
+        name="Takeoff",
+        action_spec=planner.msg.CommandAction,
+        action_goal=planner.msg.CommandGoal(command=TelloCommands.TAKEOFF),
+        action_namespace="command",
+    )
+    # TODO build the rest of the search subtree
     rescue_subtree = py_trees.composites.Sequence(name="Rescue victim")
     stop_above_victim = py_trees_ros.actions.ActionClient(
         name="Stop above victim",
@@ -129,34 +182,50 @@ def create_root():
         action_namespace="command",
     )
     # takeoff_from_there = Leaf(planner.msg.LaunchAction, planner.msg.LaunchActionGoal(order=True), "launch")
-    takeoff_from_there = py_trees_ros.actions.ActionClient(
-        name="Takeoff from there",
-        action_spec=planner.msg.CommandAction,
-        action_goal=planner.msg.CommandGoal(command=TelloCommands.TAKEOFF),
-        action_namespace="command",
-    )
 
-    root.add_children([rescue_subtree])
-    rescue_subtree.add_children(
-        [stop_above_victim, land_where_victim_found, takeoff_from_there]
-    )
+    # tree
+    root.add_children([topics2bb, priorities])
+    # topics2bb.add_children([battery2bb, home_coords2bb]) # FIXME!
+    topics2bb.add_children([battery2bb])
+    priorities.add_children([battery_check_decorator, search_and_rescue])
+    battery_check.add_children([is_battery_ok, return_home])
+    search_and_rescue.add_children([search_subtree, rescue_subtree])
+    search_subtree.add_children([takeoff])  # TODO fill the search subtree
+    rescue_subtree.add_children([stop_above_victim, land_where_victim_found])
 
     return root
 
 
-def setup_bt():
+def post_tick_handler(snapshot_visitor, tree):
+    # print(py_trees.display.ascii_tree(tree.root, snapshot_information=snapshot_visitor))
+
+    # the following actually shows more info than the above
+    py_trees.display.print_ascii_tree(tree.root, show_status=True)
+
+
+def setup_bt(timeout=15):
     """
     Set up the behaviour tree for the planning module.
 
-    This function creates the root node of the behaviour tree and sets up the tree with a timeout of 15 seconds.
+    This function creates the root node of the behaviour tree and sets up the tree with a given timeout.
+
+    Args:
+        timeout (int, optional): The timeout for setting up the behaviour tree. Defaults to 15.
 
     Returns:
         py_trees_ros.trees.BehaviourTree: The configured behaviour tree.
     """
     root = create_root()
     tree = py_trees_ros.trees.BehaviourTree(root)
+    # `SnapshotVisitor` collects runtime data to be used by visualisations
+    snapshot_visitor = py_trees.visitors.SnapshotVisitor()
+    # add a post-tick handler to print the tree after each tick in the console
+    tree.add_post_tick_handler(functools.partial(post_tick_handler, snapshot_visitor))
+    # `DebugVisitor` prints debug logging messages to stdout
+    tree.visitors.append(py_trees.visitors.DebugVisitor())
+    tree.visitors.append(snapshot_visitor)
     # TODO is 15 seconds enough? what setup is needed anyway - the action servers?
-    tree.setup(timeout=15)
+    tree.setup(timeout=timeout)
     return tree
 
 
@@ -171,21 +240,22 @@ def run_bt(behavior_tree: py_trees_ros.trees.BehaviourTree, rate_hz=2):
     Returns:
         None
     """
-    condition_met = False  # FIXME: Replace with checking whether N victims have already been rescued - maybe use Blackboard for this? or ROS params?
-    # TODO what about battery status? - add as the subtree with highest prio (most left) similar to the tut from py_trees_ros
     rate = rospy.Rate(rate_hz)
     while not rospy.is_shutdown():
-        if condition_met:  # FIXME found N victims? Blackboard?
-            break
-        behavior_tree.tick(
-            pre_tick_handler=None, post_tick_handler=None
-        )  # TODO add handlers?
+        # TODO not sure if this makes sense - maybe just sweep whole area until battery runs out
+        # if (
+        #     py_trees.blackboard.Blackboard().get("number of victims found and rescued")
+        #     == num_of_victims
+        # ):
+        #     break
+        behavior_tree.tick()  # TODO add the conditions as pre- and post_tick_handlers!
         """
         When a behaviour tree ticks, it traverses the behaviours (starting at the root of the tree), ticking each behaviour, catching its result and then using that result to make decisions on the direction the tree traversal will take. This is the decision part of the tree. Once the traversal ends back at the root, the tick is over.
 
         Any blocking work should be happening somewhere else with a behaviour simply in charge of starting/monitoring and catching the result of that work.
         """
-        py_trees.display.print_ascii_tree(tree.root, show_status=True)
+        if py_trees.blackboard.Blackboard().get("returned_home"):
+            break
         rate.sleep()
 
 
@@ -194,6 +264,7 @@ if __name__ == "__main__":
         # register the node with roscore, allowing it to communicate with other nodes
         rospy.init_node("planner")
         tree = setup_bt()
-        run_bt(tree)
+        py_trees.display.render_dot_tree(tree.root, name="planner_tree")
+        # run_bt(tree)
     except rospy.ROSInterruptException:
         pass
