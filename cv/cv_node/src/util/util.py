@@ -16,5 +16,5 @@ def build_polygon_msg(detected,msg):
             pair = pair[0]
         first = Point32(x=pair[0], y=pair[1])
         second = Point32(x=pair[2], y=pair[3])
-        msg.point_pairs.append(first).append(second)
+        msg.points.append(first).append(second)
     return msg

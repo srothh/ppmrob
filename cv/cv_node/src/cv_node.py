@@ -44,7 +44,7 @@ def callback(data, args):
     # publish
     if pub_lines is not None:
         lines_msg = Polygon()
-        lines_msg.point_pairs = []
+        lines_msg.points = []
         if lines is not None:
             lines_msg = build_polygon_msg(lines, lines_msg)
         pub_lines.publish(lines_msg)
