@@ -45,10 +45,10 @@ test protokol:
 test receiving tello status messages on port 8890
 
 ```bash
-/catkin_ws/src/drone/src# python3 tello_status.py
+# nc -ul 8890
 ```
 
-startup and test node
+#### startup and test node
 
 ```bash
 #configure ros environment
