@@ -29,6 +29,7 @@ class TwistSensor():
                 msg.twist.linear.x = state.get('vgx')
                 msg.twist.linear.y = state.get('vgy')
                 msg.twist.linear.z = state.get('vgz')
+                msg.twist.angular.z = state.get('yaw')
                 self._publisher.publish(msg)
                 self._counter += 1
         except Exception as e:

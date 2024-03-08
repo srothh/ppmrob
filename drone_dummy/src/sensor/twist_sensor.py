@@ -35,6 +35,8 @@ class TwistSensor():
             msg.twist.linear.x = self.df['vx'][self.idx]
             msg.twist.linear.y = self.df['vy'][self.idx]
             msg.twist.linear.z = self.df['vz'][self.idx]
+            msg.twist.angular.z = self.df['yaw'][self.idx]
+
             self._publisher.publish(msg)
             self._counter += 1
             self.idx = (self.idx + 1) % len(self.df)

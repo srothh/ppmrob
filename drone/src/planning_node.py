@@ -562,24 +562,24 @@ def main():  # pragma: no cover
     # planning_animation(ox, oy, resolution)
 
     #rectangle map
-    ox = [0.0, 200.0, 200.0, 0.0, 0.0]
-    oy = [0.0, 0.0, 200.0, 200.0, 0.0]
+    #ox = [0.0, 200.0, 200.0, 0.0, 0.0]
+    #oy = [0.0, 0.0, 200.0, 200.0, 0.0]
 
-    #ox = [0.0, 0.0, 300.0, 300.0, 200.0, 200.0, 100.0, 100.0, 0.0]
-    #oy = [0.0, 300.0, 300.0, 0.0, 0.0, 100.0, 100.0, 0.0, 0.0]
+    ox = [0.0, 0.0, 300.0, 300.0, 200.0, 200.0, 100.0, 100.0, 0.0]
+    oy = [0.0, 300.0, 300.0, 0.0, 0.0, 100.0, 100.0, 0.0, 0.0]
 
     #ox = [0.0, 200.0, 200.0, 100.0, 100.0, 0.0,   0]
     #oy = [0.0, 0,     200.0, 200.0, 100.0, 100.0, 0]
 
 
     resolution = 40.0
-    #px, py = planning(ox, oy, resolution)
+    px, py = planning(ox, oy, resolution)
 
     #px = [180,   0 , 180, 0 ]
     #py = [0  , 100 , 100, 0 ]
 
-    px = [1, 0]
-    py = [1  , 0]
+    #px = [20, 0]
+    #py = [20  , 0]
 
 #    if do_animation:
 #        plt.cla()
@@ -604,6 +604,8 @@ def main():  # pragma: no cover
     control_transform_client.wait_for_server()
     #px.reverse()
     #py.reverse()
+    #wait for all modules to load
+    time.sleep(5)
     for ipx, ipy in zip(px, py):
         rospy.loginfo('waypoint: %d %d' % (ipx, ipy))
         success = control_transform_client.send_goal_and_wait(control.msg.TransformGoal(target=Transform(Vector3(ipx, ipy, 0), Quaternion(0, 0, 0, 0))))

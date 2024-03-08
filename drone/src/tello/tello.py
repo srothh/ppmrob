@@ -30,7 +30,7 @@ class Tello:
     response_thread = None
     state_thread = None
 
-    command_timeout = 10
+    _command_timeout = 10
 
     running = True
 
@@ -38,7 +38,7 @@ class Tello:
 
     def __init__(self, command_timeout = 10):
         
-        self.command_timeout = command_timeout
+        self._command_timeout = command_timeout
 
         # only words with thread.select
         #self.sock.setblocking(0)
@@ -106,6 +106,8 @@ class Tello:
     # wait for response by pulling event
     # TODO progress callback
     def command_str(self, cmd, timeout=30) -> str:
+        if not timeout:
+            timeout = self._command_timeout
         result = None
         self.send_command(cmd)
         self.response_received.wait(timeout=timeout)
@@ -114,13 +116,13 @@ class Tello:
             cmd = self.command_queue.pop()
             print('\n%s -> %s' % (cmd, result))
         else:
-            print ('\n timeout')
+            print ('\n timeout: ' + self.command_queue.pop())
+        print(self.command_queue)
         return result
 
 
     # blocking method sends command and returns True if success
     def command(self, cmd, timeout=30) -> bool:
-        result = False
         return True if self.command_str(cmd, timeout) == 'ok' else False
 
     ## blocking method to send command and return with boolen success
@@ -180,6 +182,13 @@ class Tello:
         self.last_command_ts = time.time()
         return sent
     
+    ## execute multiple commands after each other
+    def execute_commands(self, cmds, sleep=0.1):
+        for cmd in cmds:
+            self.command(cmd)
+            time.sleep(sleep)
+        return True
+
     #image frame getter copied from dijtello lib
     def get_frame_read(self, with_queue = False, max_queue_len = 32) -> 'BackgroundFrameRead':
             """Get the BackgroundFrameRead object from the camera drone. Then, you just need to call

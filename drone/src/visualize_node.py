@@ -3,7 +3,7 @@
 import rospy  # the library should be added as package dependency for the package on which working here
 import cv2
 from geometry_msgs.msg import PoseStamped, TwistStamped
-from std_msgs.msg import UInt8
+from std_msgs.msg import UInt8, Bool
 import matplotlib.pyplot as plt
 from matplotlib import gridspec, transforms
 import numpy as np
@@ -17,6 +17,7 @@ targets = []
 moves = []
 twists = []
 batteries = []
+battery_signal = True
 
 
 
@@ -44,6 +45,11 @@ def drone_battery_callback(data: UInt8):
     global batteries
     bat = (data.data)
     batteries.append(bat)
+
+def battery_signal_callback(data: Bool):
+    global battery_signal
+    bat = (data.data)
+    battery_signal = bat
     
 
 if __name__ == '__main__':
@@ -53,19 +59,20 @@ if __name__ == '__main__':
         control_subscriber = rospy.Subscriber('/TransformActionServer/goal', control.msg.TransformActionGoal, callback=control_callback)
         drone_subscriber = rospy.Subscriber('/'+common.config.defaults.drone_move_action_name + '/goal', drone.msg.MoveActionGoal, callback=drone_move_callback)
         twist_subscriber = rospy.Subscriber(common.config.defaults.drone_twist_sensor_publish_topic_name, TwistStamped, callback=drone_twist_callback)
-        battery_subscriber = rospy.Subscriber(common.config.defaults.drone_battery_sensor_publish_topic_name, UInt8, callback=drone_battery_callback)
-        
+        drone_battery_subscriber = rospy.Subscriber(common.config.defaults.drone_battery_sensor_publish_topic_name, UInt8, callback=drone_battery_callback)
+        battery_signal_subscriber = rospy.Subscriber(common.config.defaults.battery_publish_topic_name, Bool, callback=battery_signal_callback)
+
         targets.append((0,0,0))
 
 
         #fig, (ax1, ax2) = plt.subplots(2)
-        fig = plt.figure(figsize=(8, 6)) 
+        fig = plt.figure(figsize=(10, 8)) 
         gs = gridspec.GridSpec(2, 2, width_ratios=[2, 1]) 
         ax1 = fig.add_subplot(gs[:,0])
         ax1.axis("equal")
         ax1.grid(True)
-        ax1.set_ylim(-400, 400)
-        ax1.set_xlim(-400, 400)
+        #ax1.set_ylim(-400, 500)
+        #ax1.set_xlim(-400, 500)
         #ax1.invert_xaxis()
         
         ax2 = plt.subplot(gs[0,1], projection='polar')
@@ -81,27 +88,40 @@ if __name__ == '__main__':
             "key_release_event",
             lambda event: [exit(0) if event.key == "escape" else None],
         )
+        last_arrow = None
         while not rospy.is_shutdown():
             if batteries:
                 bats = batteries[-10:].copy()
-                if bats[-1] > 60:
-                    color = 'green'
-                else:
-                    color = 'red'
                 ax3.cla()
                 ax3.set_ylim(0,100)
-                ax3.fill_between(np.arange(0, len(bats)), bats, color=color)
+                ax3.fill_between(np.arange(0, len(bats)), bats, color = ('orange' if battery_signal else 'olive'))
             if positions:
-                #x, y, z = positions[-1]
-                x = [i for i, j, k in positions]
-                y = [j for i, j, k in positions]               
-                ax1.plot(x, y, ".", color="blue")
+                # current position
+                xcp, ycp, zcp = positions[-1]
+                ax1.plot(xcp, ycp, ".", color="red")
+                # history
+                xp = [i for i, j, k in positions[:-1]]
+                yp = [j for i, j, k in positions[:-1]]               
+                ax1.plot(xp, yp, ".", color="blue")
             if targets:
-                x = [i for i, j, k in targets]
-                y = [j for i, j, k in targets]               
-                ax1.plot(x, y, "-r")
+                # current target
+                if len(targets) > 1:
+                    to_x, to_y, to_z = targets[-1]
+                    fr_x, fr_y, fr_z = targets[-2]
+                    if last_arrow:
+                        last_arrow.remove()
+                    last_arrow = ax1.arrow(fr_x, fr_y, to_x-fr_x, to_y-fr_y, color='red', length_includes_head=True, head_starts_at_zero=False, width=5)
+
+                    # target history
+                    x = [i for i, j, k in targets[:-1]]
+                    y = [j for i, j, k in targets[:-1]]               
+                    ax1.plot(x, y, "-", color='black')
+                else:
+                    x, y, z = targets[0]
+                    ax1.plot(x, y, "or")
+
             if moves:
-                x, y, z, r = moves[-1]                
+                xm, ym, zm, rm = moves[-1]                
                 ax2.cla()
                 #ax2.set_rorigin(-1.0)
                 ax2.set_theta_zero_location('N')
@@ -113,10 +133,10 @@ if __name__ == '__main__':
                         np.radians(180),
                         np.radians(45),
                        )) 
-                if x > 0:
-                    ax2.arrow(0,0,np.deg2rad(r),x, width = 0.05)
+                if xm > 0:
+                    ax2.arrow(0,0,np.deg2rad(rm),xm, width = 0.05)
                 else:
-                    ax2.arrow(0,0,np.deg2rad(r),20, width = 0.05, color='r')
+                    ax2.arrow(0,0,np.deg2rad(rm),20, width = 0.05, color='r')
                 #rospy.loginfo('r:%d x:%d' % (r, x))
             #if twists:
             #    x, y, z = twists[-1]                

@@ -45,6 +45,19 @@ class DroneControl:
         @rtype: object
         """
 
+
+  #      Actions:
+  #          Takeoff
+  #          Land
+  #          Movement x, y ,z geometry/translation
+  #          
+  #          *Waypoints [] translation
+  #      
+  #      subscriptions:
+  #          mapping/odometry/position
+
+
+
         #launch if needed
 
         if not self.launched:
@@ -58,20 +71,32 @@ class DroneControl:
         rbearing = round(self.normalize_angle(rbearing))
         rospy.loginfo("x1: %.2f y1: %.2f x2: %.2f y2: %.2f course: %.2f bear: %.2f dist: %.2f" % (self.prev.x, self.prev.y, target.x, target.y, course, rbearing, distance))
 
-        success_r = False
-        success_m = False
-        while not (success_m == GoalStatus.SUCCEEDED and success_r == GoalStatus.SUCCEEDED):
-            if rbearing != 0.0:
-                success_r = self.drone_move_client.send_goal_and_wait(drone.msg.MoveGoal(target=Transform(Vector3(0, 0, 0), Quaternion(0, 0, rbearing, 0))))
+
+        if rbearing != 0.0:
+            while True:
+                if self.move_drone(r = rbearing):
+                    break
+                else:
+                    rospy.loginfo('retrying')
+
+        while True:
+            if self.move_drone(x = distance):
+                break
             else:
-                success_r = GoalStatus.SUCCEEDED
-            success_m = self.drone_move_client.send_goal_and_wait(drone.msg.MoveGoal(target=Transform(Vector3(distance, 0, 0), Quaternion(0, 0, 0, 0))))
- 
+                rospy.loginfo('retrying')
+        
         self.prev = target
         self.course = course
         self._result.success = True
 
         self._as.set_succeeded(self._result)
+
+    def move_drone(self, x=0, y=0, z=0, r=0):
+        self.drone_move_client.send_goal_and_wait(drone.msg.MoveGoal(target=Transform(Vector3(x, y, z), Quaternion(0, 0, r, 0))))
+        result = self.drone_move_client.get_result()
+        return result.success
+        
+
 
     def main_process(self):
         """ The function where several functions run in a loop and are executed
