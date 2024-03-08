@@ -1,6 +1,10 @@
 #!/usr/bin/env python3
 import math
 
+import sys
+print('sys.path:', sys.path)
+
+
 import actionlib
 import rospy
 import drone.msg

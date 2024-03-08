@@ -1,5 +1,10 @@
 #!/usr/bin/env python3
 
+
+import sys
+print('sys.path:', sys.path)
+
+
 import rospy
 from std_msgs.msg import String
 from action import LaunchAction
