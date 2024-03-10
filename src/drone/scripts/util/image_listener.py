@@ -6,7 +6,10 @@ from cv_bridge import CvBridge, CvBridgeError
 import cv2
 #from PIL import Image
 
+counter = 0
+
 def callback(data):
+    global counter
     rospy.loginfo("Received image frame: %d %dx%d" % (data.height, data.height, data.width))
     br = CvBridge()
     # note: swich encoding to bgr8 
@@ -15,7 +18,8 @@ def callback(data):
     #cv2.imshow("Image window", frame)
     #cv2.waitKey(3)
     #save image
-    cv2.imwrite('lastframe.png', frame)
+    cv2.imwrite('frame-{%d}.png'.format(counter), frame)
+    counter += 1
 
 def listener_node():
     # Initialize the ROS node

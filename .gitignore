@@ -175,3 +175,5 @@ devel
 src/CMakeLists.txt
 # ignore catkin files
 .catkin_workspace
+__pycache__
+
