@@ -81,6 +81,8 @@ find_package(catkin REQUIRED COMPONENTS
    Move.action
    Planning.action
    Rotate.action
+   Land.action
+   TakeOff.action
  )
 
 ## Generate added messages and services with any dependencies listed here

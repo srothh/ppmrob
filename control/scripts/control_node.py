@@ -3,41 +3,58 @@ import math
 
 import actionlib
 import rospy
-from action import DroneActionCmd
+import control.msg
+import commands
+from action import DroneMoveCommand
 from std_msgs.msg import String
-from control.msg import DroneActionCommandAction, DroneActionCommandResult, DroneActionCommandFeedback
+from commands.takeoff_land_handler import TakeOffAndLandHandler
+from geometry_msgs.msg import Transform, Vector3, Quaternion
+from actionlib_msgs.msg import GoalStatus
+from control.msg import MoveAction, MoveResult, MoveFeedback, PlanningAction, PlanningResult, PlanningFeedback
 
 
 class DroneControl:
     def __init__(self):
         # Class Variables from different nodes
+        self.prev = Vector3(0.0, 0.0, 0.0)
+        self.takeOff = False
+        self.land = False
         self.prev_x = None
         self.prev_y = None
         self.target_x = None
         self.target_y = None
-        self.course = None
+        self.prev_course = None
         self.drone_data = None
         self.planning_data = None
         self.mapping_data = None
-        rospy.init_node("control_node_listener", anonymous=True)
+        rospy.init_node("control_node", anonymous=True)
 
         rospy.Subscriber("drone", String, self.drone_callback)
 
         rospy.Subscriber("mapping_data", String, self.mapping_callback)
 
-        rospy.Subscriber("planning_data", String, self.planning_callback)
+        rospy.Subscriber("planning_decision_data", String, self.planning_decision_callback)
 
         self.drone_command_pub = rospy.Publisher("drone_node", String, queue_size=10)
 
+        self._feedback = MoveFeedback
+        self._result = MoveResult
+
         # Action Server
-        self.server = actionlib.SimpleActionServer(
+        # Initialised for providing MoveAction for drone node
+        self.action_server = actionlib.SimpleActionServer(
             'Movement-Server',
-            DroneActionCommandAction,
+            MoveAction,
             execute_cb=self.execute_cb,
             auto_start=False
         )
 
-        self.drone_action_command = DroneActionCmd()
+        self.planning_action_client = actionlib.SimpleActionClient('planning_action', PlanningAction)
+        self.planning_action_client.wait_for_server()
+
+        self.drone_move_command = DroneMoveCommand()
+
+        self.take_off_land_handler = TakeOffAndLandHandler()
 
     def mapping_callback(self, mapping_data):
         """ Returns the data from the mapping node
@@ -54,27 +71,35 @@ class DroneControl:
         """
         self.drone_data = data.data
 
-    def planning_callback(self, planning_data):
-        """ Returns the data from the planning node
+    def planning_decision_callback(self, decision):
+        """ Returns the decision data from the planning node if there is a need for
+            landing or taking off
 
+        @param decision:
         @param planning_data
         @rtype: object
         """
+        if decision.data == 'takeoff':
+            self.take_off_land_handler.handle_takeoff(self.takeOff)
+        elif decision.data == 'land':
+            self.take_off_land_handler.handle_takeoff(self.land)
+
+    def planning_callback(self, planning_data):
         self.target_x = planning_data.x2
         self.target_y = planning_data.y2
 
-    def calculate_rotation_and_translation(self):
+    def calculate_rotation_and_translation(self, prev, target):
         """ Calculates the rotation angle and translation for the drone node
         Return the angle in degrees and the translation as float
 
         @rtype: object
         """
-        if self.prev_x is None or self.prev_y is None or self.target_x is None or self.target_y is None:
+        if prev.x is None or prev.y is None or target.x is None or target.y is None:
             degree_angle = 0.0
             distance = 0.0
         else:
-            dx = abs(self.target_x - self.prev_x)
-            dy = abs(self.target_y - self.prev_y)
+            dx = abs(target.x - prev.x)
+            dy = abs(target.y - prev.y)
             # hypoth = math.sqrt(dx ** 2 + dy ** 2)
             # sine = dy / hypoth
             # rad_angle = math.asin(sine)
@@ -82,23 +107,62 @@ class DroneControl:
             degree_angle = math.degrees(angle)
             distance = float(dy)
 
+            self.prev = target
+
         return degree_angle, distance
 
-    def execute_cb(self):
-        """ Sends the calculated rotation and translation values as action messages to
+    def execute_cb(self, goal):
+        """ Provides the calculated rotation and translation values as action messages to
         the drone node
 
         @rtype: object
         """
-        degree_angle, distance = self.calculate_rotation_and_translation()
-        if degree_angle == 0.0:
-            self.drone_action_command.send_action_command(distance, 0.0, 0.0, 0.0, 0.0, 0.0)
-        else:
-            self.drone_action_command.send_action_command(0.0, 0.0, 0.0, 0.0, 0.0, degree_angle)
 
-        result = DroneActionCommandResult()
+        planning_goal = PlanningGoal()
+
+        # Send action request for target points to the planning node
+        self.planning_action_client.send_goal(planning_goal)
+        self.planning_action_client.wait_for_result()
+        planning_result = self.planning_action_client.get_result()
+
+        target = planning_result.target
+
+        course, distance = self.calculate_rotation_and_translation(self.prev, target)
+
+        bear = course - self.prev_course
+
+        bear = self.normalize_angle(bear)
+
+        rospy.loginfo("x1: %.2f y1: %.2f x2: %.2f y2: %.2f course: %.2f bear: %.2f dist: %.2f" % (
+            self.prev.x, self.prev.y, target.x, target.y, course, bear, distance))
+
+        self.prev_course = course
+
+        if bear != 0.0:
+            while True:
+                result = self.drone_move_command.move_drone(0.0, 0.0, 0.0, bear)
+                if result.success:
+                    break
+                else:
+                    rospy.loginfo("Retrying to rotate")
+        else:
+            while True:
+                result = self.drone_move_command.move_drone(distance, 0.0, 0.0, 0.0)
+                if result.success:
+                    break
+                else:
+                    rospy.loginfo("Retrying to translate")
+
+        result = MoveResult()
         result.success = True
-        self.server.set_succeeded(result)
+        self.action_server.set_succeeded(result)
+
+    def normalize_angle(self, angle):
+        if angle > 180.0:
+            angle -= 360.0
+        elif angle < -180.0:
+            angle += 360.0
+        return angle
 
     def main_process(self):
         """ The function where several functions run in a loop and are executed
@@ -106,8 +170,8 @@ class DroneControl:
         @rtype: object
         """
 
-        # Start the action server
-        self.server.start()
+        # Start the action server to provide MoveAction messages
+        self.action_server.start()
 
         # 10 Hz Rate
         rate = rospy.Rate(10)

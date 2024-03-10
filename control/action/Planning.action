@@ -1,5 +1,5 @@
-float32[] waypoints    # list of waypoints from the planning
+geometry_msgs/Point target    # target definition for goal
 ---
-bool success
+bool success                  # Result definition
 ---
-bool feedback
+bool feedback                 # Feedback definition
