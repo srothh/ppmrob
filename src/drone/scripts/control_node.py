@@ -44,24 +44,9 @@ class DroneControl:
         @rtype: object
         """
 
-
-  #      Actions:
-  #          Takeoff
-  #          Land
-  #          Movement x, y ,z geometry/translation
-  #          
-  #          *Waypoints [] translation
-  #      
-  #      subscriptions:
-  #          mapping/odometry/position
-
-
-
-        #launch if needed
-
-        if not self.launched:
-             success = self.drone_launch_client.send_goal_and_wait(drone.msg.LaunchGoal(takeoff=True))
-             self.launched = (success == GoalStatus.SUCCEEDED)
+#        if not self.launched:
+#             success = self.drone_launch_client.send_goal_and_wait(drone.msg.LaunchGoal(takeoff=True))
+#             self.launched = (success == GoalStatus.SUCCEEDED)
 
 
         target = goal.target.translation

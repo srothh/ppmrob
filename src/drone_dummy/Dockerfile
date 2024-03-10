@@ -12,12 +12,11 @@ RUN /bin/bash -c "source /opt/ros/noetic/setup.bash && catkin_create_pkg $PACKAG
 # Copy the src of package into the container
 COPY ./$PACKAGE_NAME/ /catkin_ws/src/$PACKAGE_NAME/
 COPY ./common/ /catkin_ws/src/common/
-COPY ./drone/ /catkin_ws/src/common/
-#COPY ./control/ /catkin_ws/src/control/
+COPY ./drone/ /catkin_ws/src/drone
 
 #RUN add-apt-repository ppa:deadsnakes/ppa
 RUN apt-get update && apt-get install -y dos2unix python3.10 python3-pip netcat net-tools python3-tk
-RUN pip3 install av image matplotlib pyqt5
+RUN pip3 install av image
 
 # Convert line endings in the Python script
 #RUN find /catkin_ws/src/$PACKAGE_NAME -type f -print0 | xargs -0 dos2unix -
@@ -38,7 +37,7 @@ ENV ROS_WORKSPACE /catkin_ws
 RUN echo "source /opt/ros/$ROS_DISTRO/setup.bash && source /catkin_ws/devel/setup.bash" >> /root/.bashrc
 
 # Source the ROS setup file every time a new container is run
-ENTRYPOINT ["/bin/bash", "-c", "source /opt/ros/$ROS_DISTRO/setup.bash && source /catkin_ws/devel/setup.bash && roslaunch $PACKAGE_NAME $LAUNCH_FILE --wait"]
-#ENTRYPOINT ["/bin/bash", "-c", "while true; do sleep 1000; done"]
+#ENTRYPOINT ["/bin/bash", "-c", "source /opt/ros/$ROS_DISTRO/setup.bash && source /catkin_ws/devel/setup.bash && roslaunch $PACKAGE_NAME $LAUNCH_FILE --wait"]
+ENTRYPOINT ["/bin/bash", "-c", "while true; do sleep 1000; done"]
 #ENTRYPOINT /root/${PACKAGE_NAME}/entrypoint.sh
  
