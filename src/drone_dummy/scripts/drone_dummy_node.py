@@ -40,11 +40,11 @@ def drone_node():
     launch_server = CommandAction('command', drone)
     rospy.loginfo("command server created")
 
-    img = ImageSensor(datadir)
+    img = ImageSensor(datadir+'/camera')
     rospy.Timer(rospy.Duration(0.5), img.publish)
     rospy.loginfo("image publisher started")
 
-    twist = TwistSensor(datadir)
+    twist = TwistSensor(datadir+'/telemetry')
     rospy.Timer(rospy.Duration(0.1), twist.publish)
     rospy.loginfo("twist publisher started")
 
