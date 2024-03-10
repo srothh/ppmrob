@@ -608,8 +608,8 @@ def main():  # pragma: no cover
     time.sleep(5)
     for ipx, ipy in zip(px, py):
         rospy.loginfo('waypoint: %d %d' % (ipx, ipy))
-        success = control_transform_client.send_goal_and_wait(control.msg.TransformGoal(target=Transform(Vector3(ipx, ipy, 0), Quaternion(0, 0, 0, 0))))
-        print('s:%s' % success)
+        #success = control_transform_client.send_goal_and_wait(control.msg.TransformGoal(target=Transform(Vector3(ipx, ipy, 0), Quaternion(0, 0, 0, 0))))
+        #print('s:%s' % success)
 
     print("done!!")
 
