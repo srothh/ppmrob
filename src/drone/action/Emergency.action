@@ -1,8 +1,0 @@
-#goal definition
-bool soft
----
-#result definition
-bool success
----
-#feedback
-bool[] progress

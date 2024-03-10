@@ -1,3 +1,0 @@
-<launch>
-  <node pkg="drone" type="drone_node.py" name="drone_node" output="screen"/>
-</launch>
