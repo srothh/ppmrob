@@ -88,6 +88,33 @@ services:
       - ppmrob
     depends_on:
       - ros_master
+  gazebo:
+    build: ./gazebo
+    environment:
+      - "ROS_MASTER_URI=http://ros_master:11311"
+      - "ROS_LOG_LEVEL=debug"
+      - "PYTHONUNBUFFERED=1"
+    ports:
+      - "9005:9005"
+      - "8889:8889/udp"
+      - "8890:8890/udp"
+      - "11111:11111/udp"
+    networks:
+      - ppmrob
+    depends_on:
+      - ros_master
+  control:
+    build: ./control
+    environment:
+      - "ROS_MASTER_URI=http://ros_master:11311"
+      - "ROS_LOG_LEVEL=info"
+      - "PYTHONUNBUFFERED=1"
+    ports:
+      - "9006:9006"
+    networks:
+      - ppmrob
+    depends_on:
+      - ros_master
 networks:
   ppmrob:
     driver: "bridge"
