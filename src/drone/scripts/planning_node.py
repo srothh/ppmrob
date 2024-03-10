@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 import rospy
 import actionlib
 import time
-import control.msg
+import drone.msg
 from geometry_msgs.msg import Transform, Vector3, Quaternion
 from functools import total_ordering
 from scipy.spatial.transform import Rotation as Rot
@@ -600,7 +600,7 @@ def main():  # pragma: no cover
     # # Prints out the result of executing the action
     # print(client.get_result())
 
-    control_transform_client = actionlib.SimpleActionClient("TransformActionServer", control.msg.TransformAction)
+    control_transform_client = actionlib.SimpleActionClient("TransformActionServer", drone.msg.ControlTransformAction)
     control_transform_client.wait_for_server()
     #px.reverse()
     #py.reverse()
@@ -608,7 +608,7 @@ def main():  # pragma: no cover
     time.sleep(5)
     for ipx, ipy in zip(px, py):
         rospy.loginfo('waypoint: %d %d' % (ipx, ipy))
-        #success = control_transform_client.send_goal_and_wait(control.msg.TransformGoal(target=Transform(Vector3(ipx, ipy, 0), Quaternion(0, 0, 0, 0))))
+        success = control_transform_client.send_goal_and_wait(drone.msg.ControlTransformGoal(target=Transform(Vector3(ipx, ipy, 0), Quaternion(0, 0, 0, 0))))
         #print('s:%s' % success)
 
     print("done!!")

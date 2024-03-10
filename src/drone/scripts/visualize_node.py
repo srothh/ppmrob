@@ -8,7 +8,7 @@ from std_msgs.msg import UInt8, Bool
 import matplotlib.pyplot as plt
 from matplotlib import gridspec, transforms
 import numpy as np
-import control.msg
+import drone.msg
 import drone.msg
 import common.config.defaults
 from cv_bridge import CvBridge, CvBridgeError
@@ -38,7 +38,7 @@ def odometry_callback(data: PoseStamped):
     coordinates = (data.pose.position.x, data.pose.position.y, data.pose.position.z, data.pose.orientation.z)
     positions.append(coordinates)
 
-def control_callback(data: control.msg.TransformActionGoal):
+def control_callback(data: drone.msg.ControlTransformActionGoal):
     global targets
     target = (data.goal.target.translation.x, data.goal.target.translation.y, data.goal.target.translation.z)
     targets.append(target)
@@ -129,19 +129,19 @@ def update(frame_number):
 
     if moves:
         xm, ym, zm, rm = moves[-1]                
-        if xm > 0:
-            #movement
-            try:
-                last_rot.remove()
-            except Exception:
-                pass
-        else:
-            #rotation
-            try:
-                last_rot.remove()
-            except Exception:
-                pass
-            last_rot = ax4.fill_between(np.linspace(np.deg2rad(rm)+np.deg2rad(ozcp)-np.pi, np.deg2rad(ozcp)-np.pi, 100), 0, 1, color='lightblue', alpha=0.9)
+        # if xm > 0:
+        #     #movement
+        #     try:
+        #         last_rot.remove()
+        #     except Exception:
+        #         pass
+        # else:
+        #     #rotation
+        #     try:
+        #         last_rot.remove()
+        #     except Exception:
+        #         pass
+        #     last_rot = ax4.fill_between(np.linspace(np.deg2rad(rm)+np.deg2rad(ozcp)-np.pi, np.deg2rad(ozcp)-np.pi, 100), 0, 1, color='lightblue', alpha=0.9)
 
 
 
@@ -149,7 +149,7 @@ if __name__ == '__main__':
     try:
         rospy.init_node('visualize_node')  # register the node with roscore, allowing it to communicate with other nodes
         odo_subscriber = rospy.Subscriber('/odometry/return_signal', PoseStamped, callback=odometry_callback)
-        control_subscriber = rospy.Subscriber('/TransformActionServer/goal', control.msg.TransformActionGoal, callback=control_callback)
+        control_subscriber = rospy.Subscriber('/TransformActionServer/goal', drone.msg.ControlTransformActionGoal, callback=control_callback)
         drone_subscriber = rospy.Subscriber('/'+common.config.defaults.drone_move_action_name + '/goal', drone.msg.MoveActionGoal, callback=drone_move_callback)
         twist_subscriber = rospy.Subscriber(common.config.defaults.drone_twist_sensor_publish_topic_name, TwistStamped, callback=drone_twist_callback)
         drone_battery_subscriber = rospy.Subscriber(common.config.defaults.drone_battery_sensor_publish_topic_name, UInt8, callback=drone_battery_callback)

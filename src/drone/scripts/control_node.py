@@ -1,14 +1,9 @@
 #!/usr/bin/env python3
 import math
 
-import sys
-print('sys.path:', sys.path)
-
-
 import actionlib
 import rospy
 import drone.msg
-import control.msg
 
 from std_msgs.msg import String
 from geometry_msgs.msg import Transform, Vector3, Quaternion
@@ -23,13 +18,13 @@ class DroneControl:
         self.launched = False
         rospy.init_node("control_node", anonymous=True)
 
-        self._feedback = control.msg.TransformFeedback()
-        self._result = control.msg.TransformResult()
+        self._feedback = drone.msg.ControlTransformFeedback()
+        self._result = drone.msg.ControlTransformResult()
 
         # Action Server
         self._as = actionlib.SimpleActionServer(
             'TransformActionServer',
-            control.msg.TransformAction,
+            drone.msg.ControlTransformAction,
             execute_cb=self.execute_cb,
             auto_start=False
         )
@@ -64,9 +59,9 @@ class DroneControl:
 
         #launch if needed
 
-        # if not self.launched:
-        #     success = self.drone_launch_client.send_goal_and_wait(drone.msg.LaunchGoal(takeoff=True))
-        #     self.launched = (success == GoalStatus.SUCCEEDED)
+        if not self.launched:
+             success = self.drone_launch_client.send_goal_and_wait(drone.msg.LaunchGoal(takeoff=True))
+             self.launched = (success == GoalStatus.SUCCEEDED)
 
 
         target = goal.target.translation
