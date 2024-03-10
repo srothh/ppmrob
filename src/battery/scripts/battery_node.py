@@ -2,7 +2,7 @@
 
 import rospy  # the library should be added as package dependency for the package on which working here
 from std_msgs.msg import Bool
-from std_msgs.msg import Int32
+from std_msgs.msg import UInt8
 
 BATTERY_FULL_PERCENTAGE = 100
 BATTERY_THRESHOLD_IN_PERCENT = 10
@@ -21,13 +21,13 @@ class BatteryManager:
             rospy.loginfo("Publishing %s return signal", message.data)
             rate.sleep()  # wait according to the publishing rate
 
-    def battery_status_callback(self, data: Int32): # never call this func. yourself, called when msg arrives
+    def battery_status_callback(self, data: UInt8): # never call this func. yourself, called when msg arrives
         rospy.loginfo("battery at %s%%", data.data)
         self._battery_status = data.data # keep as short as possible, since interrupts the execution flow
 
     def __init__(self, rate=BATTERY_DEFAULT_RATE):
         self._battery_status = BATTERY_FULL_PERCENTAGE
-        self._sub = rospy.Subscriber('/drone/battery', Int32, callback=self.battery_status_callback)
+        self._sub = rospy.Subscriber('/drone/battery', UInt8, callback=self.battery_status_callback)
         self._rate = rate # convention: prefix single underscore to non-public instance variables
 
 

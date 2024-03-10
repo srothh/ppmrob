@@ -1,0 +1,8 @@
+#goal definition
+bool takeoff
+---
+#result definition
+bool success
+---
+#feedback
+bool[] progress

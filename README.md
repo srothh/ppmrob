@@ -15,8 +15,8 @@ docker compose down
 ## Development
 
     # in catkin workspace (i.e., ppmrob)
-    catkin_make
-    source devel/setup.bash
+    catkin_make # compile
+    source devel/setup.bash # update the workspace environment
 
 
 When successful you should be able to run, e.g., `roscd battery`.
@@ -38,7 +38,7 @@ For a package to be considered a catkin package it must meet a few requirements:
               CMakeLists.txt     -- CMakeLists.txt file for package_n
               package.xml        -- Package manifest for package_n
 
-As tree (find more info [here](https://www.yahboom.net/public/upload/upload-html/1640334504/7.2%20Introduction%20of%20project%20files.html)):  
+Project file structure as a tree (find more info [here](https://www.yahboom.net/public/upload/upload-html/1640334504/7.2%20Introduction%20of%20project%20files.html)):  
 ![catkin workspace file system](https://github.com/srothh/ppmrob/assets/128387629/88483141-cafa-4f00-95af-474e443ee353)
 
 ### Custom nodes
