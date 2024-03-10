@@ -1,0 +1,3 @@
+<launch>
+  <node pkg="drone" type="visualize_node.py" name="visualize_node" output="screen"/>
+</launch>
