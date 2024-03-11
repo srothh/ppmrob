@@ -13,12 +13,12 @@ upper_beige = np.array([40, 150, 255])
 def detect_lines(image):
     # Convert the frame to grayscale
     # For testing with different cam uncomment the 2 lines below
-    # frame = cv2.resize(image, (320, 240))
-    # gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    äframe = cv2.resize(image, (320, 240))
+    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     # TEST ALSO GRAYSCALE
     (thresh, im_bw) = cv2.threshold(gray, 175, 255, cv2.THRESH_BINARY)
     # FOR TESTING
-    cv2.imshow('gray', im_bw)
+    # cv2.imshow('gray', im_bw)
     # Apply Gaussian blur to reduce noise
     blurred = cv2.GaussianBlur(im_bw, (5, 5), 0)
     # Apply Canny edge detection
@@ -32,6 +32,6 @@ def detect_lines(image):
             cv2.line(image, (x1, y1), (x2, y2), (0, 0, 255), 3)
 
     # Display the frame with detected lines
-    cv2.imshow('Frame with Detected Lines', image)
-    cv2.imshow('Canny', edges)
+    # cv2.imshow('Frame with Detected Lines', image)
+    # cv2.imshow('Canny', edges)
     return lines
