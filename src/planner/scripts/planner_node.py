@@ -222,8 +222,6 @@ def create_root():
         action_goal=planner.msg.CommandGoal(command=TelloCommands.TAKEOFF),
         action_namespace=COMMAND_ACTION_NAMESPACE,
     )
-    takeoff_one_shot = py_trees.decorators.OneShot(child=takeoff)
-    # TODO following block - the loop in search subtree
     is_victim_found = py_trees.blackboard.CheckBlackboardVariable(
         name="Victim found?",
         variable_name=BB_VAR_VICTIM_FOUND,
@@ -256,10 +254,9 @@ def create_root():
     topics2bb.add_children([battery2bb, home_coords2bb, victim_found2bb])
     priorities.add_children([battery_check, search_and_rescue])
     battery_check.add_children([is_battery_low, return_home])
-    search_and_rescue.add_children([search_subtree_condition, rescue_subtree])
+    search_and_rescue.add_children([takeoff, search_subtree_condition, rescue_subtree])
     search_subtree.add_children(
         [
-            takeoff_one_shot,
             is_victim_found_inverter,
             path_planning,
             move_to_next_position,
