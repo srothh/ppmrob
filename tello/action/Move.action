@@ -1,9 +1,0 @@
-#goal definition
-string axis
-int16 parameter
----
-#result definition
-bool success
----
-#feedback
-int16[] progress

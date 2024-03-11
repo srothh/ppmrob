@@ -1,110 +1,47 @@
 # ppmrob
 ## Initial docker setup
-Currently listener + publisher example. To run use
+To run use
 
 ``
 docker compose up --build
 ``
 
-To exit run
+To exit send `Ctrl+C` or run
 
 ``
 docker compose down
 ``
-## Custom nodes
-To create custom nodes, recreate the folder structure for your node, edit the variables PACKAGE_NAME (name of the package/node you want to create) and LAUNCH_FILE(name of the launch file in your directory for this node) in the Dockerfile
-and add the node/service to the docker-compose.yml file.
 
-## Tello
+## Development
 
-### test
-
-```bash
-#start servers
-
-$ rosrun tello tello_node.py
-
-# start state listener
-
-$ rosrun tello state_listener.py
-
-# start action client
-
-$ rosrun tello launch_client.py
-
-# view/save camera images
-
-$ rosrun tello cv_node.py
-
-```
-#### Notes
-
-* if battery < 70 strange things happen, 
-** error No valid imu
-** error no joystick
-
-### Actions
-
-| action  | argument  |   |
-|---|---|---|
-| launch  | bool order  | true: takeoff <br> false: land  |
-| rotate |  int bearing  | negative: ccw <br> positive cw  |
-| x |  int distance  | negative: back <br> positive forward  |
-| y |  int distance  | negative: left <br> positive right  |
-| z |  int distance  | negative: down <br> positive up  |
-|  command | string  | execute command  | 
-
-### Sensors
-
-sensordata published in topics
-
-| publisher  | topic | comment |
-|---|---|---|
-| TelemetrySensor  | telemetry  | all state fields |
-| BatteryPublisher  | battery | battery status |
-| ImageSensor  | camera/forward | image data |
-
-#### BatteryPublisher 
-
-queries actively the status of the battery (command 'battery?') to prevent safety hutdown after 15 sec. NOT WORKING
-
-#### TelemetrySensor
-
-contains all fields from the status string broadcasted by the drone
-
-- pitch:%d
-- roll:%d
-- yaw:%d
-- vgx:%d
-- vgy%d
-- vgz:%d
-- templ:%d
-- temph:%d
-- tof:%d
-- h:%d
-- bat:%d
-- baro:%.2f
-- time:%d
-- agx:%.2f
-- agy:%.2f
-- agz:%.2f
-
-### ImageSensor
-
-publishes image data from the camera.
-
-* links:
-http://wiki.ros.org/cv_bridge/Tutorials/ConvertingBetweenROSImagesAndOpenCVImagesPython
-
-### Servers
-
-* KeepAliveServer
-
-#### TODO
-
-- preempted actions: drone should stop current command
-- set speed
-- streaming server: false colors (blue/red)
-- command timeout
+    # in catkin workspace (i.e., ppmrob)
+    catkin_make # compile
+    source devel/setup.bash # update the workspace environment
 
 
+When successful you should be able to run, e.g., `roscd battery`.
+
+### Creating a ROS package
+For a package to be considered a catkin package it must meet a few requirements:
+1.  catkin compliant `package.xml`
+1. `CMakeLists.txt` which uses catkin
+1. have its own folder
+
+        workspace_folder/        -- WORKSPACE
+          src/                   -- SOURCE SPACE
+            CMakeLists.txt       -- 'Toplevel' CMake file, provided by catkin
+            package_1/
+              CMakeLists.txt     -- CMakeLists.txt file for package_1
+              package.xml        -- Package manifest for package_1
+            ...
+            package_n/
+              CMakeLists.txt     -- CMakeLists.txt file for package_n
+              package.xml        -- Package manifest for package_n
+
+Project file structure as a tree (find more info [here](https://www.yahboom.net/public/upload/upload-html/1640334504/7.2%20Introduction%20of%20project%20files.html)):  
+![catkin workspace file system](https://github.com/srothh/ppmrob/assets/128387629/88483141-cafa-4f00-95af-474e443ee353)
+
+### Custom nodes
+1. [CreatingPackage](http://wiki.ros.org/ROS/Tutorials/catkin/CreatingPackage)
+2. Add `Dockerfile` to the package folder
+3. Add the node/service to the `docker-compose.yml` file
