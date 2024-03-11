@@ -68,9 +68,9 @@ def cv_node():
     #    img_processing(frame, window_name)
     # STOP DELETE
     # Subscribe to the 'chatter' topic and register the callback function
-    rospy.Subscriber('camera/forward', Image_msg, callback)
-    pub_victim = rospy.Publisher('cv/victim', Polygon, queue_size=10)  # change message type
-    pub_lines = rospy.Publisher('cv/lines', Polygon, queue_size=10)  # change message type
+    rospy.Subscriber('/drone/camera', Image_msg, callback)
+    pub_victim = rospy.Publisher('/cv/victim', Polygon, queue_size=10)  # change message type
+    pub_lines = rospy.Publisher('/cv/lines', Polygon, queue_size=10)  # change message type
     print("Started CV NODE")
     # Spin to keep the script from exiting
     rospy.spin()
