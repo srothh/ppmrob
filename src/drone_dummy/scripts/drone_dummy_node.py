@@ -44,7 +44,7 @@ def drone_node():
     rospy.Timer(rospy.Duration(0.5), img.publish)
     rospy.loginfo("image publisher started")
 
-    twist = TwistSensor(datadir+'/telemetry')
+    twist = TwistSensor(datadir+'/telemetry/rotate-notmove.csv')
     rospy.Timer(rospy.Duration(0.1), twist.publish)
     rospy.loginfo("twist publisher started")
 
