@@ -55,28 +55,6 @@ services:
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
     depends_on:
       - ros_master
-  tello:
-    #image: ros:noetic-ros-base
-    build: src/tello
-    #volumes:
-    #  - type: bind
-    #    source: ./tello
-    #    target: /catkin_ws/src/tello
-    #volumes:
-    #  - ./tello:/catkin_ws/src/tello
-    environment:
-      - "ROS_MASTER_URI=http://ros_master:11311"
-      - "ROS_LOG_LEVEL=debug"
-      - "PYTHONUNBUFFERED=1"
-    ports:
-      - "9003:9003"
-      - "8889:8889/udp"
-      - "8890:8890/udp"
-      - "11111:11111/udp"
-    networks:
-      - ppmrob
-    depends_on:
-      - ros_master
   battery:
     build: src/battery
     environment:
@@ -88,7 +66,7 @@ services:
     depends_on:
       - ros_master
   control:
-    build: ./control
+    build: ./src/control
     environment:
       - "ROS_MASTER_URI=http://ros_master:11311"
       - "ROS_LOG_LEVEL=info"
