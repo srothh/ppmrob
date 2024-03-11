@@ -12,7 +12,7 @@ services:
     networks:
       - ppmrob
   cv:
-    build: ./cv/cv_node
+    build: ./src/cv/cv_node
     environment:
       - "ROS_MASTER_URI=http://ros_master:11311"
       - "ROS_LOG_LEVEL=info"
