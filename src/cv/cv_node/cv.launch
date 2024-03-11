@@ -1,0 +1,3 @@
+<launch>
+  <node pkg="cv" type="cv_node.py" name="cv" output="screen"/>
+</launch>
