@@ -10,6 +10,7 @@ from action import CommandAction
 from sensor import ImageSensor
 from sensor import TwistSensor
 from sensor import BatterySensor
+from util import StateCsvLogger
 import common.config.defaults
 
 
@@ -42,6 +43,9 @@ def drone_node(drone):
 
     battery = BatterySensor(topic=common.config.defaults.drone_battery_sensor_publish_topic_name)
     drone.registerStateHandler(battery.publish)
+
+    writer = StateCsvLogger('./state-log.csv')
+    drone.registerStateHandler(writer.log)
 
     #keepalive
     rospy.Timer(rospy.Duration(10), lambda x: drone.keep_alive())
