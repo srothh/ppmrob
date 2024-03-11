@@ -1,0 +1,3 @@
+<launch>
+  <node pkg="cockpit" type="cockpit_node.py" name="cockpit_node" output="screen"/>
+</launch>
