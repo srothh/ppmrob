@@ -48,12 +48,14 @@ def callback(data, args):
         if lines is not None:
             lines_msg = build_polygon_msg(lines, lines_msg)
         pub_lines.publish(lines_msg)
+    print("Published lines message")
     if pub_victim is not None:
         victim_msg = Polygon()
         victim_msg.points = []
         if detected is not None:
             victim_msg = build_polygon_msg(detected, victim_msg)
         pub_victim.publish(victim_msg)
+        print("Published victim message")
 
 
 def cv_node():
