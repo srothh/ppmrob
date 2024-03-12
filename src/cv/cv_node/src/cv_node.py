@@ -67,9 +67,7 @@ def cv_node():
     #    img_processing(frame, window_name)
     # STOP DELETE
     # Subscribe to the 'chatter' topic and register the callback function
-    frame = cv2.imread('/catkin_ws/src/cv/src/or0001.jpg')
-    window_name = 'contours'
-    detected, lines = img_processing(frame, window_name)
+
     rospy.Subscriber('/drone/camera', Image_msg, callback)
     pub_victim = rospy.Publisher('/cv/victim', Polygon, queue_size=10)  # change message type
     pub_lines = rospy.Publisher('/cv/lines', Polygon, queue_size=10)  # change message type
