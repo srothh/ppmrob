@@ -34,6 +34,7 @@ last_pos_history = []
 
 last_time = 0
 move_idx = 0
+victim_idx = 0
 
 def odometry_callback(data: PoseStamped):
     global positions
@@ -282,6 +283,7 @@ def update(frame_number):
         battery_current[0].set_color('red' if battery_signal else 'olive')
 
     if victims:
+        #victim_idx = len(victims)
         x1, y1, x2, y2 = victims[-1]
         victim_current.set_xy((x1, y1))
         victim_current.set_width(x2-x1)
