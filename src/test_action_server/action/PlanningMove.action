@@ -1,0 +1,5 @@
+geometry_msgs/Point target    # target definition for goal
+---
+bool success                  # Result definition
+---
+bool feedback                 # Feedback definition

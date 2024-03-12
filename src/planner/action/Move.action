@@ -1,9 +1,0 @@
-#goal definition
-int16 x
-int16 y
----
-#result definition
-bool success
----
-#feedback
-int16[] progress
