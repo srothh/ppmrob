@@ -149,7 +149,7 @@ def update_o(frame_number):
 
 
 
-rospy.init_node('visualize_node')  # register the node with roscore, allowing it to communicate with other nodes
+rospy.init_node('cockpit')  # register the node with roscore, allowing it to communicate with other nodes
 odo_subscriber = rospy.Subscriber('/odometry/return_signal', PoseStamped, callback=odometry_callback)
 control_subscriber = rospy.Subscriber('/TransformActionServer/goal', drone.msg.ControlTransformActionGoal, callback=control_callback)
 drone_subscriber = rospy.Subscriber('/'+common.config.defaults.drone_move_action_name + '/goal', drone.msg.MoveActionGoal, callback=drone_move_callback)

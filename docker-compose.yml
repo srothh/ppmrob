@@ -63,6 +63,24 @@ services:
       - ppmrob
     depends_on:
       - ros_master
+  cockpit:
+    build:
+      context: ./src
+      dockerfile: ./cockpit/Dockerfile
+    environment:
+      - "ROS_MASTER_URI=http://ros_master:11311"
+      - "ROS_LOG_LEVEL=info"
+      - "PYTHONUNBUFFERED=1"
+      - "QT_X11_NO_MITSHM=1"
+      - "DISPLAY=$DISPLAY"
+    ports:
+      - "9004:9004"
+    networks:
+      - ppmrob
+    volumes:
+      - /tmp/.X11-unix:/tmp/.X11-unix
+    depends_on:
+      - ros_master
   control:
     build: ./src/control
     environment:

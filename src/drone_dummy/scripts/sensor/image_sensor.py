@@ -12,25 +12,25 @@ class ImageSensor():
 
     # publish image data
     def publish(self, event=None):
-        try:
-            print(len(self._files))
-            idx = self._counter % len(self._files)
-            file = self._files[idx]
-            frame = cv2.imread(file, cv2.IMREAD_COLOR)
-            if frame.size == 0:
-                raise Exception("file not found: %s" % file)
-            msg = self._br.cv2_to_imgmsg(frame, encoding='rgb8')
-            rospy.logdebug('image: %s' % file)
-            self._publisher.publish(msg)
-            self._counter += 1
-        except Exception as e:
-            rospy.loginfo(e)
+        if len(self._files) > 0:
+            try:
+                idx = self._counter % len(self._files)
+                file = self._files[idx]
+                frame = cv2.imread(file, cv2.IMREAD_COLOR)
+                if frame.size == 0:
+                    raise Exception("file not found: %s" % file)
+                msg = self._br.cv2_to_imgmsg(frame, encoding='rgb8')
+                rospy.logdebug('image: %s' % file)
+                self._publisher.publish(msg)
+                self._counter += 1
+            except Exception as e:
+                rospy.logerr(e)
 
     # return list off all png files from folder
     def get_files(self):
         files = []
         for file in sorted(os.listdir(self._datadir)):
-            if file.endswith(".jpg"):
+            if file.upper().endswith(".JPG") or file.upper().endswith(".JPEG") or file.upper().endswith(".PNG"):
                 files.append(os.path.join(self._datadir, file))
         return files
 

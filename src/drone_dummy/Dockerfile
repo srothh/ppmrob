@@ -15,8 +15,9 @@ COPY ./common/ /catkin_ws/src/common/
 COPY ./drone/ /catkin_ws/src/drone
 
 #RUN add-apt-repository ppa:deadsnakes/ppa
-RUN apt-get update && apt-get install -y dos2unix python3.10 python3-pip netcat net-tools python3-tk
-RUN pip3 install av image numpy>=1.22.4 opencv-python
+RUN apt-get update && apt-get install -y dos2unix python3.10 python3-pip
+#RUN pip3 install av image numpy>=1.22.4 opencv-python
+RUN pip3 install av image pandas
 
 RUN dos2unix /catkin_ws/src/$PACKAGE_NAME/scripts/*
 RUN dos2unix /catkin_ws/src/$PACKAGE_NAME/scripts/action/*
