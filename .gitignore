@@ -186,3 +186,4 @@ fabric.properties
 .catkin_workspace
 devel
 src/CMakeLists.txt
+src/drone_dummy/scripts/data/*
