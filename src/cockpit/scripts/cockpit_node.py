@@ -2,11 +2,11 @@
 
 import rospy  # the library should be added as package dependency for the package on which working here
 import cv2
-from geometry_msgs.msg import PoseStamped, TwistStamped
+from geometry_msgs.msg import PoseStamped, TwistStamped, Polygon
 from sensor_msgs.msg import Image
 from std_msgs.msg import UInt8, Bool
 import matplotlib.pyplot as plt
-from matplotlib import gridspec, transforms
+from matplotlib import gridspec, transforms, patches
 import numpy as np
 import drone.msg
 import drone.msg
@@ -23,6 +23,7 @@ twists = []
 batteries = []
 battery_signal = True
 image = []
+victims = []
 br = CvBridge()
 
 last_arrow = None
@@ -69,7 +70,10 @@ def drone_camera_callback(data: Image):
     image = br.imgmsg_to_cv2(data, desired_encoding='bgr8')
     #cv2.imshow("Image window", image)
 
-
+def cv_victim_callback(data: Polygon):
+    global victims
+    first, second = data.points
+    victims.append([first.x, first.y, second.x, second.y])
 
 
 
@@ -157,6 +161,7 @@ twist_subscriber = rospy.Subscriber(common.config.defaults.drone_twist_sensor_pu
 drone_battery_subscriber = rospy.Subscriber(common.config.defaults.drone_battery_sensor_publish_topic_name, UInt8, callback=drone_battery_callback)
 battery_signal_subscriber = rospy.Subscriber(common.config.defaults.battery_publish_topic_name, Bool, callback=battery_signal_callback)
 drone_camera_subsriber = rospy.Subscriber(common.config.defaults.drone_image_sensor_publish_topic_name, Image, callback=drone_camera_callback)
+cv_victim_subsriber = rospy.Subscriber('/cv/victim', Polygon, callback=cv_victim_callback)
 
 targets.append((0,0,0))
 
@@ -211,6 +216,7 @@ ax2.set_xticklabels([])
 ax2.set_yticklabels([])
 whiteblankimage = np.ones(shape=[720, 960, 3], dtype=np.uint8)
 image_current = ax2.imshow(whiteblankimage)
+victim_current = ax2.add_patch(patches.Rectangle((0, 0), 0, 0, linewidth=2, edgecolor='g', facecolor='none'))
 
 ax3 = plt.subplot(gs[0,3])
 ax3.grid(True)
@@ -275,7 +281,15 @@ def update(frame_number):
         battery_current[0].set_height(batteries[-1])
         battery_current[0].set_color('red' if battery_signal else 'olive')
 
-    return [target_current, target_history, pos_current, pos_history, azimuth_current, image_current, battery_current[0], rot_current]
+    if victims:
+        x1, y1, x2, y2 = victims[-1]
+        victim_current.set_xy((x1, y1))
+        victim_current.set_width(x2-x1)
+        victim_current.set_height(y2-y1)
+#        ax2.add_patch(rect)
+        
+
+    return [target_current, target_history, pos_current, pos_history, azimuth_current, image_current, battery_current[0], rot_current, victim_current]
 
 
 animation = FuncAnimation(fig, update, blit=True, repeat=False, interval=100, save_count=100)
