@@ -13,6 +13,7 @@ class ImageSensor():
     # publish image data
     def publish(self, event=None):
         try:
+            print(len(self._files))
             idx = self._counter % len(self._files)
             file = self._files[idx]
             frame = cv2.imread(file, cv2.IMREAD_COLOR)
@@ -29,7 +30,7 @@ class ImageSensor():
     def get_files(self):
         files = []
         for file in sorted(os.listdir(self._datadir)):
-            if file.endswith(".png"):
+            if file.endswith(".jpg"):
                 files.append(os.path.join(self._datadir, file))
         return files
 

@@ -20,7 +20,7 @@ import common.config.defaults
 
 def drone_node():
 
-    datadir = os.getcwd() + "/data"
+    datadir = "/catkin_ws/src/drone_dummy/scripts/data"
 
     # Initialize the ROS node
     rospy.init_node('drone', anonymous=True)
@@ -45,9 +45,9 @@ def drone_node():
     rospy.Timer(rospy.Duration(0.5), img.publish)
     rospy.loginfo("image publisher started")
 
-    twist = TwistSensor(datadir+'/telemetry/rotate-notmove.csv')
-    rospy.Timer(rospy.Duration(0.1), twist.publish)
-    rospy.loginfo("twist publisher started")
+#    twist = TwistSensor(datadir+'/telemetry/rotate-notmove.csv')
+#    rospy.Timer(rospy.Duration(0.1), twist.publish)
+#    rospy.loginfo("twist publisher started")
 
     battery = BatterySensor()
     rospy.Timer(rospy.Duration(0.1), battery.publish)

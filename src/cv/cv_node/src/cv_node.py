@@ -30,7 +30,7 @@ Both publish a geometry_msgs/Polygon message, and every pair of Point32 in the m
 """
 
 
-def callback(data, args):
+def callback(data):
     rospy.loginfo("Received image frame: %d %dx%d" % (data.height, data.height, data.width))
     br = CvBridge()
     # note: swich encoding to bgr8
@@ -40,7 +40,7 @@ def callback(data, args):
     # cv2.waitKey(3)
     # save image
     # cv2.imwrite('lastframe.png', frame)
-    detected, lines = img_processing(frame, args[0])
+    detected, lines = img_processing(frame)
     # publish
     if pub_lines is not None:
         lines_msg = Polygon()
@@ -48,15 +48,12 @@ def callback(data, args):
         if lines is not None:
             lines_msg = build_polygon_msg(lines, lines_msg)
         pub_lines.publish(lines_msg)
-    print("Published lines message")
     if pub_victim is not None:
         victim_msg = Polygon()
         victim_msg.points = []
         if detected is not None:
             victim_msg = build_polygon_msg(detected, victim_msg)
         pub_victim.publish(victim_msg)
-        print("Published victim message")
-
 
 def cv_node():
     global pub_lines, pub_victim
