@@ -51,6 +51,22 @@ services:
       - "11111:11111/udp"
     networks:
       - ppmrob
+    depends_on:
+      - ros_master
+  cockpit:
+    build:
+      context: ./src
+      dockerfile: ./cockpit/Dockerfile
+    environment:
+      - "ROS_MASTER_URI=http://ros_master:11311"
+      - "ROS_LOG_LEVEL=info"
+      - "PYTHONUNBUFFERED=1"
+      - "DISPLAY"
+      - "QT_X11_NO_MITSHM=1"
+    ports:
+      - "9004:9004"
+    networks:
+      - ppmrob
     volumes:
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
     depends_on:

@@ -177,3 +177,4 @@ src/CMakeLists.txt
 .catkin_workspace
 __pycache__
 
+state-log.csv

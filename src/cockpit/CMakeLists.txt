@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.0.2)
-project(odometry)
+project(cockpit)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
 # add_compile_options(-std=c++11)
@@ -10,8 +10,6 @@ project(odometry)
 find_package(catkin REQUIRED COMPONENTS
   rospy
   std_msgs
-  actionlib_msgs
-  geometry_msgs
 )
 
 ## System dependencies are found with CMake's conventions
@@ -64,15 +62,14 @@ find_package(catkin REQUIRED COMPONENTS
 ## Generate actions in the 'action' folder
 # add_action_files(
 #   FILES
-#   Launch.action Emergency.action Move.action Command.action
+#   Action1.action
+#   Action2.action
 # )
 
 ## Generate added messages and services with any dependencies listed here
 # generate_messages(
 #   DEPENDENCIES
 #   std_msgs
-#   actionlib_msgs
-#   geometry_msgs
 # )
 
 ################################################
@@ -106,8 +103,8 @@ find_package(catkin REQUIRED COMPONENTS
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
 #  INCLUDE_DIRS include
-#  LIBRARIES drone
-  CATKIN_DEPENDS rospy std_msgs actionlib_msgs
+#  LIBRARIES cockpit
+#  CATKIN_DEPENDS rospy std_msgs
 #  DEPENDS system_lib
 )
 
@@ -124,7 +121,7 @@ include_directories(
 
 ## Declare a C++ library
 # add_library(${PROJECT_NAME}
-#   src/${PROJECT_NAME}/drone.cpp
+#   src/${PROJECT_NAME}/cockpit.cpp
 # )
 
 ## Add cmake target dependencies of the library
@@ -135,7 +132,7 @@ include_directories(
 ## Declare a C++ executable
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
-# add_executable(${PROJECT_NAME}_node src/drone_node.cpp)
+# add_executable(${PROJECT_NAME}_node src/cockpit_node.cpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -199,7 +196,7 @@ include_directories(
 #############
 
 ## Add gtest based cpp test target and link libraries
-# catkin_add_gtest(${PROJECT_NAME}-test test/test_drone.cpp)
+# catkin_add_gtest(${PROJECT_NAME}-test test/test_cockpit.cpp)
 # if(TARGET ${PROJECT_NAME}-test)
 #   target_link_libraries(${PROJECT_NAME}-test ${PROJECT_NAME})
 # endif()

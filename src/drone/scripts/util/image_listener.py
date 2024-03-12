@@ -18,7 +18,7 @@ def callback(data):
     #cv2.imshow("Image window", frame)
     #cv2.waitKey(3)
     #save image
-    cv2.imwrite('frame-{%d}.png'.format(counter), frame)
+    cv2.imwrite('frame-{:04d}.png'.format(counter), frame)
     counter += 1
 
 def listener_node():

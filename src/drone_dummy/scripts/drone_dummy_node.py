@@ -6,6 +6,7 @@ print('sys.path:', sys.path)
 
 
 import rospy
+import os
 from std_msgs.msg import String
 from action import LaunchAction
 from action import MoveAction
@@ -19,7 +20,7 @@ import common.config.defaults
 
 def drone_node():
 
-    datadir = "/home/lazafi/labor/mobrob-2023/src/ppmrob2/repo/src/drone_dummy/scripts/data"
+    datadir = os.getcwd() + "/data"
 
     # Initialize the ROS node
     rospy.init_node('drone', anonymous=True)
@@ -44,7 +45,7 @@ def drone_node():
     rospy.Timer(rospy.Duration(0.5), img.publish)
     rospy.loginfo("image publisher started")
 
-    twist = TwistSensor(datadir+'/telemetry')
+    twist = TwistSensor(datadir+'/telemetry/rotate-notmove.csv')
     rospy.Timer(rospy.Duration(0.1), twist.publish)
     rospy.loginfo("twist publisher started")
 
