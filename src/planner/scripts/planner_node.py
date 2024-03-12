@@ -5,23 +5,20 @@ import actionlib
 import py_trees
 import py_trees_ros
 import rospy
-import planner.msg
+
+# import control.msg
+import test_planning.msg
 
 # import grid_based_sweep
 from std_msgs.msg import String, Bool
+from geometry_msgs.msg import Point
+
+import common.config.defaults as defaults  # TODO add to dockerfile as per issue!
 
 
 BB_VAR_RETURNED_HOME = "returned_home"
 BB_VAR_HOME_COORDINATES = "home_coordinates"
 BB_VAR_VICTIM_FOUND = "victim_found"
-MOVE_ACTION_NAMESPACE = "move"
-COMMAND_ACTION_NAMESPACE = "command"
-
-
-class TelloCommands:
-    TAKEOFF = "takeoff"
-    LAND = "land"
-    STOP = "stop"
 
 
 class CreatePlan(py_trees.behaviour.Behaviour):
@@ -144,7 +141,7 @@ class Leaf(py_trees.behaviour.Behaviour):
 class MyDynamicActionClient(py_trees_ros.actions.ActionClient):
     def initialise(self):
         home_coords = py_trees.blackboard.Blackboard().get(BB_VAR_HOME_COORDINATES)
-        self.action_goal = planner.msg.MoveGoal(
+        self.action_goal = test_planning.msg.PlanningMoveGoal(
             x=home_coords.x,  # FIXME
             y=home_coords.y,  # FIXME
         )
@@ -158,16 +155,13 @@ class MyDynamicActionClient(py_trees_ros.actions.ActionClient):
         super().terminate(new_status)
 
 
-class MoveDynamicActionClient(py_trees_ros.actions.ActionClient):
+class PlanningMoveDynamicActionClient(py_trees_ros.actions.ActionClient):
 
     def initialise(self):
-        planned_path = py_trees.blackboard.Blackboard().get(
-            "planned_path"
-        )  # TODO as constant
-        self.action_goal = planner.msg.MoveGoal(
-            x=planned_path.x,  # FIXME
-            y=planned_path.y,  # FIXME
-        )
+        # TODO as constant
+        planned_path = py_trees.blackboard.Blackboard().get("planned_path")
+        # TODO check that this works as intended!
+        self.action_goal = test_planning.msg.PlanningMoveGoal(target=planned_path)
         super().initialise()
 
 
@@ -186,14 +180,14 @@ def create_root():
     # FIXME maybe just delete and create own behavior that will just use service to get home coordinates?
     home_coords2bb = py_trees_ros.subscribers.ToBlackboard(
         name="HomeCoords2BB",
-        topic_name="/mapping/home_coordinates",  # TODO - communicate with team
-        topic_type=planner.msg.Coordinates,  # TODO - communicate with team
+        topic_name=defaults.Odometry.HOME_COORDS_TOPIC_NAME,
+        topic_type=Point,
         blackboard_variables={BB_VAR_HOME_COORDINATES: None},
     )
     victim_found2bb = py_trees_ros.subscribers.ToBlackboard(
         name="VictimFound2BB",
-        topic_name="/mapping/victim_found",  # TODO - communicate with team
-        topic_type=Bool,  # TODO communicate with team
+        topic_name=defaults.Mapping.VICTIM_FOUND_TOPIC_NAME,
+        topic_type=Bool,
         # get rid of the annoying sub-data field
         blackboard_variables={BB_VAR_VICTIM_FOUND: "data"},
     )
@@ -208,8 +202,8 @@ def create_root():
     # FIXME I just need this actionclient to set variable in blackboard, waypoint needs to be set just once!
     return_home = MyDynamicActionClient(
         name="Return home",
-        action_spec=planner.msg.MoveAction,
-        action_namespace=MOVE_ACTION_NAMESPACE,
+        action_spec=test_planning.msg.PlanningMoveAction,
+        action_namespace=defaults.Planning.MOVE_ACTION_NAMESPACE,
     )
     search_and_rescue = py_trees.composites.Sequence(name="Search & rescue victim")
     search_subtree = py_trees.composites.Sequence(name="Search victim")
@@ -218,9 +212,11 @@ def create_root():
     )
     takeoff = py_trees_ros.actions.ActionClient(
         name="Takeoff",
-        action_spec=planner.msg.CommandAction,
-        action_goal=planner.msg.CommandGoal(command=TelloCommands.TAKEOFF),
-        action_namespace=COMMAND_ACTION_NAMESPACE,
+        action_spec=test_planning.msg.PlanningCommandAction,
+        action_goal=test_planning.msg.PlanningCommandGoal(
+            command=defaults.TelloCommands.TAKEOFF
+        ),
+        action_namespace=defaults.Planning.COMMAND_ACTION_NAMESPACE,
     )
     is_victim_found = py_trees.blackboard.CheckBlackboardVariable(
         name="Victim found?",
@@ -230,23 +226,27 @@ def create_root():
     is_victim_found_inverter = py_trees.decorators.Inverter(child=is_victim_found)
     path_planning = py_trees.behaviours.Success("Path planning")
     # FIXME following needs output of path planning! -> make dynamic action client
-    move_to_next_position = MoveDynamicActionClient(
+    move_to_next_position = PlanningMoveDynamicActionClient(
         name="Move to next position",
-        action_spec=planner.msg.MoveAction,
-        action_namespace=MOVE_ACTION_NAMESPACE,
+        action_spec=test_planning.msg.PlanningMoveAction,
+        action_namespace=defaults.Planning.MOVE_ACTION_NAMESPACE,
     )
     rescue_subtree = py_trees.composites.Sequence(name="Rescue victim")
     stop_above_victim = py_trees_ros.actions.ActionClient(
         name="Stop above victim",
-        action_spec=planner.msg.CommandAction,
-        action_goal=planner.msg.CommandGoal(command=TelloCommands.STOP),
-        action_namespace=COMMAND_ACTION_NAMESPACE,
+        action_spec=test_planning.msg.PlanningCommandAction,
+        action_goal=test_planning.msg.PlanningCommandGoal(
+            command=defaults.TelloCommands.STOP
+        ),
+        action_namespace=defaults.Planning.COMMAND_ACTION_NAMESPACE,
     )
     land_where_victim_found = py_trees_ros.actions.ActionClient(
         name="Land where victim found",
-        action_spec=planner.msg.CommandAction,
-        action_goal=planner.msg.CommandGoal(command=TelloCommands.LAND),
-        action_namespace=COMMAND_ACTION_NAMESPACE,
+        action_spec=test_planning.msg.PlanningCommandAction,
+        action_goal=test_planning.msg.PlanningCommandGoal(
+            command=defaults.TelloCommands.LAND
+        ),
+        action_namespace=defaults.Planning.COMMAND_ACTION_NAMESPACE,
     )
     # takeoff_from_there = Leaf(planner.msg.LaunchAction, planner.msg.LaunchActionGoal(order=True), "launch")
     # tree
