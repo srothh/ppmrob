@@ -11,8 +11,8 @@ services:
       - "11311:11311"
     networks:
       - ppmrob
-  cv:
-    build: ./cv/cv_node
+  publisher:
+    build: src/publisher
     environment:
       - "ROS_MASTER_URI=http://ros_master:11311"
       - "ROS_LOG_LEVEL=info"
@@ -28,7 +28,7 @@ services:
       - "ROS_MASTER_URI=http://ros_master:11311"
       - "ROS_LOG_LEVEL=info"
       - "PYTHONUNBUFFERED=1"
-    build: ./listener
+    build: src/listener
     ports:
       - "6000:6000"
     #    runtime: nvidia GPU needs extra work
@@ -69,27 +69,24 @@ services:
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
     depends_on:
       - ros_master
-  gazebo:
-    build: ./gazebo
-    environment:
-      - "ROS_MASTER_URI=http://ros_master:11311"
-      - "ROS_LOG_LEVEL=debug"
-      - "PYTHONUNBUFFERED=1"
-    ports:
-      - "9003:9003"
-      - "8889:8889/udp"
-      - "8890:8890/udp"
-      - "11111:11111/udp"
-    networks:
-      - ppmrob
-    depends_on:
-      - ros_master
-  odometry:
-    build: ./odometry
+  battery:
+    build: src/battery
     environment:
       - "ROS_MASTER_URI=http://ros_master:11311"
       - "ROS_LOG_LEVEL=info"
       - "PYTHONUNBUFFERED=1"
+    networks:
+      - ppmrob
+    depends_on:
+      - ros_master
+  control:
+    build: ./src/control
+    environment:
+      - "ROS_MASTER_URI=http://ros_master:11311"
+      - "ROS_LOG_LEVEL=info"
+      - "PYTHONUNBUFFERED=1"
+    ports:
+      - "9006:9006"
     networks:
       - ppmrob
     depends_on:

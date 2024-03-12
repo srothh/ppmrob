@@ -1,0 +1,12 @@
+float64 x_translation
+float64 y_translation
+float64 z_translation
+float64 x_rotation
+float64 y_rotation
+float64 z_rotation
+---
+# result
+bool success
+---
+# feedback
+bool feedback
