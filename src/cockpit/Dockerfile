@@ -14,12 +14,14 @@ COPY ./$PACKAGE_NAME/ /catkin_ws/src/$PACKAGE_NAME/
 COPY ./common/ /catkin_ws/src/common/
 COPY ./drone/ /catkin_ws/src/drone/
 
+# this is needed for matplotlib
+COPY ./cockpit/keyboard /etc/default/keyboard
 #RUN add-apt-repository ppa:deadsnakes/ppa
-RUN apt-get update && apt-get install -y dos2unix python3.10 python3-pip netcat net-tools python3-tk
-RUN pip3 install av image matplotlib pyqt5
+RUN apt-get update && apt-get install -y dos2unix python3.10 python3-pip python3-matplotlib python3-tk python3-pyqt5
+RUN pip3 install av image
 
-# Convert line endings in the Python script
-#RUN find /catkin_ws/src/$PACKAGE_NAME -type f -print0 | xargs -0 dos2unix -
+RUN dos2unix /catkin_ws/src/$PACKAGE_NAME/scripts/*
+RUN dos2unix /catkin_ws/src/$PACKAGE_NAME/launch/*
 
 # Change back to the root of the workspace
 WORKDIR /catkin_ws

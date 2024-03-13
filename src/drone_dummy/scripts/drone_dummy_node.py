@@ -20,7 +20,7 @@ import common.config.defaults
 
 def drone_node():
 
-    datadir = os.getcwd() + "/data"
+    datadir = os.environ['ROS_WORKSPACE'] + '/src/drone_dummy/scripts/data'
 
     # Initialize the ROS node
     rospy.init_node('drone', anonymous=True)

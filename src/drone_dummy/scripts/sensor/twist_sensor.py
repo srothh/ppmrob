@@ -5,6 +5,7 @@ from geometry_msgs.msg import TwistStamped
 from std_msgs.msg import Header
 import common.config.defaults
 import time
+# problem with numpy version
 import pandas as pd
 
 class TwistSensor():
@@ -20,7 +21,6 @@ class TwistSensor():
         # read data
 
         self.df = pd.read_csv(self._datafile, delimiter=';', decimal=".")
-        #df = pd.read_csv('data/tv_telemetry_210327_131735_demo_orbit_party.txt',decimal=".")
         self.idx = 0 
 
         rospy.loginfo('TwistSensor initalized')
@@ -38,7 +38,6 @@ class TwistSensor():
             msg.twist.angular.x = self.df['roll'][self.idx]
             msg.twist.angular.y = self.df['pitch'][self.idx]
             msg.twist.angular.z = self.df['yaw'][self.idx]
-            #msg.twist.angular.z = -90
 
             self._publisher.publish(msg)
             self._counter += 1

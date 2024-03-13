@@ -11,13 +11,13 @@ services:
       - "11311:11311"
     networks:
       - ppmrob
-  publisher:
-    build: src/publisher
+  cv:
+    build: ./src/cv/cv_node
     environment:
       - "ROS_MASTER_URI=http://ros_master:11311"
       - "ROS_LOG_LEVEL=info"
       - "PYTHONUNBUFFERED=1"
-      - DISPLAY=host.docker.internal:0 # Uncomment only if running VcXsrv on Windows (https://sourceforge.net/projects/vcxsrv/), it will show gui things like imshow(). Will cause crash without it.
+#      - DISPLAY=host.docker.internal:0 # Uncomment only if running VcXsrv on Windows (https://sourceforge.net/projects/vcxsrv/), it will show gui things like imshow(). Will cause crash without it.
     #      - "NVIDIA_VISIBLE_DEVICES=all" GPU needs extra work
     networks:
       - ppmrob
@@ -42,11 +42,23 @@ services:
       - "ROS_MASTER_URI=http://ros_master:11311"
       - "ROS_LOG_LEVEL=info"
       - "PYTHONUNBUFFERED=1"
+      - "DISPLAY"
+      - "QT_X11_NO_MITSHM=1"
     ports:
       - "9003:9003"
       - "8889:8889/udp"
       - "8890:8890/udp"
       - "11111:11111/udp"
+    networks:
+      - ppmrob
+    depends_on:
+      - ros_master
+  battery:
+    build: src/battery
+    environment:
+      - "ROS_MASTER_URI=http://ros_master:11311"
+      - "ROS_LOG_LEVEL=info"
+      - "PYTHONUNBUFFERED=1"
     networks:
       - ppmrob
     depends_on:
@@ -59,24 +71,14 @@ services:
       - "ROS_MASTER_URI=http://ros_master:11311"
       - "ROS_LOG_LEVEL=info"
       - "PYTHONUNBUFFERED=1"
-      - "DISPLAY"
       - "QT_X11_NO_MITSHM=1"
+      - "DISPLAY=$DISPLAY"
     ports:
       - "9004:9004"
     networks:
       - ppmrob
     volumes:
-      - /tmp/.X11-unix:/tmp/.X11-unix:rw
-    depends_on:
-      - ros_master
-  battery:
-    build: src/battery
-    environment:
-      - "ROS_MASTER_URI=http://ros_master:11311"
-      - "ROS_LOG_LEVEL=info"
-      - "PYTHONUNBUFFERED=1"
-    networks:
-      - ppmrob
+      - /tmp/.X11-unix:/tmp/.X11-unix
     depends_on:
       - ros_master
   control:
