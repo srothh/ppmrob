@@ -15,6 +15,7 @@ from cv_bridge import CvBridge, CvBridgeError
 import cv2
 from matplotlib.animation import FuncAnimation
 import time
+from matplotlib.collections import LineCollection
 
 positions = []
 targets = []
@@ -24,6 +25,8 @@ batteries = []
 battery_signal = True
 image = []
 victims = []
+lines = []
+
 br = CvBridge()
 
 last_arrow = None
@@ -35,6 +38,11 @@ last_pos_history = []
 last_time = 0
 move_idx = 0
 victim_idx = 0
+
+def pairwise(iterable):
+    "s -> (s0, s1), (s2, s3), (s4, s5), ..."
+    a = iter(iterable)
+    return zip(a, a)
 
 def odometry_callback(data: PoseStamped):
     global positions
@@ -75,6 +83,13 @@ def cv_victim_callback(data: Polygon):
     global victims
     first, second = data.points
     victims.append([first.x, first.y, second.x, second.y])
+
+def cv_lines_callback(data: Polygon):
+    global lines
+    lines = []
+    #iterate over pairs of data.points
+    for f, s in pairwise(data.points):
+        lines.append([(f.x, f.y), (s.x, s.y)])
 
 
 
@@ -163,6 +178,7 @@ drone_battery_subscriber = rospy.Subscriber(common.config.defaults.drone_battery
 battery_signal_subscriber = rospy.Subscriber(common.config.defaults.battery_publish_topic_name, Bool, callback=battery_signal_callback)
 drone_camera_subsriber = rospy.Subscriber(common.config.defaults.drone_image_sensor_publish_topic_name, Image, callback=drone_camera_callback)
 cv_victim_subsriber = rospy.Subscriber('/cv/victim', Polygon, callback=cv_victim_callback)
+cv_lines_subsriber = rospy.Subscriber('/cv/lines', Polygon, callback=cv_lines_callback)
 
 targets.append((0,0,0))
 
@@ -218,6 +234,8 @@ ax2.set_yticklabels([])
 whiteblankimage = np.ones(shape=[720, 960, 3], dtype=np.uint8)
 image_current = ax2.imshow(whiteblankimage)
 victim_current = ax2.add_patch(patches.Rectangle((0, 0), 0, 0, linewidth=2, edgecolor='g', facecolor='none'))
+lines_current = LineCollection([], color='r', linewidth=2)
+ax2.add_collection(lines_current)
 
 ax3 = plt.subplot(gs[0,3])
 ax3.grid(True)
@@ -277,21 +295,26 @@ def update(frame_number):
                 rot_current.set_data([0],[0])
     if len(image) > 0:
         image_current.set_data(image)
+        if victims:
+            #victim_idx = len(victims)
+            x1, y1, x2, y2 = victims[-1]
+            victim_current.set_xy((x1, y1))
+            victim_current.set_width(x2-x1)
+            victim_current.set_height(y2-y1)
+        else:
+            victim_current.setxy((0, 0))
+        if len(lines) > 0:
+            lines_current.set_segments(lines)
+        else:
+            lines_current.set_segments([])
     
     if batteries:
         battery_current[0].set_height(batteries[-1])
         battery_current[0].set_color('red' if battery_signal else 'olive')
 
-    if victims:
-        #victim_idx = len(victims)
-        x1, y1, x2, y2 = victims[-1]
-        victim_current.set_xy((x1, y1))
-        victim_current.set_width(x2-x1)
-        victim_current.set_height(y2-y1)
-#        ax2.add_patch(rect)
         
 
-    return [target_current, target_history, pos_current, pos_history, azimuth_current, image_current, battery_current[0], rot_current, victim_current]
+    return [target_current, target_history, pos_current, pos_history, azimuth_current, image_current, battery_current[0], rot_current, victim_current, lines_current]
 
 
 animation = FuncAnimation(fig, update, blit=True, repeat=False, interval=100, save_count=100)
