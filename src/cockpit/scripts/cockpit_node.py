@@ -302,7 +302,7 @@ def update(frame_number):
             victim_current.set_width(x2-x1)
             victim_current.set_height(y2-y1)
         else:
-            victim_current.setxy((0, 0))
+            victim_current.set_xy((0, 0))
         if len(lines) > 0:
             lines_current.set_segments(lines)
         else:
