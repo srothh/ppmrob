@@ -2,20 +2,22 @@
 
 import rospy  # the library should be added as package dependency for the package on which working here
 import cv2
-from geometry_msgs.msg import PoseStamped, TwistStamped, Polygon
+from geometry_msgs.msg import PoseStamped, TwistStamped, Polygon, Pose
 from sensor_msgs.msg import Image
 from std_msgs.msg import UInt8, Bool
 import matplotlib.pyplot as plt
 from matplotlib import gridspec, transforms, patches
 import numpy as np
 import drone.msg
-import drone.msg
 import common.config.defaults
 from cv_bridge import CvBridge, CvBridgeError
 import cv2
 from matplotlib.animation import FuncAnimation
 import time
-from matplotlib.collections import LineCollection
+from matplotlib.collections import LineCollection, PatchCollection
+import matplotlib.patches as patches
+import actionlib 
+
 
 positions = []
 targets = []
@@ -26,6 +28,7 @@ battery_signal = True
 image = []
 victims = []
 lines = []
+waypoints = []
 
 br = CvBridge()
 
@@ -81,8 +84,10 @@ def drone_camera_callback(data: Image):
 
 def cv_victim_callback(data: Polygon):
     global victims
-    first, second = data.points
-    victims.append([first.x, first.y, second.x, second.y])
+    victims = []
+    #iterate over pairs of data.points
+    for f, s in pairwise(data.points):
+        victims.append([(f.x, f.y), (s.x, s.y)])
 
 def cv_lines_callback(data: Polygon):
     global lines
@@ -91,7 +96,28 @@ def cv_lines_callback(data: Polygon):
     for f, s in pairwise(data.points):
         lines.append([(f.x, f.y), (s.x, s.y)])
 
+def on_press(event):
 
+    rospy.loginfo('press %s', event.key)
+    if event.key == ' ':
+        rospy.loginfo('EMERGENCY LANDING')
+        emergency_client.send_goal_and_wait(drone.msg.EmergencyGoal(soft=True))
+
+
+def on_resize(event):
+    ax1.set_ylim(common.config.defaults.Cockpit.map_ylim)
+    ax1.set_xlim(common.config.defaults.Cockpit.map_xlim)
+
+
+def on_click(event):
+    ix, iy = event.xdata, event.ydata
+    rospy.loginfo('x = %d, y = %d' % (ix, iy))
+    waypoint = Pose()
+    waypoint.position.x = ix
+    waypoint.position.y = iy
+    waypoint.position.z = 0
+    waypoint_publisher.publish(waypoint)
+    waypoints.append((ix, iy))
 
 def update_o(frame_number):
     global last_arrow, last_azim, last_rot, last_pos, last_pos_history, last_time
@@ -180,7 +206,14 @@ drone_camera_subsriber = rospy.Subscriber(common.config.defaults.drone_image_sen
 cv_victim_subsriber = rospy.Subscriber('/cv/victim', Polygon, callback=cv_victim_callback)
 cv_lines_subsriber = rospy.Subscriber('/cv/lines', Polygon, callback=cv_lines_callback)
 
+waypoint_publisher = rospy.Publisher('/cockpit/waypoint', Pose, queue_size=10) 
+
+rospy.loginfo('waiting for drone emergency action server')
+emergency_client = actionlib.SimpleActionClient('emergency', drone.msg.EmergencyAction)
+emergency_client.wait_for_server()
+
 targets.append((0,0,0))
+waypoints.append((0, 0))
 
 
 #plt.cla()
@@ -191,14 +224,18 @@ targets.append((0,0,0))
 #)
 
 fig = plt.figure(figsize=(10, 8)) 
-
+fig.tight_layout()
+fig.canvas.manager.set_window_title('Press SPACE for emergency landing')
+fig.canvas.mpl_connect('key_press_event', on_press)
+fig.canvas.mpl_connect('button_press_event', on_click)
+fig.canvas.mpl_connect('resize_event', on_resize)
 
 gs = gridspec.GridSpec(3, 4) 
 ax1 = fig.add_subplot(gs[:,:-2])
 ax1.axis("equal")
 ax1.grid(True)
-ax1.set_ylim(-300, 300)
-ax1.set_xlim(-400, 400)
+ax1.set_ylim(common.config.defaults.Cockpit.map_ylim)
+ax1.set_xlim(common.config.defaults.Cockpit.map_xlim)
 #ax1.invert_xaxis()
 
 
@@ -212,6 +249,7 @@ yp=np.arange(100)
 #pos_history = [ax1.plot(xp[step*i:step*(i+1)],yp[step*i:step*(i+1)], '.',alpha=np.min([0.1+0.01*i,1]),color='tab:blue',lw=1)  for i in range(int(len(xp)/step))]
 pos_history, = ax1.plot(0,0, '.',alpha=0.6,color='tab:blue',lw=1) 
 
+waypoints_all, = ax1.plot(0,0, 'x',color='tab:red',lw=1)
 
 # compass
 ax4 = plt.subplot(gs[0,2], projection='polar')
@@ -233,9 +271,11 @@ ax2.set_xticklabels([])
 ax2.set_yticklabels([])
 whiteblankimage = np.ones(shape=[720, 960, 3], dtype=np.uint8)
 image_current = ax2.imshow(whiteblankimage)
-victim_current = ax2.add_patch(patches.Rectangle((0, 0), 0, 0, linewidth=2, edgecolor='g', facecolor='none'))
-lines_current = LineCollection([], color='r', linewidth=2)
+#victim_current = ax2.add_patch(patches.Rectangle((0, 0), 0, 0, linewidth=2, edgecolor='g', facecolor='none'))
+lines_current = LineCollection([], color='r', linewidth=1, zorder=1)
 ax2.add_collection(lines_current)
+victim_current = PatchCollection([], color='g', facecolor='none', linewidth=2, zorder=2)
+ax2.add_collection(victim_current)
 
 ax3 = plt.subplot(gs[0,3])
 ax3.grid(True)
@@ -295,26 +335,39 @@ def update(frame_number):
                 rot_current.set_data([0],[0])
     if len(image) > 0:
         image_current.set_data(image)
-        if victims:
-            #victim_idx = len(victims)
-            x1, y1, x2, y2 = victims[-1]
-            victim_current.set_xy((x1, y1))
-            victim_current.set_width(x2-x1)
-            victim_current.set_height(y2-y1)
-        else:
-            victim_current.set_xy((0, 0))
         if len(lines) > 0:
             lines_current.set_segments(lines)
         else:
             lines_current.set_segments([])
+        if victims:
+            #victim_idx = len(victims)
+            #for f, s in victim_current
+            rects = []
+            colors = []
+            edges = []
+            for victim in victims:
+                x, y = victim
+                rects.append(patches.Rectangle((x[0], y[0]), x[1]-x[0], y[1]-y[0]))
+                colors.append('none')
+                edges.append('g')
+            victim_current.set_paths(rects)
+            #victim_current.set_facecolors(colors)
+            #victim_current.set_edgecolors(edges)
+            #victim_current.set_linewidths(2)
+        else:
+            victim_current.set_paths([])
     
     if batteries:
         battery_current[0].set_height(batteries[-1])
         battery_current[0].set_color('red' if battery_signal else 'olive')
 
-        
+    if waypoints:
+        x = [x for x,y in waypoints]
+        y = [y for x,y in waypoints]
+        waypoints_all.set_data(x,y)
+        waypoints_all.set_visible(True)
 
-    return [target_current, target_history, pos_current, pos_history, azimuth_current, image_current, battery_current[0], rot_current, victim_current, lines_current]
+    return [target_current, target_history, pos_current, pos_history, azimuth_current, image_current, battery_current[0], rot_current, victim_current, lines_current, waypoints_all]
 
 
 animation = FuncAnimation(fig, update, blit=True, repeat=False, interval=100, save_count=100)
