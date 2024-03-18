@@ -34,8 +34,8 @@ class ImageSensor():
                 files.append(os.path.join(self._datadir, file))
         return files
 
-    def __init__(self, datadir):
-        self._publish_to_topic = common.config.defaults.drone_image_sensor_publish_topic_name
+    def __init__(self, datadir, topic=None):
+        self._publish_to_topic = topic
         self._publisher = rospy.Publisher(self._publish_to_topic, Image, queue_size=10)
         self._datadir = datadir
         self._br = CvBridge()

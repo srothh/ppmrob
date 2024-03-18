@@ -35,7 +35,7 @@ def drone_node(drone):
     rospy.loginfo("command server created")
 
     img = ImageSensor(drone, topic=common.config.defaults.drone_image_sensor_publish_topic_name)
-    rospy.Timer(rospy.Duration(0.5), img.publish)
+    rospy.Timer(rospy.Duration(common.config.defaults.drone_image_sensor_publish_delay), img.publish)
     rospy.loginfo("image publisher started")
 
     twist = TwistSensor(topic=common.config.defaults.drone_twist_sensor_publish_topic_name)
