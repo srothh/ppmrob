@@ -3,7 +3,6 @@
 import rospy
 from geometry_msgs.msg import TwistStamped
 from std_msgs.msg import Header
-import common.config.defaults
 
 class TwistSensor():
 

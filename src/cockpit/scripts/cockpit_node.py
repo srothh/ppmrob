@@ -17,6 +17,7 @@ import time
 from matplotlib.collections import LineCollection, PatchCollection
 import matplotlib.patches as patches
 import actionlib 
+import sys
 
 
 positions = []
@@ -41,6 +42,9 @@ last_pos_history = []
 last_time = 0
 move_idx = 0
 victim_idx = 0
+
+map_ylim = common.config.defaults.Cockpit.map_ylim
+map_xlim = common.config.defaults.Cockpit.map_xlim
 
 def pairwise(iterable):
     "s -> (s0, s1), (s2, s3), (s4, s5), ..."
@@ -97,17 +101,18 @@ def cv_lines_callback(data: Polygon):
         lines.append([(f.x, f.y), (s.x, s.y)])
 
 def on_press(event):
-
+    sys.stdout.flush()
     rospy.loginfo('press %s', event.key)
     if event.key == ' ':
         rospy.loginfo('EMERGENCY LANDING')
         emergency_client.send_goal_and_wait(drone.msg.EmergencyGoal(soft=True))
-
+    elif event.key == '-':
+        resize_map(-100)        
+    elif event.key == '+':
+        resize_map(100)        
 
 def on_resize(event):
-    ax1.set_ylim(common.config.defaults.Cockpit.map_ylim)
-    ax1.set_xlim(common.config.defaults.Cockpit.map_xlim)
-
+    resize_map()
 
 def on_click(event):
     ix, iy = event.xdata, event.ydata
@@ -119,80 +124,16 @@ def on_click(event):
     waypoint_publisher.publish(waypoint)
     waypoints.append((ix, iy))
 
-def update_o(frame_number):
-    global last_arrow, last_azim, last_rot, last_pos, last_pos_history, last_time
-
-    print('%f %d' % (time.time()-last_time, frame_number))
-    last_time = time.time()
-
-    # if len(image) > 0:
-    #     ax2.imshow(image)
-    # if batteries:
-    #     bats = batteries[-10:].copy()
-    #     ax3.cla()
-    #     ax3.set_ylim(0,100)
-    #     ax3.fill_between(np.arange(0, len(bats)), bats, color = ('orange' if battery_signal else 'olive'))
-    if positions:
-        # current position
-        xcp, ycp, zcp, ozcp = positions[-1]
-        if last_pos:
-            last_pos.remove()
-            for lp in last_pos_history:
-               if len(lp)>0:
-                l = lp.pop(0)
-                l.remove()
-            #ax1.lines.pop(0)
-        last_pos, = ax1.plot(xcp, ycp, "x", color="blue", alpha=0.8)
-        # history
-        xp = [i for i, j, k, l in positions[-100:-1]]
-        yp = [j for i, j, k, l in positions[-100:-1]]               
-        #ax1.plot(xp, yp, ".", color="lightblue", alpha=0.6)
-        step=10
-        [last_pos_history.append( ax1.plot(xp[step*i:step*(i+1)],yp[step*i:step*(i+1)], '.',alpha=np.min([0.1+0.01*i,1]),color='tab:blue',lw=1) ) for i in range(int(len(xp)/step))]
-        #[ax1.plot(xp[i:(i+1)],yp[i:(i+1)], '.',alpha=np.min([0.1+0.01*i,1]),color='tab:blue',lw=1) for i in range(int(len(xp)))]
-        #[print('x%f y%f, a%f' % (xp[i:(i+1)],yp[i:(i+1)],np.min([0.1+0.01*i,1]))) for i in range(int(len(xp)))]
-        # orientation
-        # if last_azim:
-        #     ax4.lines.pop(0)
-        #     #last_azim.pop()
-        # #ax4.set_theta_zero_location('N')
-        # ax4.set_theta_offset(np.deg2rad(ozcp)+np.pi/2)
-        # #last_azim = ax4.arrow(0,0,np.deg2rad(ozcp)-np.pi,0.8, alpha = 0.5, width = 0.02, edgecolor = 'black', facecolor = 'green', lw = 2, zorder = 5)
-        # last_azim = ax4.plot([0,np.deg2rad(ozcp)], [0,1], color='red')
-
-    if targets:
-        # current target
-        if len(targets) > 1:
-            to_x, to_y, to_z = targets[-1]
-            fr_x, fr_y, fr_z = targets[-2]
-            if last_arrow:
-                last_arrow.remove()
-            last_arrow = ax1.arrow(fr_x, fr_y, to_x-fr_x, to_y-fr_y, color='red', length_includes_head=True, head_starts_at_zero=False, width=5)
-
-            # target history
-            x = [i for i, j, k in targets[:-1]]
-            y = [j for i, j, k in targets[:-1]]               
-            ax1.plot(x, y, "-", color='black')
-        else:
-            x, y, z = targets[0]
-            ax1.plot(x, y, "or")
-
-    if moves:
-        xm, ym, zm, rm = moves[-1]                
-        # if xm > 0:
-        #     #movement
-        #     try:
-        #         last_rot.remove()
-        #     except Exception:
-        #         pass
-        # else:
-        #     #rotation
-        #     try:
-        #         last_rot.remove()
-        #     except Exception:
-        #         pass
-        #     last_rot = ax4.fill_between(np.linspace(np.deg2rad(rm)+np.deg2rad(ozcp)-np.pi, np.deg2rad(ozcp)-np.pi, 100), 0, 1, color='lightblue', alpha=0.9)
-
+def resize_map(amount = 0):
+    global map_ylim, map_xlim, ax1
+    if amount:
+        map_xlim = tuple(np.add(map_xlim, (amount, (-1)*amount)))
+        map_ylim = tuple(np.add(map_ylim, (amount, (-1)*amount))) 
+    ax1.set_ylim(map_ylim)
+    ax1.set_xlim(map_xlim)
+    #fig.tight_layout()
+    ax1.figure.canvas.draw_idle()
+    rospy.loginfo('x = %s, y = %s' % (map_xlim, map_ylim))
 
 
 rospy.init_node('cockpit')  # register the node with roscore, allowing it to communicate with other nodes
@@ -208,10 +149,10 @@ cv_lines_subsriber = rospy.Subscriber('/cv/lines', Polygon, callback=cv_lines_ca
 
 waypoint_publisher = rospy.Publisher('/cockpit/waypoint', Pose, queue_size=10) 
 
-rospy.loginfo('waiting for drone emergency action server')
-emergency_client = actionlib.SimpleActionClient('emergency', drone.msg.EmergencyAction)
+emergency_client = actionlib.SimpleActionClient(common.config.defaults.drone_emergency_action_name, drone.msg.EmergencyAction)
+rospy.loginfo('waiting for action server: %s', common.config.defaults.drone_emergency_action_name)
 emergency_client.wait_for_server()
-
+rospy.loginfo('done')
 targets.append((0,0,0))
 waypoints.append((0, 0))
 
