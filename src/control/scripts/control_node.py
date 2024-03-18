@@ -10,7 +10,7 @@ from std_msgs.msg import String
 from commands.takeoff_land_handler import TakeOffAndLandHandler
 from geometry_msgs.msg import Transform, Vector3, Quaternion
 from actionlib_msgs.msg import GoalStatus
-from control.msg import MoveAction, MoveResult, MoveFeedback, PlanningAction, PlanningResult, PlanningFeedback
+from control.msg import MoveAction, MoveResult, MoveFeedback, PlanningMoveAction, PlanningMoveResult, PlanningCommandAction
 
 
 class DroneControl:
@@ -35,22 +35,30 @@ class DroneControl:
 
         rospy.Subscriber("planning_decision_data", String, self.planning_decision_callback)
 
+        rospy.Subscriber("odometry/return_signal", String, self.odometry_callback)
+
         self.drone_command_pub = rospy.Publisher("drone_node", String, queue_size=10)
 
         self._feedback = MoveFeedback
         self._result = MoveResult
 
-        # Action Server
-        # Initialised for providing MoveAction for drone node
-        self.action_server = actionlib.SimpleActionServer(
-            'Movement-Server',
-            MoveAction,
+        # Move Action Server
+        # Initialised for providing MoveAction for planning node
+        self.move_action_server = actionlib.SimpleActionServer(
+            'Move-Action-Server',
+            PlanningMoveAction,
             execute_cb=self.execute_cb,
             auto_start=False
         )
 
-        self.planning_action_client = actionlib.SimpleActionClient('planning_action', PlanningAction)
-        self.planning_action_client.wait_for_server()
+        # Planning Command Server
+        # Initialised for providing PlanningCommandAction for planning node
+        self.planning_command_server = actionlib.SimpleActionServer(
+            'Planning-Command-Server',
+            PlanningCommandAction,
+            execute_cb=self.planning_decision_callback,
+            auto_start=False
+        )
 
         self.drone_move_command = DroneMoveCommand()
 
@@ -71,22 +79,39 @@ class DroneControl:
         """
         self.drone_data = data.data
 
-    def planning_decision_callback(self, decision):
+    def planning_decision_callback(self, goal):
         """ Returns the decision data from the planning node if there is a need for
             landing or taking off
 
-        @param decision:
-        @param planning_data
+        @param goal
         @rtype: object
         """
-        if decision.data == 'takeoff':
+
+        command = goal.command
+
+        if command == 'Take off':
             self.take_off_land_handler.handle_takeoff(self.takeOff)
-        elif decision.data == 'land':
+        elif command == 'Stop and Land':
             self.take_off_land_handler.handle_takeoff(self.land)
 
     def planning_callback(self, planning_data):
         self.target_x = planning_data.x2
         self.target_y = planning_data.y2
+
+    def odometry_callback(self, msg):
+        """ Return th odometry data for orientation and position
+
+        @param msg:
+        """
+        position = msg.pose.position
+        orientation = msg.pose.orientation
+
+        #TODO: Use this data for calculate_rotation_and_translation?
+
+        x = position.x
+        y = position.y
+        z = position.z
+        direction = orientation.z
 
     def calculate_rotation_and_translation(self, prev, target):
         """ Calculates the rotation angle and translation for the drone node
@@ -118,19 +143,14 @@ class DroneControl:
         @rtype: object
         """
 
-        planning_goal = PlanningGoal()
+        target = goal.target
 
-        # Send action request for target points to the planning node
-        self.planning_action_client.send_goal(planning_goal)
-        self.planning_action_client.wait_for_result()
-        planning_result = self.planning_action_client.get_result()
-
-        target = planning_result.target
-
+        # course angle and distance fpr movement are calculated
         course, distance = self.calculate_rotation_and_translation(self.prev, target)
 
         bear = course - self.prev_course
 
+        # Angle is normalized for holding area in specific area
         bear = self.normalize_angle(bear)
 
         rospy.loginfo("x1: %.2f y1: %.2f x2: %.2f y2: %.2f course: %.2f bear: %.2f dist: %.2f" % (
@@ -138,6 +158,7 @@ class DroneControl:
 
         self.prev_course = course
 
+        # Now the move command is send to the drone node
         if bear != 0.0:
             while True:
                 result = self.drone_move_command.move_drone(0.0, 0.0, 0.0, bear)
@@ -153,11 +174,23 @@ class DroneControl:
                 else:
                     rospy.loginfo("Retrying to translate")
 
-        result = MoveResult()
-        result.success = True
-        self.action_server.set_succeeded(result)
+        # Send feedback via move action server for planning node
+        feedback = MoveFeedback()
+        feedback.progress = result.progress
+        self.move_action_server.publish_feedback(feedback)
+
+        # Set result for move action server for planning node
+        result_msg = PlanningMoveResult()
+        result_msg.success = result.success
+        self.move_action_server.set_succeeded(result_msg)
 
     def normalize_angle(self, angle):
+        """ Function which holds the angle in an area between -180 degrees
+            and 180 degrees
+
+        @param angle:
+        @return:
+        """
         if angle > 180.0:
             angle -= 360.0
         elif angle < -180.0:
@@ -171,7 +204,7 @@ class DroneControl:
         """
 
         # Start the action server to provide MoveAction messages
-        self.action_server.start()
+        self.move_action_server.start()
 
         # 10 Hz Rate
         rate = rospy.Rate(10)
