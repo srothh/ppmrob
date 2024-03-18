@@ -37,32 +37,42 @@ services:
   drone:
     build:
       context: ./src
-      dockerfile: ./drone_dummy/Dockerfile
+      dockerfile: ./drone/Dockerfile
     environment:
       - "ROS_MASTER_URI=http://ros_master:11311"
       - "ROS_LOG_LEVEL=info"
       - "PYTHONUNBUFFERED=1"
-      - "DISPLAY"
-      - "QT_X11_NO_MITSHM=1"
     ports:
-      - "9003:9003"
       - "8889:8889/udp"
       - "8890:8890/udp"
       - "11111:11111/udp"
     networks:
-      - ppmrob
+      - ppmrob    
     depends_on:
       - ros_master
-  battery:
-    build: src/battery
-    environment:
-      - "ROS_MASTER_URI=http://ros_master:11311"
-      - "ROS_LOG_LEVEL=info"
-      - "PYTHONUNBUFFERED=1"
-    networks:
-      - ppmrob
-    depends_on:
-      - ros_master
+  # DO NOT start drone_dummy together with drone
+#  drone_dummy:
+#    build:
+#      context: ./src
+#      dockerfile: ./drone_dummy/Dockerfile
+#    environment:
+#      - "ROS_MASTER_URI=http://ros_master:11311"
+#      - "ROS_LOG_LEVEL=info"
+#      - "PYTHONUNBUFFERED=1"
+#    networks:
+#      - ppmrob    
+#    depends_on:
+#      - ros_master
+#  battery:
+#    build: src/battery
+#    environment:
+#      - "ROS_MASTER_URI=http://ros_master:11311"
+#      - "ROS_LOG_LEVEL=info"
+#      - "PYTHONUNBUFFERED=1"
+#    networks:
+#      - ppmrob
+#    depends_on:
+#      - ros_master
   cockpit:
     build:
       context: ./src
@@ -73,8 +83,6 @@ services:
       - "PYTHONUNBUFFERED=1"
       - "QT_X11_NO_MITSHM=1"
       - "DISPLAY=$DISPLAY"
-    ports:
-      - "9004:9004"
     networks:
       - ppmrob
     volumes:

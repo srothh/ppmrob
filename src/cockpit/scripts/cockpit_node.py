@@ -260,12 +260,17 @@ ax4.set_xticklabels(np.arange(0,360,10), fontsize='small')
 ax4.grid(True)
 ax4.tick_params(labelsize=6)
 
-azimuth_current = ax4.arrow(0,0,0,0, width=0.01)
+azimuth_current = ax4.arrow(0,0,0,0, width=0.01, color='r')
 #ax4.plot([0,np.deg2rad(0)], [0,1], color='red')
 #rot_current = ax4.fill_between(np.linspace(0, 0, 100), 0, 1, color='lightblue', alpha=0.9)
 rot_current, = ax4.plot(0, 1, color='lightgreen', alpha=0.9, linewidth=2)
 
+move_current_x = ax4.arrow(0, 0, 0, 0.3, width=0.05)
+move_current_x.set_visible(False)
+move_current_y = ax4.arrow(0, 0, np.deg2rad(90), 0.3, width=0.05)
+move_current_y.set_visible(False)
 
+#camera
 ax2 = plt.subplot(gs[1:,2:])
 ax2.set_xticklabels([])
 ax2.set_yticklabels([])
@@ -277,6 +282,7 @@ ax2.add_collection(lines_current)
 victim_current = PatchCollection([], color='g', facecolor='none', linewidth=2, zorder=2)
 ax2.add_collection(victim_current)
 
+#battery
 ax3 = plt.subplot(gs[0,3])
 ax3.grid(True)
 ax3.set_aspect('auto')
@@ -329,10 +335,17 @@ def update(frame_number):
             #if rm is not 0
 
             if rm != 0.0:
+                move_current_x.set_visible(False)
+                move_current_y.set_visible(False)
                 az_diff = rm + azimuth
                 rot_current.set_data([0,np.deg2rad(rm + azimuth)], [0,np.pi])
             else:
                 rot_current.set_data([0],[0])
+                if xm != 0.0:
+                    move_current_x.set_visible(True)
+                elif ym != 0.0:
+                    move_current_y.set_visible(True)
+
     if len(image) > 0:
         image_current.set_data(image)
         if len(lines) > 0:
@@ -367,7 +380,7 @@ def update(frame_number):
         waypoints_all.set_data(x,y)
         waypoints_all.set_visible(True)
 
-    return [target_current, target_history, pos_current, pos_history, azimuth_current, image_current, battery_current[0], rot_current, victim_current, lines_current, waypoints_all]
+    return [target_current, target_history, pos_current, pos_history, azimuth_current, move_current_y, move_current_x, image_current, battery_current[0], rot_current, victim_current, lines_current, waypoints_all]
 
 
 animation = FuncAnimation(fig, update, blit=True, repeat=False, interval=100, save_count=100)
