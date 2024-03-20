@@ -24,7 +24,7 @@ def detect_lines(image):
     # Apply Canny edge detection
     edges = cv2.Canny(blurred, 250, 150)
     # Detect lines using Hough Line Transform
-    lines = cv2.HoughLinesP(edges, rho=1, theta=np.pi / 180, threshold=45, minLineLength=80, maxLineGap=100)
+    lines = cv2.HoughLinesP(edges, rho=1, theta=np.pi / 180, threshold=75, minLineLength=100, maxLineGap=100)
     # Draw detected lines on the original frame
     if lines is not None:
         for line in lines:

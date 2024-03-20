@@ -8,7 +8,7 @@ pathlib.PosixPath = pathlib.WindowsPath
 
 # Load custom YOLOv5 model
 model = torch.hub.load('ultralytics/yolov5', 'custom', path='model/best.pt', force_reload=True)  # local model
-cap = cv2.VideoCapture(0)  # Open the default camera
+cap = cv2.VideoCapture(1)  # Open the default camera
 
 while True:
     ret, frame = cap.read()  # Read a frame from the video stream
@@ -32,8 +32,6 @@ while True:
             # Draw bounding box on the frame
             start_point = (box[0]), int(box[1])  # Top-left corner
             end_point = (box[2]), int(box[3])  # Bottom-right corner
-            print(start_point)
-            print(end_point)
             color = (0, 255, 0)  # Green color
             thickness = 2  # Line thickness
             cv2.rectangle(frame, start_point, end_point, color, thickness)
