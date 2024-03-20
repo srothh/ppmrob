@@ -10,7 +10,7 @@ ENV LAUNCH_FILE mapping.launch
 # Create a new ROS package for the listener
 RUN /bin/bash -c "source /opt/ros/noetic/setup.bash && catkin_create_pkg $PACKAGE_NAME std_msgs rospy geometry_msgs nav_msgs"
 
-# Copy the listener package into the container
+# Copy the mapping package into the container
 COPY . /catkin_ws/src/$PACKAGE_NAME/
 
 RUN apt-get update && apt-get install -y dos2unix
@@ -31,6 +31,7 @@ ENV ROS_DISTRO noetic
 ENV ROS_WORKSPACE /catkin_ws
 
 RUN chmod +x /catkin_ws/src/${PACKAGE_NAME}/scripts/*
+RUN echo "source /opt/ros/noetic/setup.bash" >> ~/.bashrc
 
 # Source the ROS setup file every time a new container is run
 ENTRYPOINT ["/bin/bash", "-c", "source /opt/ros/$ROS_DISTRO/setup.bash && source /catkin_ws/devel/setup.bash && roslaunch $PACKAGE_NAME $LAUNCH_FILE --wait"]
