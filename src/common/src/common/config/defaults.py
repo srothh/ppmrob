@@ -6,9 +6,9 @@ drone_launch_action_name = "launch"
 drone_move_action_name = "move"
 drone_command_action_name = "command"
 drone_emergency_action_name = "emergency"
+drone_image_sensor_publish_delay = 0.5
 
 battery_publish_topic_name = "/battery/return_signal"
-
 
 class Odometry:
     HOME_COORDS_TOPIC_NAME = "/odometry/home_coordinates"
@@ -27,3 +27,8 @@ class TelloCommands:
     TAKEOFF = "takeoff"
     LAND = "land"
     STOP = "stop"
+
+class Cockpit:
+    map_xlim = (-300, 300)    
+    map_ylim = (-300, 300)
+

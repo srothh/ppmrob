@@ -2,7 +2,7 @@
 
 import rospy
 import actionlib
-from control.msg import TakeOffAction, TakeOffGoal, LandAction, LandGoal
+from control.msg import PlanningCommandAction, PlanningCommandGoal
 
 
 class TakeOffAndLandHandler:

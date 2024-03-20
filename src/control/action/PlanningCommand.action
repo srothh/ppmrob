@@ -1,12 +1,8 @@
-string TAKEOFF='takeoff'
-string LAND='land'
-string STOP='stop'
-
 #goal definition
 string command
 ---
 #result definition
-bool success
+bool command_executed
 ---
 #feedback
 bool[] progress

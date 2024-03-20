@@ -3,24 +3,22 @@
 import rospy
 from geometry_msgs.msg import TwistStamped
 from std_msgs.msg import Header
-import common.config.defaults
 import time
-# problem with numpy version
 import pandas as pd
 
 class TwistSensor():
 
     _drone = None
 
-    def __init__(self, datafile):
-        self._publish_to_topic = common.config.defaults.drone_twist_sensor_publish_topic_name
+    def __init__(self, datafile, topic=None):
+        self._publish_to_topic = topic
         self._publisher = rospy.Publisher(self._publish_to_topic, TwistStamped, queue_size=10)
         self._datafile = datafile     
         self._counter = 0
         self.idx = 0
         # read data
 
-        self.df = pd.read_csv(self._datafile, delimiter=';', decimal=".")
+        self.df = pd.read_csv(self._datafile, decimal=".")
         self.idx = 0 
 
         rospy.loginfo('TwistSensor initalized')

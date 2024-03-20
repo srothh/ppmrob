@@ -17,8 +17,8 @@ COPY ./drone/ /catkin_ws/src/drone/
 # this is needed for matplotlib
 COPY ./cockpit/keyboard /etc/default/keyboard
 #RUN add-apt-repository ppa:deadsnakes/ppa
-RUN apt-get update && apt-get install -y dos2unix python3.10 python3-pip python3-matplotlib python3-tk python3-pyqt5
-RUN pip3 install av image
+RUN apt-get update && apt-get install -y dos2unix python3.10 python3-pip python3-tk python3-pyqt5
+RUN pip3 install av image matplotlib scipy
 
 RUN dos2unix /catkin_ws/src/$PACKAGE_NAME/scripts/*
 RUN dos2unix /catkin_ws/src/$PACKAGE_NAME/launch/*
@@ -40,6 +40,6 @@ RUN echo "source /opt/ros/$ROS_DISTRO/setup.bash && source /catkin_ws/devel/setu
 
 # Source the ROS setup file every time a new container is run
 ENTRYPOINT ["/bin/bash", "-c", "source /opt/ros/$ROS_DISTRO/setup.bash && source /catkin_ws/devel/setup.bash && roslaunch $PACKAGE_NAME $LAUNCH_FILE --wait"]
+#ENTRYPOINT ["/bin/bash", "-c", "source /opt/ros/$ROS_DISTRO/setup.bash && source /catkin_ws/devel/setup.bash && roslaunch cockpit mobrob.launch --wait"]
 #ENTRYPOINT ["/bin/bash", "-c", "while true; do sleep 1000; done"]
-#ENTRYPOINT /root/${PACKAGE_NAME}/entrypoint.sh
  

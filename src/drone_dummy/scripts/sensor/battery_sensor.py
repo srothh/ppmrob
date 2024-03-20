@@ -8,8 +8,8 @@ class BatterySensor():
 
     _drone = None
 
-    def __init__(self, drone=None):
-        self._publisher = rospy.Publisher('/drone/battery', UInt8, queue_size=10)
+    def __init__(self, drone=None, topic=None):
+        self._publisher = rospy.Publisher(topic, UInt8, queue_size=10)
         self._counter = 0
         self._start_time = time.time()
 
