@@ -1,8 +1,5 @@
 # tello SDK boiler plate
 # usig tello library
-import sys
-print('Updated sys.path:', sys.path)
-
 
 from tello import Tello
 

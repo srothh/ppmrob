@@ -253,8 +253,8 @@ def update(frame_number):
         #pos_current.axes.set_xlim(np.min([cur_xlim[0], xcp]), np.max([cur_xlim[1], xcp]))
         #pos_current.axes.set_ylim(np.min([cur_ylim[0], ycp]), np.max([cur_ylim[1], ycp]))
         pos_current.set_data([xcp], [ycp])
-        xp = [i for i, j, k, l in positions[-100:-1]]
-        yp = [j for i, j, k, l in positions[-100:-1]]  
+        xp = [i for i, j, k, l in positions[:-1]]
+        yp = [j for i, j, k, l in positions[:-1]]  
         pos_history.set_data(xp ,yp)             
         #for i in range(0, len(pos_history)):
         #    s = pos_history[i][0]
