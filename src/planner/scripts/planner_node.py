@@ -7,7 +7,7 @@ import py_trees_ros
 import rospy
 
 # import control.msg
-import test_planning.msg
+import control.msg
 
 # import grid_based_sweep
 from std_msgs.msg import String, Bool
@@ -103,7 +103,7 @@ class ReturnHomeDynamicActionClient(py_trees_ros.actions.ActionClient):
     def initialise(self):
         home_coords = py_trees.blackboard.Blackboard().get(BB_VAR_HOME_COORDINATES)
         # TODO check that this works as intended!
-        self.action_goal = test_planning.msg.PlanningMoveGoal(target=home_coords)
+        self.action_goal = control.msg.PlanningMoveGoal(target=home_coords)
         super().initialise()
 
 
@@ -111,7 +111,7 @@ class PlanningMoveDynamicActionClient(py_trees_ros.actions.ActionClient):
     def initialise(self):
         planned_path = py_trees.blackboard.Blackboard().get(BB_VAR_WAYPOINT)
         # TODO check that this works as intended!
-        self.action_goal = test_planning.msg.PlanningMoveGoal(target=planned_path)
+        self.action_goal = control.msg.PlanningMoveGoal(target=planned_path)
         super().initialise()
 
 
@@ -156,13 +156,13 @@ def create_root():
     return_home = py_trees.composites.Sequence("Return home")
     fly_home = ReturnHomeDynamicActionClient(
         name="Fly home",
-        action_spec=test_planning.msg.PlanningMoveAction,
+        action_spec=control.msg.PlanningMoveAction,
         action_namespace=defaults.Planning.MOVE_ACTION_NAMESPACE,
     )
     land_home = py_trees_ros.actions.ActionClient(
         name="Land home",
-        action_spec=test_planning.msg.PlanningCommandAction,
-        action_goal=test_planning.msg.PlanningCommandGoal(
+        action_spec=control.msg.PlanningCommandAction,
+        action_goal=control.msg.PlanningCommandGoal(
             command=defaults.TelloCommands.LAND
         ),
         action_namespace=defaults.Planning.COMMAND_ACTION_NAMESPACE,
@@ -177,8 +177,8 @@ def create_root():
     )
     takeoff = py_trees_ros.actions.ActionClient(
         name="Takeoff",
-        action_spec=test_planning.msg.PlanningCommandAction,
-        action_goal=test_planning.msg.PlanningCommandGoal(
+        action_spec=control.msg.PlanningCommandAction,
+        action_goal=control.msg.PlanningCommandGoal(
             command=defaults.TelloCommands.TAKEOFF
         ),
         action_namespace=defaults.Planning.COMMAND_ACTION_NAMESPACE,
@@ -193,22 +193,22 @@ def create_root():
     # FIXME following needs output of path planning! -> make dynamic action client
     move_to_next_position = PlanningMoveDynamicActionClient(
         name="Move to next position",
-        action_spec=test_planning.msg.PlanningMoveAction,
+        action_spec=control.msg.PlanningMoveAction,
         action_namespace=defaults.Planning.MOVE_ACTION_NAMESPACE,
     )
     rescue_subtree = py_trees.composites.Sequence(name="Rescue victim")
     stop_above_victim = py_trees_ros.actions.ActionClient(
         name="Stop above victim",
-        action_spec=test_planning.msg.PlanningCommandAction,
-        action_goal=test_planning.msg.PlanningCommandGoal(
+        action_spec=control.msg.PlanningCommandAction,
+        action_goal=control.msg.PlanningCommandGoal(
             command=defaults.TelloCommands.STOP
         ),
         action_namespace=defaults.Planning.COMMAND_ACTION_NAMESPACE,
     )
     land_where_victim_found = py_trees_ros.actions.ActionClient(
         name="Land where victim found",
-        action_spec=test_planning.msg.PlanningCommandAction,
-        action_goal=test_planning.msg.PlanningCommandGoal(
+        action_spec=control.msg.PlanningCommandAction,
+        action_goal=control.msg.PlanningCommandGoal(
             command=defaults.TelloCommands.LAND
         ),
         action_namespace=defaults.Planning.COMMAND_ACTION_NAMESPACE,
