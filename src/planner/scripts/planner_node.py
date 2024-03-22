@@ -157,7 +157,7 @@ def create_root():
     fly_home = ReturnHomeDynamicActionClient(
         name="Fly home",
         action_spec=control.msg.PlanningMoveAction,
-        action_namespace=defaults.Planning.MOVE_ACTION_NAMESPACE,
+        action_namespace=defaults.Control.MOVE_ACTION_NAMESPACE,
     )
     land_home = py_trees_ros.actions.ActionClient(
         name="Land home",
@@ -165,7 +165,7 @@ def create_root():
         action_goal=control.msg.PlanningCommandGoal(
             command=defaults.TelloCommands.LAND
         ),
-        action_namespace=defaults.Planning.COMMAND_ACTION_NAMESPACE,
+        action_namespace=defaults.Control.COMMAND_ACTION_NAMESPACE,
     )
     terminate = py_trees.blackboard.SetBlackboardVariable(
         name="Terminate", variable_name=BB_VAR_RETURNED_HOME, variable_value=True
@@ -181,7 +181,7 @@ def create_root():
         action_goal=control.msg.PlanningCommandGoal(
             command=defaults.TelloCommands.TAKEOFF
         ),
-        action_namespace=defaults.Planning.COMMAND_ACTION_NAMESPACE,
+        action_namespace=defaults.Control.COMMAND_ACTION_NAMESPACE,
     )
     is_victim_found = py_trees.blackboard.CheckBlackboardVariable(
         name="Victim found?",
@@ -194,7 +194,7 @@ def create_root():
     move_to_next_position = PlanningMoveDynamicActionClient(
         name="Move to next position",
         action_spec=control.msg.PlanningMoveAction,
-        action_namespace=defaults.Planning.MOVE_ACTION_NAMESPACE,
+        action_namespace=defaults.Control.MOVE_ACTION_NAMESPACE,
     )
     rescue_subtree = py_trees.composites.Sequence(name="Rescue victim")
     stop_above_victim = py_trees_ros.actions.ActionClient(
@@ -203,7 +203,7 @@ def create_root():
         action_goal=control.msg.PlanningCommandGoal(
             command=defaults.TelloCommands.STOP
         ),
-        action_namespace=defaults.Planning.COMMAND_ACTION_NAMESPACE,
+        action_namespace=defaults.Control.COMMAND_ACTION_NAMESPACE,
     )
     land_where_victim_found = py_trees_ros.actions.ActionClient(
         name="Land where victim found",
@@ -211,7 +211,7 @@ def create_root():
         action_goal=control.msg.PlanningCommandGoal(
             command=defaults.TelloCommands.LAND
         ),
-        action_namespace=defaults.Planning.COMMAND_ACTION_NAMESPACE,
+        action_namespace=defaults.Control.COMMAND_ACTION_NAMESPACE,
     )
     # tree
     root.add_children([topics2bb, priorities])
