@@ -1,3 +1,7 @@
+string TAKEOFF='takeoff'
+string LAND='land'
+string STOP='stop'
+
 #goal definition
 string command
 ---

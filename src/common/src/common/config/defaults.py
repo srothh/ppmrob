@@ -6,6 +6,7 @@ drone_launch_action_name = "launch"
 drone_move_action_name = "move"
 drone_command_action_name = "command"
 drone_emergency_action_name = "emergency"
+drone_image_sensor_publish_delay = 0.5
 
 battery_publish_topic_name = "/battery/return_signal"
 
@@ -18,16 +19,21 @@ class Mapping:
     VICTIM_FOUND_TOPIC_NAME = "/mapping/victim_found"
 
 
-class Planning:  # FIXME - Control
+class Control:
     MOVE_ACTION_NAMESPACE = "planning_move"
     COMMAND_ACTION_NAMESPACE = "planning_command"
-
-
-class Drone:
-    BATTERY_THRESHOLD = 10.0
 
 
 class TelloCommands:
     TAKEOFF = "takeoff"
     LAND = "land"
     STOP = "stop"
+
+
+class Drone:
+    BATTERY_THRESHOLD = 10.0
+
+
+class Cockpit:
+    map_xlim = (-300, 300)
+    map_ylim = (-300, 300)

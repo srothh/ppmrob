@@ -1,3 +1,6 @@
+#!/usr/bin/env python3
+
+
 import socket, select
 import threading
 import time

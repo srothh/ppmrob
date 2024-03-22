@@ -4,6 +4,7 @@ import rospy
 from sensor_msgs.msg import Image
 from cv_bridge import CvBridge, CvBridgeError
 import common.config.defaults
+import time
 
 class ImageSensor():
 
@@ -27,5 +28,7 @@ class ImageSensor():
         self._br = CvBridge()
         self._counter = 0
         resp = drone.command('streamon')
+        time.sleep(0.1)
+        resp = drone.command('downvision 1')
         rospy.loginfo('ImageSensor initalized: %s' % resp)
 

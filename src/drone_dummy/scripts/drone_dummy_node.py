@@ -1,11 +1,7 @@
 #!/usr/bin/env python3
 
-
-import sys
-print('sys.path:', sys.path)
-
-
 import rospy
+import os
 from std_msgs.msg import String
 from action import LaunchAction
 from action import MoveAction
@@ -19,36 +15,43 @@ import common.config.defaults
 
 def drone_node():
 
-    datadir = "/home/lazafi/labor/mobrob-2023/src/ppmrob2/repo/src/drone_dummy/scripts/data"
+
+    #TODO: localy not set by debugger
+    if os.environ.get('ROS_WORKSPACE'):
+        workspace = os.environ.get('ROS_WORKSPACE')
+    else:
+         workspace = '/home/lazafi/labor/mobrob-2023/src/ppmrob2/repo'
+         
+    datadir = workspace + '/src/drone_dummy/data'
+    rospy.loginfo("data directory: " + datadir)
 
     # Initialize the ROS node
-    rospy.init_node('drone', anonymous=True)
-    rospy.loginfo("starting drone node")
+    rospy.init_node('drone_dummy', anonymous=True)
+    rospy.loginfo("starting drone_dummy node")
 
     drone = None
 
-    emergency_server = EmergencyAction('emergency', drone)
+    emergency_server = EmergencyAction(common.config.defaults.drone_emergency_action_name, drone)
     rospy.loginfo("emergency server created")
 
-
-    launch_server = LaunchAction('launch', drone)
+    launch_server = LaunchAction(common.config.defaults.drone_launch_action_name, drone)
     rospy.loginfo("launch server created")
 
-    launch_server = MoveAction('move', drone)
+    move_server = MoveAction(common.config.defaults.drone_move_action_name, drone)
     rospy.loginfo("move server created")
 
-    launch_server = CommandAction('command', drone)
+    command_server = CommandAction(common.config.defaults.drone_command_action_name, drone)
     rospy.loginfo("command server created")
 
-    img = ImageSensor(datadir)
-    rospy.Timer(rospy.Duration(0.5), img.publish)
+    img = ImageSensor(datadir+'/camera', topic=common.config.defaults.drone_image_sensor_publish_topic_name)
+    rospy.Timer(rospy.Duration(common.config.defaults.drone_image_sensor_publish_delay), img.publish)
     rospy.loginfo("image publisher started")
 
-    twist = TwistSensor(datadir)
+    twist = TwistSensor(datadir+'/telemetry/state-log.csv', topic=common.config.defaults.drone_twist_sensor_publish_topic_name)
     rospy.Timer(rospy.Duration(0.1), twist.publish)
     rospy.loginfo("twist publisher started")
 
-    battery = BatterySensor()
+    battery = BatterySensor(topic=common.config.defaults.drone_battery_sensor_publish_topic_name)
     rospy.Timer(rospy.Duration(0.1), battery.publish)
     rospy.loginfo("battery publisher started")
 

@@ -21,7 +21,7 @@ class MoveAction(object):
         self._result = drone.msg.MoveResult() 
 
     def execute_cb(self, goal):
-        rospy.loginfo('%s %s' % (self._action_name, goal.target))
+        rospy.loginfo('%s %s' % (self._action_name, str(goal.target).replace('\n', '').replace(' ', '')))
         time.sleep(3+(goal.target.translation.x+goal.target.translation.y+goal.target.translation.z)/100)
 
         self.success_cb(True)

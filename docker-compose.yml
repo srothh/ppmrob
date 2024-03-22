@@ -11,13 +11,13 @@ services:
       - "11311:11311"
     networks:
       - ppmrob
-  publisher:
-    build: src/publisher
+  cv:
+    build: ./src/cv/cv_node
     environment:
       - "ROS_MASTER_URI=http://ros_master:11311"
       - "ROS_LOG_LEVEL=info"
       - "PYTHONUNBUFFERED=1"
-      - DISPLAY=host.docker.internal:0 # Uncomment only if running VcXsrv on Windows (https://sourceforge.net/projects/vcxsrv/), it will show gui things like imshow(). Will cause crash without it.
+#      - DISPLAY=host.docker.internal:0 # Uncomment only if running VcXsrv on Windows (https://sourceforge.net/projects/vcxsrv/), it will show gui things like imshow(). Will cause crash without it.
     #      - "NVIDIA_VISIBLE_DEVICES=all" GPU needs extra work
     networks:
       - ppmrob
@@ -37,45 +37,30 @@ services:
   drone:
     build:
       context: ./src
-      dockerfile: ./src/drone/Dockerfile
-#    entrypoint: /root/src/entrypoint.sh
+      dockerfile: ./drone/Dockerfile
     environment:
       - "ROS_MASTER_URI=http://ros_master:11311"
-      - "ROS_LOG_LEVEL=debug"
+      - "ROS_LOG_LEVEL=info"
       - "PYTHONUNBUFFERED=1"
-      - "DISPLAY"
-      - "QT_X11_NO_MITSHM=1"
     ports:
-      - "9003:9003"
       - "8889:8889/udp"
       - "8890:8890/udp"
       - "11111:11111/udp"
     networks:
-      - ppmrob
-    volumes:
-      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+      - ppmrob    
     depends_on:
       - ros_master
-  tello:
-    #image: ros:noetic-ros-base
-    build: src/tello
-    #volumes:
-    #  - type: bind
-    #    source: ./tello
-    #    target: /catkin_ws/src/tello
-    #volumes:
-    #  - ./tello:/catkin_ws/src/tello
+  # DO NOT start drone_dummy together with drone
+  drone_dummy:
+    build:
+      context: ./src
+      dockerfile: ./drone_dummy/Dockerfile
     environment:
       - "ROS_MASTER_URI=http://ros_master:11311"
-      - "ROS_LOG_LEVEL=debug"
+      - "ROS_LOG_LEVEL=info"
       - "PYTHONUNBUFFERED=1"
-    ports:
-      - "9003:9003"
-      - "8889:8889/udp"
-      - "8890:8890/udp"
-      - "11111:11111/udp"
     networks:
-      - ppmrob
+      - ppmrob    
     depends_on:
       - ros_master
   battery:
@@ -88,8 +73,24 @@ services:
       - ppmrob
     depends_on:
       - ros_master
+  cockpit:
+    build:
+      context: ./src
+      dockerfile: ./cockpit/Dockerfile
+    environment:
+      - "ROS_MASTER_URI=http://ros_master:11311"
+      - "ROS_LOG_LEVEL=info"
+      - "PYTHONUNBUFFERED=1"
+      - "QT_X11_NO_MITSHM=1"
+      - "DISPLAY=$DISPLAY"
+    networks:
+      - ppmrob
+    volumes:
+      - /tmp/.X11-unix:/tmp/.X11-unix
+    depends_on:
+      - ros_master
   control:
-    build: ./control
+    build: ./src/control
     environment:
       - "ROS_MASTER_URI=http://ros_master:11311"
       - "ROS_LOG_LEVEL=info"

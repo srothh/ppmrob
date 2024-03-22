@@ -1,77 +1,88 @@
 #!/usr/bin/env python3
 
-import rospy  # the library should be added as package dependency for the package on which working here
-import numpy as np
-from geometry_msgs.msg import TwistStamped
-from geometry_msgs.msg import PoseStamped
+import rospy  
+import math 
+from geometry_msgs.msg import TwistStamped, Twist
+from geometry_msgs.msg import PoseStamped, Pose
 from std_msgs.msg import Header
-import common.config.defaults
+import tf2_ros
+from geometry_msgs.msg import TransformStamped
 
+ODOMETRY_DEFAULT_RATE = 100  
 
+class Odometry:
+    def __init__(self, rate=ODOMETRY_DEFAULT_RATE):
+        
+        self._sub = rospy.Subscriber("/drone/twist", TwistStamped, callback=self.read_vel)
+        self._pub = rospy.Publisher('/odometry/return_signal', PoseStamped, queue_size=10) 
+        self._tf = tf2_ros.TransformBroadcaster()
+        self._rate = rospy.Rate(rate) 
+    
+    
+        self._sens_data = Twist()
+        self._pose = Pose()
+        self._pose.orientation.w = 1
+        self._dt = 1/rate
 
-ODOMETRY_DEFAULT_RATE = 10  # in Hz
-DEFAULT_POSITION = 0
-
-
-class OdometrySubscriber:
-
-    _messages = []
-
-    def start(self):
-        pub = rospy.Publisher('/odometry/return_signal', PoseStamped, queue_size=10) 
-        rate = rospy.Rate(self._rate) # set rate of the following loop
-        message = PoseStamped() # create a message for return signal
         while not rospy.is_shutdown():
             try:
-                message.header = Header()
-                message.header.frame_id = "position"
-                message.header.stamp = rospy.Time.now()
-                times = []
-                vx = []
-                vy = []
-                vz = []
-                yaw = 0
-                messages = self._messages.copy()
-                for mess in messages:
-                    # queue size of twiststamped should be = 2
-                    times.append(mess.header.stamp.to_sec())
-                    vx.append(mess.twist.linear.x)
-                    vy.append(mess.twist.linear.y)
-                    vz.append(mess.twist.linear.z)
-                if (len(times) > 2):
-                    deltaTimeS=np.diff(times)
-                    message.pose.position.x =  sum(vx[1:len(vx)]*deltaTimeS)*(10)
-                    message.pose.position.y =  sum(vy[1:len(vy)]*deltaTimeS)*(-10)
-                    message.pose.position.z =  sum(vz[1:len(vz)]*deltaTimeS)*10
-
-                    #calculate azimuth
-                    message.pose.orientation.z = (messages[-1].twist.angular.z + 360) % 360
-                    pub.publish(message) # publish the return signal
-                    #self._messages = []
-                    #rospy.loginfo("Publishing %s return signal", message.data)
-                rate.sleep()  # wait according to the publishing rate
+                self.update_odom()
+                rospy.loginfo(self._pose)
+                self.send_pose()
+                self.send_tf()
+                self._rate.sleep()
             except Exception as e:
                 rospy.loginfo(e)
-    def odometry_callback(self, data: TwistStamped): # never call this func. yourself, called when msg arrives
-        #rospy.loginfo("velocity: %s" % data)
-        #self._messages = rospy.wait_for_message(common.config.defaults.drone_twist_sensor_publish_topic_name, TwistStamped)  # Read all messages currently in the queue
-        self._messages.append(data)
-        #rospy.loginfo("messages: %s", self._messages)
 
+    def update_odom(self):
 
+        # Integrate velocities to obtain the position
+        self._pose.position.x += self._sens_data.linear.x*self._dt
+        self._pose.position.y += self._sens_data.linear.y*self._dt
+        self._pose.position.z += self._sens_data.linear.z*self._dt
+        pitch_rad = math.radians(self._sens_data.angular.x)
+        roll_rad = math.radians(self._sens_data.angular.y)
+        yaw_rad = math.radians(self._sens_data.angular.z)
 
-    def __init__(self, rate=ODOMETRY_DEFAULT_RATE):
-        self._position_x = DEFAULT_POSITION
-        self._position_y = DEFAULT_POSITION
-        self._position_z = DEFAULT_POSITION
-        self._sub = rospy.Subscriber(common.config.defaults.drone_twist_sensor_publish_topic_name, TwistStamped, callback=self.odometry_callback)
-        self._rate = rate # convention: prefix single underscore to non-public instance variables
+        # Compute quaternion components
+        cy = math.cos(yaw_rad * 0.5)
+        sy = math.sin(yaw_rad * 0.5)
+        cp = math.cos(pitch_rad * 0.5)
+        sp = math.sin(pitch_rad * 0.5)
+        cr = math.cos(roll_rad * 0.5)
+        sr = math.sin(roll_rad * 0.5)
+        self._pose.orientation.w = cy * cp * cr + sy * sp * sr
+        self._pose.orientation.x = cy * cp * sr - sy * sp * cr
+        self._pose.orientation.y = sy * cp * sr + cy * sp * cr
+        self._pose.orientation.z = sy * cp * cr - cy * sp * sr
+
+    def read_vel(self, data: TwistStamped): # Never call this func. yourself, called when msg arrives
+        self._sens_data = data.twist
+
+    def send_pose(self):     
+        msg = PoseStamped()
+        msg.header = Header()
+        msg.header.frame_id = "position"
+        msg.header.stamp = rospy.Time.now()
+        msg.pose = self._pose
+        
+        self._pub.publish(msg)
+
+    def send_tf(self): # Function used to visualize
+        # Publish the odometry TF data
+        odom_tf = TransformStamped()
+        odom_tf.header.stamp = rospy.Time.now()
+        odom_tf.header.frame_id = "odom"
+        odom_tf.child_frame_id = "base_link"  
+        odom_tf.transform.translation = self._pose.position
+        odom_tf.transform.rotation = self._pose.orientation  # Rotation (Quaternion, with w=1.0 indicating no rotation)
+        
+        self._tf.sendTransform(odom_tf)
 
 
 if __name__ == '__main__':
     try:
-        rospy.init_node('odometry')  # register the node with roscore, allowing it to communicate with other nodes
-        odometry_subscriber = OdometrySubscriber()
-        odometry_subscriber.start()
+        rospy.init_node('odometry')  # Register the node with roscore, allowing it to communicate with other nodes
+        odometry_subscriber = Odometry()
     except rospy.ROSInterruptException:
         pass

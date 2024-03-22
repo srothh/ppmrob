@@ -16,7 +16,7 @@ COPY ./common/ /catkin_ws/src/common/
 
 #RUN add-apt-repository ppa:deadsnakes/ppa
 RUN apt-get update && apt-get install -y dos2unix python3.10 python3-pip netcat net-tools python3-tk
-RUN pip3 install av image matplotlib pyqt5
+RUN pip3 install av image
 
 # Convert line endings in the Python script
 #RUN find /catkin_ws/src/$PACKAGE_NAME -type f -print0 | xargs -0 dos2unix -
