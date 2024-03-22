@@ -10,6 +10,7 @@ drone_image_sensor_publish_delay = 0.5
 
 battery_publish_topic_name = "/battery/return_signal"
 
+
 class Odometry:
     HOME_COORDS_TOPIC_NAME = "/odometry/home_coordinates"
 
@@ -18,7 +19,7 @@ class Mapping:
     VICTIM_FOUND_TOPIC_NAME = "/mapping/victim_found"
 
 
-class Planning:
+class Control:
     MOVE_ACTION_NAMESPACE = "planning_move"
     COMMAND_ACTION_NAMESPACE = "planning_command"
 
@@ -28,7 +29,11 @@ class TelloCommands:
     LAND = "land"
     STOP = "stop"
 
-class Cockpit:
-    map_xlim = (-300, 300)    
-    map_ylim = (-300, 300)
 
+class Drone:
+    BATTERY_THRESHOLD = 10.0
+
+
+class Cockpit:
+    map_xlim = (-300, 300)
+    map_ylim = (-300, 300)
