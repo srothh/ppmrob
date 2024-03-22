@@ -18,9 +18,13 @@ class Mapping:
     VICTIM_FOUND_TOPIC_NAME = "/mapping/victim_found"
 
 
-class Planning:
+class Planning:  # FIXME - Control
     MOVE_ACTION_NAMESPACE = "planning_move"
     COMMAND_ACTION_NAMESPACE = "planning_command"
+
+
+class Drone:
+    BATTERY_THRESHOLD = 10.0
 
 
 class TelloCommands:
