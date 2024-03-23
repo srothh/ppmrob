@@ -1,12 +1,17 @@
 # ppmrob
 ## Initial docker setup
-To run use
-
+### To run use:
 ``
 docker compose up --build
 ``
 
-To exit send `Ctrl+C` or run
+This defaults to 1 victim. 
+### To run with different number of victims
+Run the above command in the shell that contains `NUMBER_OF_VICTIMS=<value>`.  
+The values set in the shell environment override those set in the `.env` file, the `environment` attribute, and the `env_file` attribute.
+
+### To exit
+Send `Ctrl+C` or run:
 
 ``
 docker compose down
