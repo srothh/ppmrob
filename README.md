@@ -9,7 +9,7 @@ This defaults to 1 victim.
 ### To run with different number of victims
 ~~Run the above command in the shell that contains `NUMBER_OF_VICTIMS=<value>`.  
 The values set in the shell environment override those set in the `.env` file, the `environment` attribute, and the `env_file` attribute.~~
-- [ ] TODO
+- [ ] TODO (for the time being change the value in `docker_planner_vars.env`)
 
 ### To exit
 Send `Ctrl+C` or run:
