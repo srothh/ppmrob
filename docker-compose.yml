@@ -17,7 +17,7 @@ services:
       - "ROS_MASTER_URI=http://ros_master:11311"
       - "ROS_LOG_LEVEL=info"
       - "PYTHONUNBUFFERED=1"
-#      - DISPLAY=host.docker.internal:0 # Uncomment only if running VcXsrv on Windows (https://sourceforge.net/projects/vcxsrv/), it will show gui things like imshow(). Will cause crash without it.
+    #      - DISPLAY=host.docker.internal:0 # Uncomment only if running VcXsrv on Windows (https://sourceforge.net/projects/vcxsrv/), it will show gui things like imshow(). Will cause crash without it.
     #      - "NVIDIA_VISIBLE_DEVICES=all" GPU needs extra work
     networks:
       - ppmrob
@@ -47,7 +47,7 @@ services:
       - "8890:8890/udp"
       - "11111:11111/udp"
     networks:
-      - ppmrob    
+      - ppmrob
     depends_on:
       - ros_master
   # DO NOT start drone_dummy together with drone
@@ -60,7 +60,7 @@ services:
       - "ROS_LOG_LEVEL=info"
       - "PYTHONUNBUFFERED=1"
     networks:
-      - ppmrob    
+      - ppmrob
     depends_on:
       - ros_master
   battery:
@@ -101,6 +101,20 @@ services:
       - ppmrob
     depends_on:
       - ros_master
+  planner:
+    build: src/planner
+    env_file:
+      # paths are relative to the location of `compose.yml` file
+      - docker.env
+      - docker_planner_vars.env
+    networks:
+      - ppmrob
+    depends_on:
+      # FIXME adjust to actual dependencies
+      - ros_master
+      - control
+      # - mapping
+      # - odometry
 networks:
   ppmrob:
     driver: "bridge"
