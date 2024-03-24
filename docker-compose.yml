@@ -102,7 +102,12 @@ services:
     depends_on:
       - ros_master
   planner:
-    build: src/planner
+    build:
+      # If not set explicitly, context defaults to project directory (.).
+      # relative ==> resolved from the Compose file's parent folder
+      # context: ./src/
+      # relative ==> resolved from the build context
+      dockerfile: ./src/planner/Dockerfile
     env_file:
       # paths are relative to the location of `compose.yml` file
       - docker.env

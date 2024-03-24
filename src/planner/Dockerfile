@@ -8,13 +8,19 @@ WORKDIR /catkin_ws/src
 ENV PACKAGE_NAME planner
 ENV LAUNCH_FILE planner.launch
 # Create a new ROS package for the package
-RUN /bin/bash -c "source /opt/ros/noetic/setup.bash && catkin_create_pkg $PACKAGE_NAME rospy std_msgs"
+RUN /bin/bash -c "source /opt/ros/noetic/setup.bash"
 
 # Copy the src of package into the container
-COPY ./$PACKAGE_NAME/ /catkin_ws/src/$PACKAGE_NAME/
-COPY ./common/ /catkin_ws/src/common/
+COPY src/$PACKAGE_NAME/ /catkin_ws/src/$PACKAGE_NAME/
+COPY src/common/ /catkin_ws/src/common/
 
-RUN apt-get update && apt-get install -y dos2unix python3
+RUN apt-get update && apt-get install -y \
+    dos2unix \
+    python3 \
+    ros-noetic-py-trees \
+    ros-noetic-py-trees-msgs \
+    ros-noetic-py-trees-ros \
+    ros-noetic-rqt-py-trees
 
 # Convert line endings in the Python script
 RUN dos2unix /catkin_ws/src/$PACKAGE_NAME/scripts/*
