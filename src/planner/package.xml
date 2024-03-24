@@ -56,7 +56,7 @@
   <depend>py_trees_ros</depend>
   <depend>rospy</depend>
   <depend>message_generation</depend>
-
+  <depend>actionlib</depend>
 
   <!-- The export tag contains other, unspecified, tags -->
   <export>
