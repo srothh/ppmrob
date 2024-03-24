@@ -1,65 +1,52 @@
 #!/usr/bin/env python3
 import functools
-
 import actionlib
 import py_trees
 import py_trees_ros
 import rospy
-
 # import control.msg
 import control.msg
-
 # import grid_based_sweep
 from std_msgs.msg import String, Bool
 from geometry_msgs.msg import Point
-
+from nav_msgs.msg import OccupancyGrid
+import pathfinding
 import common.config.defaults as defaults  # TODO add to dockerfile as per issue!
-
 
 BB_VAR_RETURNED_HOME = "returned_home"
 BB_VAR_HOME_COORDINATES = "home_coordinates"
 BB_VAR_VICTIM_FOUND = "victim_found"
-BB_VAR_WAYPOINT = "waypoint"
+BB_VAR_WAYPOINTS = "waypoints"
 
 
-class CreatePlan(py_trees.behaviour.Behaviour):
-    def __init__(self, name, action_server_name):
-        super(CreatePlan, self).__init__(name)
-        self.map_subscriber = rospy.Subscriber(
-            "/mapping/map", String, self.map_callback
-        )
-        self.map_data = None
-        self.action_client = actionlib.SimpleActionClient(
-            action_server_name, planner.msg.PlanAction
-        )
-        self.action_client.wait_for_server()
-
-    def map_callback(self, msg):
-        self.map_data = msg
-
-    def initialise(self):
-        pass
+class DynamicPlan(py_trees.behaviour.Behaviour):
+    def __init__(self, name):
+        super(DynamicPlan, self).__init__(name)
 
     def update(self):
-        if self.map_data is None:
-            rospy.loginfo("Waiting for map data...")
-            return py_trees.common.Status.RUNNING
+        path = dynamic_plan()
+        py_trees.blackboard.Blackboard().plan = path
+        return py_trees.common.Status.FAILURE if len(path) == 0 else py_trees.common.Status.SUCCESS
 
-        # plan = grid_based_sweep.generate_plan()
-        goal = planner.msg.PlanGoal()
-        # goal.x = plan[0]
-        # goal.y = plan[1]
 
-        self.action_client.send_goal(goal)
-        self.action_client.wait_for_result()
+class UnexploredPlan(py_trees.behaviour.Behaviour):
+    def __init__(self, name):
+        super(UnexploredPlan, self).__init__(name)
 
-        result = self.action_client.get_result()
-        print(result)
+    def update(self):
+        path = path_to_unexplored()
+        py_trees.blackboard.Blackboard().plan = path
+        return py_trees.common.Status.FAILURE if len(path) == 0 else py_trees.common.Status.SUCCESS
 
-        return py_trees.common.Status.SUCCESS
 
-    def terminate(self, new_status):
-        self.map_subscriber.unregister()
+class HomePlan(py_trees.behaviour.Behaviour):
+    def __init__(self, name):
+        super(HomePlan, self).__init__(name)
+
+    def update(self):
+        path = path_home()
+        py_trees.blackboard.Blackboard().plan = path
+        return py_trees.common.Status.FAILURE if len(path) == 0 else py_trees.common.Status.SUCCESS
 
 
 class Leaf(py_trees.Behaviour):
@@ -101,24 +88,62 @@ class Leaf(py_trees.Behaviour):
 
 class ReturnHomeDynamicActionClient(py_trees_ros.actions.ActionClient):
     def initialise(self):
-        home_coords = py_trees.blackboard.Blackboard().get(BB_VAR_HOME_COORDINATES)
-        # TODO check that this works as intended!
-        self.action_goal = control.msg.PlanningMoveGoal(target=home_coords)
-        super().initialise()
-
-
-class PlanningMoveDynamicActionClient(py_trees_ros.actions.ActionClient):
-    def initialise(self):
-        planned_path = py_trees.blackboard.Blackboard().get(BB_VAR_WAYPOINT)
+        planned_path = py_trees.blackboard.Blackboard().get(BB_VAR_WAYPOINTS)
         # TODO check that this works as intended!
         self.action_goal = control.msg.PlanningMoveGoal(target=planned_path)
         super().initialise()
 
 
+class PlanningMoveDynamicActionClient(py_trees_ros.actions.ActionClient):
+    def initialise(self):
+        planned_path = py_trees.blackboard.Blackboard().get(BB_VAR_WAYPOINTS)
+        # TODO check that this works as intended!
+        self.action_goal = control.msg.PlanningMoveGoal(target=planned_path)
+        super().initialise()
+
+
+def dynamic_plan():
+    grid = py_trees.blackboard.Blackboard().map_data
+    grid_pos_y, grid_pos_x = world_to_grid(py_trees.blackboard.Blackboard().world_pos.x,
+                                           py_trees.blackboard.Blackboard().world_pos.y)
+    path = []
+    if grid[grid_pos_x][grid_pos_y + 1] == 0 or grid[grid_pos_x][grid_pos_y + 1] == 1:
+        path = [(py_trees.blackboard.Blackboard().world_pos.x, py_trees.blackboard.Blackboard().world_pos.y + 30)]
+    elif grid[grid_pos_x + 1][grid_pos_y] == 0 or grid[grid_pos_x + 1][grid_pos_y] == 1:
+        path = [(py_trees.blackboard.Blackboard().world_pos.x + 30, py_trees.blackboard.Blackboard().world_pos.y)]
+    elif grid[grid_pos_x][grid_pos_y - 1] == 0 or grid[grid_pos_x][grid_pos_y - 1] == 0:
+        path = [(py_trees.blackboard.Blackboard().world_pos.x, py_trees.blackboard.Blackboard().world_pos.y - 30)]
+    elif grid[grid_pos_x - 1][grid_pos_y] == 0 or grid[grid_pos_x - 1][grid_pos_y] == 0:
+        path = [(py_trees.blackboard.Blackboard().world_pos.x - 30, py_trees.blackboard.Blackboard().world_pos.y)]
+    return path
+
+
+def path_to_unexplored():
+    path = []
+    grid = py_trees.blackboard.Blackboard().map_data
+    for row in range(len(grid)):
+        for cell in range(len(row)):
+            if grid[row][cell] == 1:
+                path = path_to_pos(row, cell)
+    return path
+
+
+def path_home():
+    return path_to_pos(0, 0)
+
+
+def path_to_pos(row, cell):
+    grid = py_trees.blackboard.Blackboard().map_data
+    grid_pos_y, grid_pos_x = world_to_grid(py_trees.blackboard.Blackboard().world_pos.x,
+                                           py_trees.blackboard.Blackboard().world_pos.y)
+    current = Point(grid_pos_x, grid_pos_y, 0)
+    target = Point(row, cell, 0)
+    return pathfinding.a_star(grid, (current.x, current.y), (target.x, target.y))
+
+
 def create_root():
     """
     Creates the behaviour tree and returns the root node.
-
     The tree is built as if executing a tree traversal algorithm: from root to bottom left to bottom right nodes.
     """
     # nodes
@@ -154,6 +179,7 @@ def create_root():
         expected_value=True,
     )
     return_home = py_trees.composites.Sequence("Return home")
+    plan_home = HomePlan("Plan path home")
     fly_home = ReturnHomeDynamicActionClient(
         name="Fly home",
         action_spec=control.msg.PlanningMoveAction,
@@ -189,7 +215,10 @@ def create_root():
         expected_value=True,
     )
     is_victim_found_inverter = py_trees.decorators.Inverter(child=is_victim_found)
-    path_planning = py_trees.behaviours.Success("Path planning")
+    path_planning = py_trees.composites.Selector("Path planning")
+    dynamic_plan = DynamicPlan("Dynamic planning")
+    unexplored = UnexploredPlan("Plan path to unexplored cell")
+    path_planning.add_children([dynamic_plan, unexplored, plan_home])
     # FIXME following needs output of path planning! -> make dynamic action client
     move_to_next_position = PlanningMoveDynamicActionClient(
         name="Move to next position",
@@ -218,7 +247,7 @@ def create_root():
     topics2bb.add_children([battery2bb, home_coords2bb, victim_found2bb])
     priorities.add_children([battery_check, search_and_rescue])
     battery_check.add_children([is_battery_low, return_home])
-    return_home.add_children([fly_home, land_home, terminate])
+    return_home.add_children([plan_home, fly_home, land_home, terminate])
     search_and_rescue.add_children([takeoff, search_subtree_condition, rescue_subtree])
     search_subtree.add_children(
         [
@@ -287,14 +316,67 @@ def run_bt(behavior_tree: py_trees_ros.trees.BehaviourTree, rate_hz=2):
         rate.sleep()
 
 
+# Map callback function
+def map_callback(msg):
+    py_trees.blackboard.Blackboard().map_width = msg.info.width
+    py_trees.blackboard.Blackboard().map_data = flat_to_2d(msg.data, msg.info.width)
+
+
+# Position callback function
+def position_callback(msg):
+    py_trees.blackboard.Blackboard().world_pos = msg
+
+
+# Drone world position in centimetres -> Drone position in grid
+def world_to_grid(world_x, world_y):
+    grid_x = int(world_x / defaults.map_resolution)
+    grid_y = int(world_y / defaults.map_resolution)
+    return grid_x, grid_y
+
+
+def grid_to_world(row, col):
+    x_world = col * defaults.map_resolution / 2
+    y_world = row * defaults.map_resolution / 2
+    return x_world, y_world
+
+
+def flat_to_2d(flat_array, width):
+    if len(flat_array) % width != 0:
+        raise ValueError("The length of the flat array is not evenly divisible by the width")
+    return [flat_array[i:i + width] for i in range(0, len(flat_array), width)]
+
+
 if __name__ == "__main__":
+    # pathfinding test
+    # occupancy_grid = [
+    #     9,9,9,9,9,9,9,9,9,9,
+    #     9,0,0,0,0,0,0,0,0,9,
+    #     9,0,0,0,0,0,0,0,0,9,
+    #     9,9,9,9,9,9,0,0,0,9,
+    #     9,9,9,9,9,9,0,0,0,9,
+    #     9,9,9,9,9,9,0,0,0,9,
+    #     9,0,0,0,0,0,0,0,0,9,
+    #     9,0,2,2,2,2,2,2,2,9,
+    #     9,2,2,1,1,1,1,1,1,1,
+    #     1,1,1,1,1,1,1,1,1,1
+    # ]
+    # start = (7, 1)  # Starting cell
+    # goal = (1, 1)  # Target cell
+    # path = pathfinding.a_star(flat_to_2d(occupancy_grid, 10), start, goal)
+    # print(path)
     try:
         # register the node with roscore, allowing it to communicate with other nodes
         rospy.init_node("planner")
+
+        # Occupancy grid subscriber
+        map_subscriber = rospy.Subscriber(defaults.Mapping.OCCUPANCY_GRID_TOPIC_NAME, OccupancyGrid, map_callback)
+        # World position subscriber
+        position_subscriber = rospy.Subscriber(defaults.Control.WORLD_POSITION_TOPIC_NAME, Point, position_callback)
+
         # for testing purpose
         py_trees.logging.level = py_trees.logging.Level.DEBUG
         tree = setup_bt()
         py_trees.display.render_dot_tree(tree.root, name="planner_tree")
-        # run_bt(tree)
+        run_bt(tree)
     except rospy.ROSInterruptException:
         pass
