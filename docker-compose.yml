@@ -13,12 +13,11 @@ services:
       - ppmrob
   cv:
     build: ./src/cv/cv_node
-    environment:
-      - "ROS_MASTER_URI=http://ros_master:11311"
-      - "ROS_LOG_LEVEL=info"
-      - "PYTHONUNBUFFERED=1"
-    #      - DISPLAY=host.docker.internal:0 # Uncomment only if running VcXsrv on Windows (https://sourceforge.net/projects/vcxsrv/), it will show gui things like imshow(). Will cause crash without it.
-    #      - "NVIDIA_VISIBLE_DEVICES=all" GPU needs extra work
+    # environment:
+    #   - DISPLAY=host.docker.internal:0 # Uncomment only if running VcXsrv on Windows (https://sourceforge.net/projects/vcxsrv/), it will show gui things like imshow(). Will cause crash without it.
+    #   - "NVIDIA_VISIBLE_DEVICES=all" GPU needs extra work
+    env_file:
+      - docker.env
     networks:
       - ppmrob
     depends_on:
@@ -27,10 +26,8 @@ services:
     build:
       context: ./src
       dockerfile: ./drone/Dockerfile
-    environment:
-      - "ROS_MASTER_URI=http://ros_master:11311"
-      - "ROS_LOG_LEVEL=info"
-      - "PYTHONUNBUFFERED=1"
+    env_file:
+      - docker.env
     ports:
       - "8889:8889/udp"
       - "8890:8890/udp"
@@ -44,20 +41,16 @@ services:
     build:
       context: ./src
       dockerfile: ./drone_dummy/Dockerfile
-    environment:
-      - "ROS_MASTER_URI=http://ros_master:11311"
-      - "ROS_LOG_LEVEL=info"
-      - "PYTHONUNBUFFERED=1"
+    env_file:
+      - docker.env
     networks:
       - ppmrob
     depends_on:
       - ros_master
   battery:
     build: src/battery
-    environment:
-      - "ROS_MASTER_URI=http://ros_master:11311"
-      - "ROS_LOG_LEVEL=info"
-      - "PYTHONUNBUFFERED=1"
+    env_file:
+      - docker.env
     networks:
       - ppmrob
     depends_on:
@@ -67,11 +60,10 @@ services:
       context: ./src
       dockerfile: ./cockpit/Dockerfile
     environment:
-      - "ROS_MASTER_URI=http://ros_master:11311"
-      - "ROS_LOG_LEVEL=info"
-      - "PYTHONUNBUFFERED=1"
       - "QT_X11_NO_MITSHM=1"
       - "DISPLAY=$DISPLAY"
+    env_file:
+      - docker.env
     networks:
       - ppmrob
     volumes:
@@ -80,10 +72,8 @@ services:
       - ros_master
   control:
     build: ./src/control
-    environment:
-      - "ROS_MASTER_URI=http://ros_master:11311"
-      - "ROS_LOG_LEVEL=info"
-      - "PYTHONUNBUFFERED=1"
+    env_file:
+      - docker.env
     ports:
       - "9006:9006"
     networks:

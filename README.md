@@ -5,11 +5,7 @@
 docker compose up --build
 ``
 
-This defaults to 1 victim. 
-### To run with different number of victims
-~~Run the above command in the shell that contains `NUMBER_OF_VICTIMS=<value>`.  
-The values set in the shell environment override those set in the `.env` file, the `environment` attribute, and the `env_file` attribute.~~
-- [ ] TODO (for the time being change the value in `docker_planner_vars.env`)
+This defaults to 1 victim, change `NUMBER_OF_VICTIMS=value` in `docker_planner_vars.env` to for different number of victims.
 
 ### To exit
 Send `Ctrl+C` or run:
@@ -51,3 +47,5 @@ Project file structure as a tree (find more info [here](https://www.yahboom.net/
 1. [CreatingPackage](http://wiki.ros.org/ROS/Tutorials/catkin/CreatingPackage)
 2. Add `Dockerfile` to the package folder
 3. Add the node/service to the `docker-compose.yml` file
+
+# [Initial commit](https://github.com/srothh/ppmrob/commit/a84e313148c968950890c279be86650bc3b27f8c)
