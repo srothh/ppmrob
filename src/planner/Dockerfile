@@ -13,6 +13,8 @@ RUN /bin/bash -c "source /opt/ros/noetic/setup.bash"
 # Copy the src of package into the container
 COPY src/$PACKAGE_NAME/ /catkin_ws/src/$PACKAGE_NAME/
 COPY src/common/ /catkin_ws/src/common/
+COPY src/control/action/ /catkin_ws/src/control/action/
+COPY src/control/CMakeLists.txt src/control/package.xml /catkin_ws/src/control/
 
 RUN apt-get update && apt-get install -y \
     dos2unix \
