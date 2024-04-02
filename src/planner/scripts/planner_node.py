@@ -146,7 +146,7 @@ def create_root():
         topic_name=defaults.drone_battery_sensor_publish_topic_name,
         threshold=defaults.Drone.BATTERY_THRESHOLD,
     )
-    # preferred way of getting data from a topic according to docs
+    # preferred way of getting data from a topic according to docs (instead of, e.g., `py_trees_ros.subscribers.CheckData`)
     victim_found2bb = py_trees_ros.subscribers.ToBlackboard(
         name="VictimFound2BB",
         topic_name=defaults.Mapping.VICTIM_FOUND_TOPIC_NAME,
@@ -175,6 +175,7 @@ def create_root():
         name="Fly home",
         action_spec=control.msg.PlanningMoveAction,
         action_namespace=defaults.Control.MOVE_ACTION_NAMESPACE,
+        override_feedback_message_on_running="Returning home...",
     )
     land_home = py_trees_ros.actions.ActionClient(
         name="Land home",
@@ -183,6 +184,7 @@ def create_root():
             command=defaults.TelloCommands.LAND
         ),
         action_namespace=defaults.Control.COMMAND_ACTION_NAMESPACE,
+        override_feedback_message_on_running="Landing...",
     )
     terminate = py_trees.blackboard.SetBlackboardVariable(
         name="Terminate", variable_name=BB_VAR_RETURNED_HOME, variable_value=True
@@ -195,6 +197,7 @@ def create_root():
             command=defaults.TelloCommands.TAKEOFF
         ),
         action_namespace=defaults.Control.COMMAND_ACTION_NAMESPACE,
+        override_feedback_message_on_running="Taking off...",
     )
     search_subtree = py_trees.composites.Sequence(name="Search victim")
     search_subtree_condition = py_trees.decorators.Condition(
@@ -211,6 +214,7 @@ def create_root():
         name="Move to next position",
         action_spec=control.msg.PlanningMoveAction,
         action_namespace=defaults.Control.MOVE_ACTION_NAMESPACE,
+        override_feedback_message_on_running="Moving to next position...",
     )
     rescue_subtree = py_trees.composites.Sequence(name="Rescue victim")
     stop_above_victim = py_trees_ros.actions.ActionClient(
@@ -220,6 +224,7 @@ def create_root():
             command=defaults.TelloCommands.STOP
         ),
         action_namespace=defaults.Control.COMMAND_ACTION_NAMESPACE,
+        override_feedback_message_on_running="Stopping above victim...",
     )
     land_where_victim_found = py_trees_ros.actions.ActionClient(
         name="Land where victim found",
@@ -228,6 +233,7 @@ def create_root():
             command=defaults.TelloCommands.LAND
         ),
         action_namespace=defaults.Control.COMMAND_ACTION_NAMESPACE,
+        override_feedback_message_on_running="Landing where victim found...",
     )
     victim_rescued = IncrementBbVar("Rescued victim", BB_VAR_NUM_OF_RESCUED_VICTIMS)
     # tree
@@ -295,8 +301,8 @@ def run_bt(behavior_tree: py_trees_ros.trees.BehaviourTree, rate_hz=2):
     """
     num_of_victims_to_rescue = rospy.get_param("~num_of_victims_to_rescue")
     rospy.loginfo(f"Number of victims to rescue: {num_of_victims_to_rescue}")
-    py_trees.blackboard.Blackboard().set(BB_VAR_NUM_OF_RESCUED_VICTIMS, 0)
-    py_trees.blackboard.Blackboard().set(BB_VAR_RETURNED_HOME, False)
+    # py_trees.blackboard.Blackboard().set(BB_VAR_NUM_OF_RESCUED_VICTIMS, 0)
+    # py_trees.blackboard.Blackboard().set(BB_VAR_RETURNED_HOME, False)
     while not rospy.is_shutdown():
         if (
             py_trees.blackboard.Blackboard().get(BB_VAR_RETURNED_HOME)
