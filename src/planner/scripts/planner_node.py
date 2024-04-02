@@ -100,7 +100,7 @@ class Leaf(py_trees.Behaviour):
 class ReturnHomeDynamicActionClient(py_trees_ros.actions.ActionClient):
     def initialise(self):
         home_coords = py_trees.blackboard.Blackboard().get(BB_VAR_HOME_COORDINATES)
-        # TODO check that this works as intended!
+        rospy.loginfo(f"Home coordinates: {home_coords}")
         self.action_goal = control.msg.PlanningMoveGoal(target=home_coords)
         super().initialise()
 
@@ -108,7 +108,6 @@ class ReturnHomeDynamicActionClient(py_trees_ros.actions.ActionClient):
 class PlanningMoveDynamicActionClient(py_trees_ros.actions.ActionClient):
     def initialise(self):
         planned_path = py_trees.blackboard.Blackboard().get(BB_VAR_WAYPOINT)
-        # TODO check that this works as intended!
         self.action_goal = control.msg.PlanningMoveGoal(target=planned_path)
         super().initialise()
 
@@ -129,6 +128,7 @@ class IncrementBbVar(py_trees.behaviours.Success):
         self.blackboard.set(
             self.variable_name, IncrementBbVar.initialise.counter, overwrite=True
         )
+        rospy.loginfo(f"Number of rescued victims: {IncrementBbVar.initialise.counter}")
         # print(self.blackboard)
 
 
@@ -238,7 +238,7 @@ def create_root():
     victim_rescued = IncrementBbVar("Rescued victim", BB_VAR_NUM_OF_RESCUED_VICTIMS)
     # tree
     root.add_children([topics2bb, priorities])
-    topics2bb.add_children([battery2bb, victim_found2bb, home_coords2bb])
+    topics2bb.add_children([victim_found2bb, home_coords2bb, battery2bb])
     priorities.add_children([battery_check, search_and_rescue])
     battery_check.add_children([is_battery_low, return_home])
     return_home.add_children([fly_home, land_home, terminate])
@@ -324,7 +324,7 @@ if __name__ == "__main__":
         # register the node with roscore, allowing it to communicate with other nodes
         rospy.init_node("planner")
         # for testing purpose
-        py_trees.logging.level = py_trees.logging.Level.DEBUG
+        # py_trees.logging.level = py_trees.logging.Level.DEBUG
         tree = setup_bt()
         py_trees.display.render_dot_tree(tree.root, name="planner_tree")
         run_bt(tree)
