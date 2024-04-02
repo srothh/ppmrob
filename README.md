@@ -5,7 +5,7 @@
 docker compose up --build
 ``
 
-This defaults to 1 victim, change `NUMBER_OF_VICTIMS=value` in `docker_planner_vars.env` to for different number of victims.
+This defaults to 1 victim, change `NUMBER_OF_VICTIMS=value` in `docker_planner_vars.env` for different number of victims.
 
 ### To exit
 Send `Ctrl+C` or run:
@@ -21,7 +21,7 @@ docker compose down
     source devel/setup.bash # update the workspace environment
 
 
-When successful you should be able to run, e.g., `roscd battery`.
+When successful you should be able to run, e.g., `roscd <package>`.
 
 ### Creating a ROS package
 For a package to be considered a catkin package it must meet a few requirements:
