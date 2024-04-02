@@ -21,7 +21,7 @@ docker compose down
     source devel/setup.bash # update the workspace environment
 
 
-When successful you should be able to run, e.g., `roscd battery`.
+When successful you should be able to run, e.g., `roscd <package>`.
 
 ### Creating a ROS package
 For a package to be considered a catkin package it must meet a few requirements:
