@@ -186,14 +186,14 @@ class DroneControl:
                     break
                 else:
                     rospy.loginfo("Retrying to rotate")
-        else:
-            while True:
-                result = self.drone_move_command.move_drone(distance, 0.0, 0.0, 0.0)
-                if result.success:
-                    rospy.loginfo("Translation was successful")
-                    break
-                else:
-                    rospy.loginfo("Retrying to translate")
+
+        while True:
+            result = self.drone_move_command.move_drone(distance, 0.0, 0.0, 0.0)
+            if result.success:
+                rospy.loginfo("Translation was successful")
+                break
+            else:
+                rospy.loginfo("Retrying to translate")
 
         # Send feedback via move action server for planning node
         feedback = MoveFeedback()
