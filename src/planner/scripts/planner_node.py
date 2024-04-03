@@ -97,17 +97,10 @@ class Leaf(py_trees.Behaviour):
         )
 
 
-class ReturnHomeDynamicActionClient(py_trees_ros.actions.ActionClient):
-    def initialise(self):
-        home_coords = py_trees.blackboard.Blackboard().get(BB_VAR_HOME_COORDINATES)
-        rospy.loginfo(f"Home coordinates: {home_coords}")
-        self.action_goal = control.msg.PlanningMoveGoal(target=home_coords)
-        super().initialise()
-
-
 class PlanningMoveDynamicActionClient(py_trees_ros.actions.ActionClient):
     def initialise(self):
         planned_path = py_trees.blackboard.Blackboard().get(BB_VAR_WAYPOINT)
+        rospy.loginfo(f"Planned path: {planned_path}")
         self.action_goal = control.msg.PlanningMoveGoal(target=planned_path)
         super().initialise()
 
@@ -141,11 +134,6 @@ def create_root():
     # nodes
     root = py_trees.composites.Parallel("Mission")
     topics2bb = py_trees.composites.Sequence("Topics2BB")
-    battery2bb = py_trees_ros.battery.ToBlackboard(
-        name="Battery2BB",
-        topic_name=defaults.drone_battery_sensor_publish_topic_name,
-        threshold=defaults.Drone.BATTERY_THRESHOLD,
-    )
     # preferred way of getting data from a topic according to docs (instead of, e.g., `py_trees_ros.subscribers.CheckData`)
     victim_found2bb = py_trees_ros.subscribers.ToBlackboard(
         name="VictimFound2BB",
@@ -155,13 +143,10 @@ def create_root():
         blackboard_variables={BB_VAR_VICTIM_FOUND: "data"},
         initialise_variables={BB_VAR_VICTIM_FOUND: False},
     )
-    home_coords2bb = py_trees_ros.subscribers.ToBlackboard(
-        name="HomeCoords2BB",
-        topic_name=defaults.Odometry.HOME_COORDS_TOPIC_NAME,
-        topic_type=Point,
-        # capture entire message
-        blackboard_variables={BB_VAR_HOME_COORDINATES: None},
-        initialise_variables={BB_VAR_HOME_COORDINATES: Point()},
+    battery2bb = py_trees_ros.battery.ToBlackboard(
+        name="Battery2BB",
+        topic_name=defaults.drone_battery_sensor_publish_topic_name,
+        threshold=defaults.Drone.BATTERY_THRESHOLD,
     )
     priorities = py_trees.composites.Selector("Priorities")
     battery_check = py_trees.composites.Sequence("Battery check")
@@ -171,9 +156,12 @@ def create_root():
         expected_value=True,
     )
     return_home = py_trees.composites.Sequence("Return home")
-    fly_home = ReturnHomeDynamicActionClient(
+    fly_home = py_trees_ros.actions.ActionClient(
         name="Fly home",
         action_spec=control.msg.PlanningMoveAction,
+        action_goal=control.msg.PlanningMoveGoal(
+            target=Point(x=0.0, y=0.0, z=0.0)  # home coordinates
+        ),
         action_namespace=defaults.Control.MOVE_ACTION_NAMESPACE,
         override_feedback_message_on_running="Returning home...",
     )
@@ -229,7 +217,7 @@ def create_root():
     victim_rescued = IncrementBbVar("Rescued victim", BB_VAR_NUM_OF_RESCUED_VICTIMS)
     # tree
     root.add_children([topics2bb, priorities])
-    topics2bb.add_children([victim_found2bb, home_coords2bb, battery2bb])
+    topics2bb.add_children([victim_found2bb, battery2bb])
     priorities.add_children([battery_check, search_and_rescue])
     battery_check.add_children([is_battery_low, return_home])
     return_home.add_children([fly_home, land_home, terminate])
@@ -315,7 +303,7 @@ if __name__ == "__main__":
         # for testing purpose
         # py_trees.logging.level = py_trees.logging.Level.DEBUG
         tree = setup_bt()
-        py_trees.display.render_dot_tree(tree.root, name="planner_tree")
+        # py_trees.display.render_dot_tree(tree.root, name="planner_tree")
         run_bt(tree)
     except rospy.ROSInterruptException:
         pass
