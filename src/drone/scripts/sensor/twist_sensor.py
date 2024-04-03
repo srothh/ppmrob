@@ -4,16 +4,16 @@ import rospy
 from geometry_msgs.msg import TwistStamped
 from std_msgs.msg import Header
 
-class TwistStampedSensor():
+class TwistSensor():
 
     _drone = None
 
-    def __init__(self, drone=None):
-        self._publish_to_topic = "/drone/TwistStamped"
+    def __init__(self, topic='/drone/twist', drone=None):
+        self._publish_to_topic = topic
         self._publisher = rospy.Publisher(self._publish_to_topic, TwistStamped, queue_size=10)
         self._drone = drone        
         self._counter = 0
-        rospy.loginfo('TwistStampedSensor initalized')
+        rospy.loginfo('TwistSensor initalized')
 
     def publish(self, event=None, state=None):
         try:
