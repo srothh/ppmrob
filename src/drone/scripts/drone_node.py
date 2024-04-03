@@ -8,7 +8,7 @@ from action import MoveAction
 from action import EmergencyAction
 from action import CommandAction
 from sensor import ImageSensor
-from sensor import TwistSensor
+from sensor import TwistStampedSensor
 from sensor import BatterySensor
 from util import StateCsvLogger
 import common.config.defaults
