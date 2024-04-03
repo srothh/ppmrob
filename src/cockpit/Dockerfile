@@ -6,7 +6,7 @@ WORKDIR /catkin_ws/src
 
 #edit these for custom nodes
 ENV PACKAGE_NAME cockpit
-ENV LAUNCH_FILE cockpit.launch
+ENV LAUNCH_FILE mobrob.launch
 RUN /bin/bash -c "source /opt/ros/noetic/setup.bash && catkin_create_pkg $PACKAGE_NAME rospy std_msgs"
 
 # Copy the src of package into the container
@@ -14,6 +14,7 @@ COPY ./$PACKAGE_NAME/ /catkin_ws/src/$PACKAGE_NAME/
 COPY ./common/ /catkin_ws/src/common/
 COPY ./drone/ /catkin_ws/src/drone/
 COPY ./drone_dummy/ /catkin_ws/src/drone_dummy/
+COPY ./control/ /catkin_ws/src/control/
 
 # this is needed for matplotlib
 COPY ./cockpit/keyboard /etc/default/keyboard
