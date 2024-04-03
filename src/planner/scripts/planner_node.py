@@ -217,15 +217,6 @@ def create_root():
         override_feedback_message_on_running="Moving to next position...",
     )
     rescue_subtree = py_trees.composites.Sequence(name="Rescue victim")
-    stop_above_victim = py_trees_ros.actions.ActionClient(
-        name="Stop above victim",
-        action_spec=control.msg.PlanningCommandAction,
-        action_goal=control.msg.PlanningCommandGoal(
-            command=defaults.TelloCommands.STOP
-        ),
-        action_namespace=defaults.Control.COMMAND_ACTION_NAMESPACE,
-        override_feedback_message_on_running="Stopping above victim...",
-    )
     land_where_victim_found = py_trees_ros.actions.ActionClient(
         name="Land where victim found",
         action_spec=control.msg.PlanningCommandAction,
@@ -250,9 +241,7 @@ def create_root():
             move_to_next_position,
         ]
     )
-    rescue_subtree.add_children(
-        [stop_above_victim, land_where_victim_found, victim_rescued]
-    )
+    rescue_subtree.add_children([land_where_victim_found, victim_rescued])
     return root
 
 
