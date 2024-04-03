@@ -28,7 +28,7 @@ class CommandAction(object):
         rospy.loginfo('%s: %s' % (self._action_name, goal.command))
 
         # start executing
-        time.sleep(1)
+        time.sleep(5)
 
         success = True
         self._result.success = success
