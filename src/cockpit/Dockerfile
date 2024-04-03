@@ -37,10 +37,11 @@ RUN source /opt/ros/noetic/setup.bash  && catkin_make && source /catkin_ws/devel
 ENV ROS_DISTRO noetic
 ENV ROS_WORKSPACE /catkin_ws
 
+RUN chmod +x /catkin_ws/src/${PACKAGE_NAME}/scripts/*
+
 RUN echo "source /opt/ros/$ROS_DISTRO/setup.bash && source /catkin_ws/devel/setup.bash" >> /root/.bashrc
 
 # Source the ROS setup file every time a new container is run
 #ENTRYPOINT ["/bin/bash", "-c", "source /opt/ros/$ROS_DISTRO/setup.bash && source /catkin_ws/devel/setup.bash && roslaunch $PACKAGE_NAME $LAUNCH_FILE --wait"]
 ENTRYPOINT ["/bin/bash", "-c", "source /opt/ros/$ROS_DISTRO/setup.bash && source /catkin_ws/devel/setup.bash && roslaunch cockpit mobrob.launch --wait"]
 #ENTRYPOINT ["/bin/bash", "-c", "while true; do sleep 1000; done"]
- 
