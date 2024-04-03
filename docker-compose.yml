@@ -71,7 +71,8 @@ services:
     depends_on:
       - ros_master
   control:
-    build: ./src/control
+    build:
+      dockerfile: ./src/control/Dockerfile
     env_file:
       - docker.env
     ports:

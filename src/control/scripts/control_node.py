@@ -3,15 +3,20 @@ import math
 
 import actionlib
 import rospy
-import control.msg
-import commands
 from action import DroneMoveCommand
 from std_msgs.msg import String
 from geometry_msgs.msg import Pose
 from commands.takeoff_land_handler import TakeOffAndLandHandler
-from geometry_msgs.msg import Transform, Vector3, Quaternion
-from actionlib_msgs.msg import GoalStatus
-from control.msg import MoveAction, MoveResult, MoveFeedback, PlanningMoveAction, PlanningMoveResult, PlanningCommandAction
+from geometry_msgs.msg import Vector3
+from control.msg import (
+    MoveResult,
+    MoveFeedback,
+    PlanningMoveAction,
+    PlanningMoveResult,
+    PlanningCommandAction,
+)
+
+from common.config.defaults import Control, TelloCommands
 
 
 class DroneControl:
@@ -36,7 +41,9 @@ class DroneControl:
 
         rospy.Subscriber("/cockpit/waypoint", Pose, self.planning_callback)
 
-        rospy.Subscriber("planning_decision_data", String, self.planning_decision_callback)
+        rospy.Subscriber(
+            "planning_decision_data", String, self.planning_decision_callback
+        )
 
         rospy.Subscriber("/odometry/home_coordinates", String, self.odometry_callback)
 
@@ -48,19 +55,19 @@ class DroneControl:
         # Move Action Server
         # Initialised for providing MoveAction for planning node
         self.move_action_server = actionlib.SimpleActionServer(
-            'transform_action_server',
+            Control.MOVE_ACTION_NAMESPACE,
             PlanningMoveAction,
             execute_cb=self.execute_cb,
-            auto_start=False
+            auto_start=False,
         )
 
         # Planning Command Server
         # Initialised for providing PlanningCommandAction for planning node
         self.planning_command_server = actionlib.SimpleActionServer(
-            'planning_command_server',
+            Control.COMMAND_ACTION_NAMESPACE,
             PlanningCommandAction,
             execute_cb=self.planning_decision_callback,
-            auto_start=False
+            auto_start=False,
         )
 
         self.drone_move_command = DroneMoveCommand()
@@ -68,7 +75,7 @@ class DroneControl:
         self.take_off_land_handler = TakeOffAndLandHandler()
 
     def mapping_callback(self, mapping_data):
-        """ Returns the data from the mapping node
+        """Returns the data from the mapping node
 
         @param mapping_data:
         """
@@ -76,14 +83,14 @@ class DroneControl:
         self.prev_y = mapping_data.y
 
     def drone_callback(self, data):
-        """ Returns the data from the drone node
+        """Returns the data from the drone node
 
         @param data:
         """
         self.drone_data = data.data
 
     def planning_decision_callback(self, goal):
-        """ Returns the decision data from the planning node if there is a need for
+        """Returns the decision data from the planning node if there is a need for
             landing or taking off
 
         @param goal
@@ -92,9 +99,9 @@ class DroneControl:
 
         command = goal.command
 
-        if command == 'takeoff':
+        if command == TelloCommands.TAKEOFF:
             self.take_off_land_handler.handle_takeoff()
-        elif command == 'land':
+        elif command == TelloCommands.LAND:
             self.take_off_land_handler.handle_land()
 
     def planning_callback(self, planning_data):
@@ -103,14 +110,14 @@ class DroneControl:
         self.target_y = planning_data.position.y
 
     def odometry_callback(self, msg):
-        """ Return th odometry data for orientation and position
+        """Return th odometry data for orientation and position
 
         @param msg:
         """
         position = msg.pose.position
         orientation = msg.pose.orientation
 
-        #TODO: Use this data for calculate_rotation_and_translation?
+        # TODO: Use this data for calculate_rotation_and_translation?
 
         x = position.x
         y = position.y
@@ -118,7 +125,7 @@ class DroneControl:
         direction = orientation.z
 
     def calculate_rotation_and_translation(self, prev, target):
-        """ Calculates the rotation angle and translation for the drone node
+        """Calculates the rotation angle and translation for the drone node
         Return the angle in degrees and the translation as float
 
         @rtype: object
@@ -134,16 +141,20 @@ class DroneControl:
             # rad_angle = math.asin(sine)
             angle = math.atan2(dy, dx)
             degree_angle = math.degrees(angle)
-            distance = float(math.sqrt(dx ** 2 + dy ** 2))
+            distance = float(math.sqrt(dx**2 + dy**2))
 
             self.prev = target
 
-            rospy.loginfo("Calculated distance: %.2f " ";" "Calculated degree angle: %.2f" % (distance, degree_angle))
+            rospy.loginfo(
+                "Calculated distance: %.2f "
+                ";"
+                "Calculated degree angle: %.2f" % (distance, degree_angle)
+            )
 
         return degree_angle, distance
 
     def execute_cb(self, goal):
-        """ Provides the calculated rotation and translation values as action messages to
+        """Provides the calculated rotation and translation values as action messages to
         the drone node
 
         @rtype: object
@@ -159,8 +170,10 @@ class DroneControl:
         # Angle is normalized for holding area in specific area
         bear = self.normalize_angle(bear)
 
-        rospy.loginfo("x1: %.2f y1: %.2f x2: %.2f y2: %.2f course: %.2f bear: %.2f dist: %.2f" % (
-            self.prev.x, self.prev.y, target.x, target.y, course, bear, distance))
+        rospy.loginfo(
+            "x1: %.2f y1: %.2f x2: %.2f y2: %.2f course: %.2f bear: %.2f dist: %.2f"
+            % (self.prev.x, self.prev.y, target.x, target.y, course, bear, distance)
+        )
 
         self.prev_course = course
 
@@ -193,7 +206,7 @@ class DroneControl:
         self.move_action_server.set_succeeded(result_msg)
 
     def normalize_angle(self, angle):
-        """ Function which holds the angle in an area between -180 degrees
+        """Function which holds the angle in an area between -180 degrees
             and 180 degrees
 
         @param angle:
@@ -206,7 +219,7 @@ class DroneControl:
         return angle
 
     def main_process(self):
-        """ The function where several functions run in a loop and are executed
+        """The function where several functions run in a loop and are executed
 
         @rtype: object
         """
@@ -227,7 +240,7 @@ class DroneControl:
             rate.sleep()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     try:
         control_node = DroneControl()
         control_node.main_process()
