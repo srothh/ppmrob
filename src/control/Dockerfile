@@ -1,5 +1,4 @@
-# Use the ROS Noetic image as the base
-FROM ros:noetic-ros-base
+FROM ros:noetic-perception
 
 # Create a workspace directory for the ROS project
 WORKDIR /catkin_ws/src
@@ -13,8 +12,13 @@ RUN /bin/bash -c "source /opt/ros/noetic/setup.bash"
 # Copy the src of package into the container
 COPY src/$PACKAGE_NAME/ /catkin_ws/src/$PACKAGE_NAME/
 COPY src/common/ /catkin_ws/src/common/
+COPY src/drone/action/ /catkin_ws/src/drone/action/
+COPY src/drone/CMakeLists.txt src/drone/package.xml /catkin_ws/src/drone/
 
-RUN apt-get update && apt-get install -y dos2unix python3
+
+RUN apt-get update && apt-get install -y \
+    dos2unix \
+    python3 
 
 # Convert line endings in the Python script
 RUN dos2unix /catkin_ws/src/$PACKAGE_NAME/action/*
