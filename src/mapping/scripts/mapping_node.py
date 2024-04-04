@@ -152,7 +152,7 @@ def lines_callback(data: PolygonStamped):
             break
     lines = []
     pos_point = closest_msg[0].position
-    drone_pos = pos_point.x, pos_point.y
+    drone_pos = pos_point.x + 1000, pos_point.y + 1000 # Avoid negative values for now
     for i in range(0, num_lines, 2):
         p1 = transform_ros_point(data.polygon.points[i])
         p2 = transform_ros_point(data.polygon.points[i + 1])
@@ -200,17 +200,19 @@ def publish_occupancy_grid(custom_grid: CustomOccupancyGrid):
 
 if __name__ == '__main__':
     rospy.init_node('mapping')
-    occ_grid = CustomOccupancyGrid(250, 250, 1)
+    occ_grid = CustomOccupancyGrid(250, 250, 0.01)
     odometry_subscriber = rospy.Subscriber('/odometry/return_signal', PoseStamped, callback=odometry_callback)
     lines_subsriber = rospy.Subscriber('/cv/lines', PolygonStamped, callback=lines_callback)
     grid_pub = rospy.Publisher('/mapping/occupancy_grid', OccupancyGrid, queue_size=10)
+    step = 0
     while not rospy.is_shutdown:
         curr_time = rospy.Time().to_sec()
-        if curr_time % 5 == 0:
+        if step % 5 == 0:
             current_positions = odometry_msgs.get_buffer
             closest_msg = current_positions[-1]
             pos_point = closest_msg[0].position
             drone_pos = pos_point.x, pos_point.y
             fov = calculate_fov_size(82.6, pos_point.z)
             occ_grid.update_fov(drone_pos, fov)
+        step += 1
     
