@@ -186,9 +186,9 @@ class Tello:
         return sent
     
     ## execute multiple commands after each other
-    def execute_commands(self, cmds, sleep=0.1):
+    def execute_commands(self, cmds, sleep=0.1, timeout=30):
         for cmd in cmds:
-            self.command(cmd)
+            self.command(cmd, timeout=1)
             time.sleep(sleep)
         return True
 
