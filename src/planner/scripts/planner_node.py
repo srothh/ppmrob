@@ -18,6 +18,7 @@ BB_VAR_HOME_COORDINATES = "home_coordinates"
 BB_VAR_VICTIM_FOUND = "victim_found"
 BB_VAR_WAYPOINT = "waypoint"
 BB_VAR_NUM_OF_RESCUED_VICTIMS = "num_of_rescued_victims"
+LEAF_CHECK_VICTIM_FOUND_NAME = "Victim actually found?"
 
 
 class CreatePlan(py_trees.behaviour.Behaviour):
@@ -205,6 +206,11 @@ def create_root():
         override_feedback_message_on_running="Moving to next position...",
     )
     rescue_subtree = py_trees.composites.Sequence(name="Rescue victim")
+    is_victim_actually_found = py_trees.blackboard.CheckBlackboardVariable(
+        name=LEAF_CHECK_VICTIM_FOUND_NAME,
+        variable_name=BB_VAR_VICTIM_FOUND,
+        expected_value=True,
+    )
     land_where_victim_found = py_trees_ros.actions.ActionClient(
         name="Land where victim found",
         action_spec=control.msg.PlanningCommandAction,
@@ -229,7 +235,9 @@ def create_root():
             move_to_next_position,
         ]
     )
-    rescue_subtree.add_children([land_where_victim_found, victim_rescued])
+    rescue_subtree.add_children(
+        [is_victim_actually_found, land_where_victim_found, victim_rescued]
+    )
     return root
 
 
@@ -278,8 +286,6 @@ def run_bt(behavior_tree: py_trees_ros.trees.BehaviourTree, rate_hz=2):
     """
     num_of_victims_to_rescue = rospy.get_param("~num_of_victims_to_rescue")
     rospy.loginfo(f"Number of victims to rescue: {num_of_victims_to_rescue}")
-    # py_trees.blackboard.Blackboard().set(BB_VAR_NUM_OF_RESCUED_VICTIMS, 0)
-    # py_trees.blackboard.Blackboard().set(BB_VAR_RETURNED_HOME, False)
     while not rospy.is_shutdown():
         if (
             py_trees.blackboard.Blackboard().get(BB_VAR_RETURNED_HOME)
@@ -293,6 +299,13 @@ def run_bt(behavior_tree: py_trees_ros.trees.BehaviourTree, rate_hz=2):
         Any blocking work should be happening somewhere else with a behaviour simply in charge of starting/monitoring and catching the result of that work.
         """
         behavior_tree.tick()
+        bt_tip = behavior_tree.tip()
+        if (
+            bt_tip
+            and bt_tip.name == LEAF_CHECK_VICTIM_FOUND_NAME
+            and bt_tip.status == py_trees.common.Status.FAILURE
+        ):
+            break
         rate.sleep()
 
 

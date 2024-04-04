@@ -9,6 +9,7 @@ import matplotlib.pyplot as plt
 from matplotlib import gridspec, transforms, patches
 import numpy as np
 import drone.msg
+import control.msg
 import common.config.defaults
 from cv_bridge import CvBridge, CvBridgeError
 import cv2
@@ -88,6 +89,7 @@ def drone_camera_callback(data: Image):
 
 def cv_victim_callback(data: Polygon):
     global victims
+    #rospy.loginfo('points: (%s)' % (data.points))
     victims = []
     #iterate over pairs of data.points
     for f, s in pairwise(data.points):
@@ -116,7 +118,6 @@ def on_resize(event):
 
 def on_click(event):
     ix, iy = event.xdata, event.ydata
-    rospy.loginfo('x = %d, y = %d' % (ix, iy))
     waypoint = Pose()
     waypoint.position.x = ix
     waypoint.position.y = iy
@@ -133,12 +134,12 @@ def resize_map(amount = 0):
     ax1.set_xlim(map_xlim)
     #fig.tight_layout()
     ax1.figure.canvas.draw_idle()
-    rospy.loginfo('x = %s, y = %s' % (map_xlim, map_ylim))
 
 
 rospy.init_node('cockpit')  # register the node with roscore, allowing it to communicate with other nodes
 odo_subscriber = rospy.Subscriber('/odometry/return_signal', PoseStamped, callback=odometry_callback)
-control_subscriber = rospy.Subscriber('/TransformActionServer/goal', drone.msg.ControlTransformActionGoal, callback=control_callback)
+#control_subscriber = rospy.Subscriber('/TransformActionServer/goal', drone.msg.ControlTransformActionGoal, callback=control_callback)
+control_subscriber = rospy.Subscriber('/'+common.config.defaults.Control.MOVE_ACTION_NAMESPACE + '/goal', control.msg.PlanningMoveActionGoal, callback=control_callback)
 drone_subscriber = rospy.Subscriber('/'+common.config.defaults.drone_move_action_name + '/goal', drone.msg.MoveActionGoal, callback=drone_move_callback)
 twist_subscriber = rospy.Subscriber(common.config.defaults.drone_twist_sensor_publish_topic_name, TwistStamped, callback=drone_twist_callback)
 drone_battery_subscriber = rospy.Subscriber(common.config.defaults.drone_battery_sensor_publish_topic_name, UInt8, callback=drone_battery_callback)
@@ -236,91 +237,94 @@ battery_current = ax3.bar(0, 0, color = ('red'))
 
 
 def update(frame_number):
-    global move_idx
-    #if (frame_number % 100) == 0:
-    #    init()
-    if len(targets) > 1:
-        to_x, to_y, to_z = targets[-1]
-        from_x, from_y, fr_z = targets[-2]
-        target_current.set_data(x=from_x, y=from_y, dx=to_x-from_x, dy=to_y-from_y, width=5)
-        x = [i for i, j, k in targets[:-1]]
-        y = [j for i, j, k in targets[:-1]]               
-        target_history.set_data(x,y)
+    try:
+        global move_idx
+        #if (frame_number % 100) == 0:
+        #    init()
+        if len(targets) > 1:
+            to_x, to_y, to_z = targets[-1]
+            from_x, from_y, fr_z = targets[-2]
+            target_current.set_data(x=from_x, y=from_y, dx=to_x-from_x, dy=to_y-from_y, width=5)
+            x = [i for i, j, k in targets[:-1]]
+            y = [j for i, j, k in targets[:-1]]               
+            target_history.set_data(x,y)
 
-    if len(positions) > 0:
-        xcp, ycp, zcp, azimuth = positions[-1]
-        #cur_xlim = pos_current.axes.get_xlim()
-        #cur_ylim = pos_current.axes.get_ylim()
-        #pos_current.axes.set_xlim(np.min([cur_xlim[0], xcp]), np.max([cur_xlim[1], xcp]))
-        #pos_current.axes.set_ylim(np.min([cur_ylim[0], ycp]), np.max([cur_ylim[1], ycp]))
-        pos_current.set_data([xcp], [ycp])
-        xp = [i for i, j, k, l in positions[:-1]]
-        yp = [j for i, j, k, l in positions[:-1]]  
-        pos_history.set_data(xp ,yp)             
-        #for i in range(0, len(pos_history)):
-        #    s = pos_history[i][0]
-        #    print(s)
-        #    s.set_data(xp[i*10:(i+1)*10],yp[i*10:(i+1)*10])
+        if len(positions) > 0:
+            xcp, ycp, zcp, azimuth = positions[-1]
+            #cur_xlim = pos_current.axes.get_xlim()
+            #cur_ylim = pos_current.axes.get_ylim()
+            #pos_current.axes.set_xlim(np.min([cur_xlim[0], xcp]), np.max([cur_xlim[1], xcp]))
+            #pos_current.axes.set_ylim(np.min([cur_ylim[0], ycp]), np.max([cur_ylim[1], ycp]))
+            pos_current.set_data([xcp], [ycp])
+            xp = [i for i, j, k, l in positions[:-1]]
+            yp = [j for i, j, k, l in positions[:-1]]  
+            pos_history.set_data(xp ,yp)             
+            #for i in range(0, len(pos_history)):
+            #    s = pos_history[i][0]
+            #    print(s)
+            #    s.set_data(xp[i*10:(i+1)*10],yp[i*10:(i+1)*10])
 
-        azimuth_current.set_data(x=0,y=0,dx=np.deg2rad(azimuth),dy=1)
-        #azimuth_current.axes.set_theta_offset(np.deg2rad(azimuth)+np.pi/2)
-        #move_currrent = ax4.fill_between(np.linspace(np.deg2rad(rm)+np.deg2rad(azimuth), np.deg2rad(azimuth), 100), 0, 1, color='lightblue', alpha=0.9)
-    
-    if moves:
-        #check if there is a new element in moves array
-        if len(moves) > move_idx:
-            move_idx = len(moves)
-            xm, ym, zm, rm = moves[move_idx-1] 
-            #rot_current.clear()               
-            #rot_current = ax4.fill_between(np.linspace(np.deg2rad(rm)+np.deg2rad(azimuth), np.deg2rad(azimuth), 100), 0, 1, color='lightblue', alpha=0.9)
-            #rot_current.set_data(np.deg2rad(rm)+np.deg2rad(azimuth), 1)
-            #if rm is not 0
+            azimuth_current.set_data(x=0,y=0,dx=np.deg2rad(azimuth),dy=1)
+            #azimuth_current.axes.set_theta_offset(np.deg2rad(azimuth)+np.pi/2)
+            #move_currrent = ax4.fill_between(np.linspace(np.deg2rad(rm)+np.deg2rad(azimuth), np.deg2rad(azimuth), 100), 0, 1, color='lightblue', alpha=0.9)
+        
+        if moves:
+            #check if there is a new element in moves array
+            if len(moves) > move_idx:
+                move_idx = len(moves)
+                xm, ym, zm, rm = moves[move_idx-1] 
+                #rot_current.clear()               
+                #rot_current = ax4.fill_between(np.linspace(np.deg2rad(rm)+np.deg2rad(azimuth), np.deg2rad(azimuth), 100), 0, 1, color='lightblue', alpha=0.9)
+                #rot_current.set_data(np.deg2rad(rm)+np.deg2rad(azimuth), 1)
+                #if rm is not 0
 
-            if rm != 0.0:
-                move_current_x.set_visible(False)
-                move_current_y.set_visible(False)
-                az_diff = rm + azimuth
-                rot_current.set_data([0,np.deg2rad(rm + azimuth)], [0,np.pi])
+                if rm != 0.0:
+                    move_current_x.set_visible(False)
+                    move_current_y.set_visible(False)
+                    az_diff = rm + azimuth
+                    rot_current.set_data([0,np.deg2rad(rm + azimuth)], [0,np.pi])
+                else:
+                    rot_current.set_data([0],[0])
+                    if xm != 0.0:
+                        move_current_x.set_visible(True)
+                    elif ym != 0.0:
+                        move_current_y.set_visible(True)
+
+        if len(image) > 0:
+            image_current.set_data(image)
+            if len(lines) > 0:
+                lines_current.set_segments(lines)
             else:
-                rot_current.set_data([0],[0])
-                if xm != 0.0:
-                    move_current_x.set_visible(True)
-                elif ym != 0.0:
-                    move_current_y.set_visible(True)
+                lines_current.set_segments([])
+            if victims:
+                rects = []
+                colors = []
+                edges = []
+                for victim in victims:
+                    f, s = victim
+                    #rospy.loginfo('rect: (%d,%d) (%d,%d) ' % (f[0], f[1], s[0], s[1]))
+                    rects.append(patches.Rectangle((f[0], f[1]), abs(s[0]-f[0]), abs(s[1]-f[1])))
+                    colors.append('none')
+                    edges.append('g')
+                victim_current.set_paths(rects)
+                #victim_current.set_facecolors(colors)
+                #victim_current.set_edgecolors(edges)
+                #victim_current.set_linewidths(2)
+            else:
+                victim_current.set_paths([])
+        
+        if batteries:
+            battery_current[0].set_height(batteries[-1])
+            battery_current[0].set_color('red' if battery_signal else 'olive')
 
-    if len(image) > 0:
-        image_current.set_data(image)
-        if len(lines) > 0:
-            lines_current.set_segments(lines)
-        else:
-            lines_current.set_segments([])
-        if victims:
-            #victim_idx = len(victims)
-            #for f, s in victim_current
-            rects = []
-            colors = []
-            edges = []
-            for victim in victims:
-                x, y = victim
-                rects.append(patches.Rectangle((x[0], y[0]), x[1]-x[0], y[1]-y[0]))
-                colors.append('none')
-                edges.append('g')
-            victim_current.set_paths(rects)
-            #victim_current.set_facecolors(colors)
-            #victim_current.set_edgecolors(edges)
-            #victim_current.set_linewidths(2)
-        else:
-            victim_current.set_paths([])
-    
-    if batteries:
-        battery_current[0].set_height(batteries[-1])
-        battery_current[0].set_color('red' if battery_signal else 'olive')
-
-    if waypoints:
-        x = [x for x,y in waypoints]
-        y = [y for x,y in waypoints]
-        waypoints_all.set_data(x,y)
-        waypoints_all.set_visible(True)
+        if waypoints:
+            x = [x for x,y in waypoints]
+            y = [y for x,y in waypoints]
+            waypoints_all.set_data(x,y)
+            waypoints_all.set_visible(True)
+    except Exception as e:
+        rospy.logerr(e)
+        pass
 
     return [target_current, target_history, pos_current, pos_history, azimuth_current, move_current_y, move_current_x, image_current, battery_current[0], rot_current, victim_current, lines_current, waypoints_all]
 
