@@ -10,6 +10,9 @@ import cv2
 from collections import deque
 import math
 
+fov_x = 200
+fov_y = 200
+
 class CircularBuffer:
     def __init__(self, capacity):
         self.buffer = deque(maxlen=capacity)
@@ -43,9 +46,9 @@ def calculate_fov_size(diagonal_fov_degrees, height):
 
 
 # Assumes square window and absolute drone position
-def map_coordinate(x, y, x_d, y_d, window_size):
-    x_p = int(x_d) - window_size//2 + x
-    y_p = int(y_d) - window_size//2 + y
+def map_coordinate(x, y, x_d, y_d, fov_width, fov_height):
+    x_p = int(x_d) - fov_width//2 + x
+    y_p = int(y_d) - fov_height//2 + y
     return x_p, y_p
 
 def transform_ros_point(point_msg, orientation_quaternion):
@@ -113,15 +116,15 @@ class CustomOccupancyGrid:
         # Ensure to check bounds to avoid out-of-index errors
         self.grid[top_left_y - 1:bottom_right_y, top_left_x - 1:bottom_right_x] = np.where(self.grid[top_left_y - 1:bottom_right_y, top_left_x - 1:bottom_right_x] != 100, 0, 100)
 
-    def update_lines(self, drone_pos, lines):
+    def update_lines(self, drone_pos, lines, fov_width, fov_height):
         x_d = drone_pos[0]
         y_d = drone_pos[1]
         if lines is not None:
             for line in lines:
                 # Convert world coordinates to grid coordinates
                 x1, y1, x2, y2 = line[0]
-                p1 = map_coordinate(x1, y1, x_d, y_d, 100)
-                p2 = map_coordinate(x2, y2, x_d, y_d, 100)
+                p1 = map_coordinate(x1, y1, x_d, y_d, fov_width, fov_height)
+                p2 = map_coordinate(x2, y2, x_d, y_d, fov_width, fov_height)
                 grid_x1, grid_y1 = self.world_to_grid(p1[0], p1[1])
                 grid_x2, grid_y2 = self.world_to_grid(p2[0], p2[1])
 
@@ -159,7 +162,7 @@ def lines_callback(data: PolygonStamped):
         x1, y1, x2, y2 = p1[0], p1[1], p2[0], p2[1]
         lines.append((x1, y1, x2, y2))
     
-    occ_grid.update_lines(drone_pos, lines)
+    occ_grid.update_lines(drone_pos, lines, fov_x, fov_y)
 
 def victim_callback(data: PolygonStamped):
     return
@@ -213,6 +216,7 @@ if __name__ == '__main__':
             pos_point = closest_msg[0].position
             drone_pos = pos_point.x, pos_point.y
             fov = calculate_fov_size(82.6, pos_point.z)
+            fov_x, fov_y = fov[0], fov[1]
             occ_grid.update_fov(drone_pos, fov)
         step += 1
     
