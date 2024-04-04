@@ -15,6 +15,8 @@ COPY . /catkin_ws/src/$PACKAGE_NAME/
 
 RUN apt-get update && apt-get install -y dos2unix
 RUN apt-get update && apt-get install -y python3
+RUN apt-get install -y python3-pip
+RUN pip install opencv-python numpy-quaternion
 
 # Convert line endings in the Python script
 RUN dos2unix /catkin_ws/src/$PACKAGE_NAME/scripts/*

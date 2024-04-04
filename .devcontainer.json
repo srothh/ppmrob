@@ -1,0 +1,22 @@
+{
+    "name": "ROS Development",
+    "build": {
+      "dockerfile": "src/mapping/Dockerfile",
+      "context": "..",
+      "args": {
+        
+      }
+    },
+    "workspaceMount": "source=${localWorkspaceFolder},target=/catkin_ws,type=bind,consistency=cached",
+    "workspaceFolder": "/catkin_ws",
+    "settings": {
+      
+    },
+    "extensions": [
+      "ms-python.python"
+      
+    ],
+    "postCreateCommand": "source /opt/ros/noetic/setup.bash && source /catkin_ws/devel/setup.bash",
+    "remoteUser": "root"
+  }
+  
