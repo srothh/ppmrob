@@ -307,8 +307,7 @@ def run_bt(behavior_tree: py_trees_ros.trees.BehaviourTree, rate_hz=2):
     rospy.loginfo(f"Number of victims to rescue: {num_of_victims_to_rescue}")
     while not rospy.is_shutdown():
         if (
-            py_trees.blackboard.Blackboard().get(BB_VAR_RETURNED_HOME)
-            or py_trees.blackboard.Blackboard().get(BB_VAR_NUM_OF_RESCUED_VICTIMS)
+            py_trees.blackboard.Blackboard().get(BB_VAR_NUM_OF_RESCUED_VICTIMS)
             == num_of_victims_to_rescue
         ):
             rospy.loginfo("Mission completed.")
@@ -318,10 +317,13 @@ def run_bt(behavior_tree: py_trees_ros.trees.BehaviourTree, rate_hz=2):
         Any blocking work should be happening somewhere else with a behaviour simply in charge of starting/monitoring and catching the result of that work.
         """
         behavior_tree.tick()
+        if py_trees.blackboard.Blackboard().get(BB_VAR_RETURNED_HOME):
+            rospy.loginfo("Drone returned home.")
+            break
         bt_tip = behavior_tree.tip()
         if (
             bt_tip
-            and bt_tip.name == LEAF_CHECK_VICTIM_FOUND_NAME
+            # and bt_tip.name == LEAF_CHECK_VICTIM_FOUND_NAME
             and bt_tip.status == py_trees.common.Status.FAILURE
         ):
             break
