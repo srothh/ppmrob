@@ -27,7 +27,7 @@ class Odometry:
         while not rospy.is_shutdown():
             try:
                 self.update_odom()
-                rospy.loginfo(self._pose)
+                #rospy.loginfo(self._pose)
                 self.send_pose()
                 self.send_tf()
                 self._rate.sleep()

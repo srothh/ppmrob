@@ -37,3 +37,9 @@ class Drone:
 class Cockpit:
     map_xlim = (-300, 300)
     map_ylim = (-300, 300)
+
+    
+class Planning:
+    # TODO is 15 seconds enough? what setup is needed anyway - just the action servers in control package?
+    BT_SETUP_TIMEOUT = 15
+    

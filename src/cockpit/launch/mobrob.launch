@@ -1,10 +1,11 @@
 <launch>
-  <node pkg="cockpit" type="control_node.py" name="control_node" output="screen"/>
-  <node pkg="cockpit" type="planning_node.py" name="planning_node" output="screen"/>
+  <!-- <node pkg="cockpit" type="control_node.py" name="control_node" output="screen"/> -->
+  <!-- <node pkg="cockpit" type="planning_node.py" name="planning_node" output="screen"/> -->
   <!-- <node pkg="drone" type="drone_node.py" name="drone_node" output="screen"/> -->
-  <node pkg="drone_dummy" type="drone_dummy_node.py" name="drone_node" output="screen"/> 
+  <!-- <node pkg="drone_dummy" type="drone_dummy_node.py" name="drone_node" output="screen"/>  -->
   <node pkg="cockpit" type="cockpit_node.py" name="cockpit_node" output="screen"/> 
-  <node pkg="cockpit" type="odometry_node.py" name="odometry_node" output="screen"/>
+  <!-- <node pkg="cockpit" type="odometry_node.py" name="odometry_node" output="screen"/> -->
+  <!-- <node pkg="drone" type="odometry_node.py" name="odometry_node" output="screen"/> -->
   <!-- <node pkg="cockpit" type="cv_node.py" name="cv_node" output="screen"/> -->
   <!-- <node pkg="safety" type="safety_node.py" name="safety_node" output="screen"/> -->
   <!-- <node pkg="battery" type="battery_node.py" name="battery_node" output="screen"/> -->
