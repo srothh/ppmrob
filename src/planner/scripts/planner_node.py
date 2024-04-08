@@ -270,6 +270,25 @@ def setup_bt(timeout=defaults.Planning.BT_SETUP_TIMEOUT):
     return tree
 
 
+def lead_drone_into_safe_state():
+    ac_stop_cmd = actionlib.SimpleActionClient(
+        defaults.Control.COMMAND_ACTION_NAMESPACE, control.msg.PlanningCommandAction
+    )
+    ac_stop_cmd.wait_for_server()
+    ac_stop_cmd.send_goal(
+        control.msg.PlanningCommandGoal(command=defaults.TelloCommands.STOP)
+    )
+    ac_stop_cmd.wait_for_result()
+    ac_land_cmd = actionlib.SimpleActionClient(
+        defaults.Control.COMMAND_ACTION_NAMESPACE, control.msg.PlanningCommandAction
+    )
+    ac_land_cmd.wait_for_server()
+    ac_land_cmd.send_goal(
+        control.msg.PlanningCommandGoal(command=defaults.TelloCommands.LAND)
+    )
+    ac_land_cmd.wait_for_result()
+
+
 def run_bt(behavior_tree: py_trees_ros.trees.BehaviourTree, rate_hz=2):
     """
     Run the behavior tree.
@@ -307,6 +326,9 @@ def run_bt(behavior_tree: py_trees_ros.trees.BehaviourTree, rate_hz=2):
         ):
             break
         rate.sleep()
+    bt_tip = behavior_tree.tip()
+    if bt_tip and bt_tip.status == py_trees.common.Status.FAILURE:
+        lead_drone_into_safe_state()
 
 
 if __name__ == "__main__":
