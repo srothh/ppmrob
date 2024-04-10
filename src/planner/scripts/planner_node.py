@@ -199,6 +199,8 @@ def create_root():
     )
     is_victim_found_inverter = py_trees.decorators.Inverter(child=is_victim_found)
     path_planning = py_trees.behaviours.Success("Path planning")
+    # underneath for testing purposes
+    # path_planning = py_trees.behaviours.Failure("Path planning")
     move_to_next_position = PlanningMoveDynamicActionClient(
         name="Move to next position",
         action_spec=control.msg.PlanningMoveAction,
