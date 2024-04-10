@@ -7,7 +7,8 @@ import py_trees_ros
 
 
 def cb_inside_exec():
-    print("Executing action")
+    # print("Executing action")
+    pass
 
 
 def cb_after_goal_received(goal):

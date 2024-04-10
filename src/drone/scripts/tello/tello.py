@@ -17,7 +17,7 @@ import socketserver
 class Tello:
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     tello_address = ('192.168.10.1', 8889)
-    locaddr = ('',8889)
+    locaddr = ('',9000)
 
     state_port = 8890 
     state_recv_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)

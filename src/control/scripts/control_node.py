@@ -74,6 +74,9 @@ class DroneControl:
 
         self.take_off_land_handler = TakeOffAndLandHandler()
 
+        # For queuing the targets in PlanningMoveAction
+        self.target = []
+
     def mapping_callback(self, mapping_data):
         """Returns the data from the mapping node
 
@@ -160,33 +163,37 @@ class DroneControl:
         @rtype: object
         """
 
-        target = goal.target
+        result = False
 
-        # course angle and distance fpr movement are calculated
-        course, distance = self.calculate_rotation_and_translation(self.prev, target)
+        target_points = goal.target
 
-        bear = course - self.prev_course
+        for target in target_points:
 
-        # Angle is normalized for holding area in specific area
-        bear = self.normalize_angle(bear)
+            # course angle and distance fpr movement are calculated
+            course, distance = self.calculate_rotation_and_translation(self.prev, target)
 
-        rospy.loginfo(
-            "x1: %.2f y1: %.2f x2: %.2f y2: %.2f course: %.2f bear: %.2f dist: %.2f"
-            % (self.prev.x, self.prev.y, target.x, target.y, course, bear, distance)
-        )
+            bear = course - self.prev_course
 
-        self.prev_course = course
+            # Angle is normalized for holding area in specific area
+            bear = self.normalize_angle(bear)
 
-        # Now the move command is send to the drone node
-        if bear != 0.0:
-            while True:
-                result = self.drone_move_command.move_drone(0.0, 0.0, 0.0, bear)
-                if result.success:
-                    rospy.loginfo("Rotation was successful")
-                    break
-                else:
-                    rospy.loginfo("Retrying to rotate")
-        else:
+            rospy.loginfo(
+                "x1: %.2f y1: %.2f x2: %.2f y2: %.2f course: %.2f bear: %.2f dist: %.2f"
+                % (self.prev.x, self.prev.y, target.x, target.y, course, bear, distance)
+            )
+
+            self.prev_course = course
+
+            # Now the move command is send to the drone node
+            if bear != 0.0:
+                while True:
+                    result = self.drone_move_command.move_drone(0.0, 0.0, 0.0, bear)
+                    if result.success:
+                        rospy.loginfo("Rotation was successful")
+                        break
+                    else:
+                        rospy.loginfo("Retrying to rotate")
+
             while True:
                 result = self.drone_move_command.move_drone(distance, 0.0, 0.0, 0.0)
                 if result.success:
@@ -195,10 +202,10 @@ class DroneControl:
                 else:
                     rospy.loginfo("Retrying to translate")
 
-        # Send feedback via move action server for planning node
-        feedback = MoveFeedback()
-        feedback.progress = result.progress
-        self.move_action_server.publish_feedback(feedback)
+            # Send feedback via move action server for planning node
+            feedback = MoveFeedback()
+            feedback.progress = result.progress
+            self.move_action_server.publish_feedback(feedback)
 
         # Set result for move action server for planning node
         result_msg = PlanningMoveResult()
