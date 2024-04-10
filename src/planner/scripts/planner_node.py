@@ -97,6 +97,13 @@ class Leaf(py_trees.Behaviour):
             % (self.name, self.__class__.__name__, self.status, new_status)
         )
 
+class ReturnHomeDynamicActionClient(py_trees_ros.actions.ActionClient):
+    def initialise(self):
+        planned_path = py_trees.blackboard.Blackboard().plan
+        rospy.loginfo("Returning home...")
+        self.action_goal = control.msg.PlanningMoveGoal(target=planned_path)
+        super().initialise()
+
 class PlanningMoveDynamicActionClient(py_trees_ros.actions.ActionClient):
     def initialise(self):
         planned_path = py_trees.blackboard.Blackboard().plan
@@ -207,14 +214,10 @@ def create_root():
     )
     return_home = py_trees.composites.Sequence("Return home")
     plan_home = HomePlan("Plan path home")
-    fly_home = py_trees_ros.actions.ActionClient(
+    fly_home = ReturnHomeDynamicActionClient(
         name="Fly home",
         action_spec=control.msg.PlanningMoveAction,
-        action_goal=control.msg.PlanningMoveGoal(
-            target=Point(0,0,0)  # path back home
-        ),
         action_namespace=defaults.Control.MOVE_ACTION_NAMESPACE,
-        override_feedback_message_on_running="Returning home...",
     )
     land_home = py_trees_ros.actions.ActionClient(
         name="Land home",
