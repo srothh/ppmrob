@@ -161,7 +161,7 @@ def create_root():
         name="Fly home",
         action_spec=control.msg.PlanningMoveAction,
         action_goal=control.msg.PlanningMoveGoal(
-            target=Point(x=0.0, y=0.0, z=0.0)  # home coordinates
+            target=[Point(x=0.0, y=0.0, z=0.0)]  # home coordinates
         ),
         action_namespace=defaults.Control.MOVE_ACTION_NAMESPACE,
         override_feedback_message_on_running="Returning home...",
