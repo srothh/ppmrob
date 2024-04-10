@@ -10,11 +10,10 @@ def publish_drone_position():
     rate = rospy.Rate(1)  # Publish at 1 Hz
 
     while not rospy.is_shutdown():
-        # Create a dummy Point representing the drone's world position
         position = Point()
-        position.x = 1.0  # Example x position
-        position.y = 2.0  # Example y position
-        position.z = 3.0  # Example z position (altitude)
+        position.x = 75.0  # Example x position in cm
+        position.y = 2.0  # Example y position in cm
+        position.z = 255.0  # Example z position in cm
 
         # Publish the Point
         pub.publish(position)

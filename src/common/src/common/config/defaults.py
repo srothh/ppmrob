@@ -7,7 +7,7 @@ drone_move_action_name = "move"
 drone_command_action_name = "command"
 drone_emergency_action_name = "emergency"
 drone_image_sensor_publish_delay = 0.5
-map_resolution = 0.3 # 30cm per grid cell
+map_resolution = 30  # 30cm per grid cell
 
 battery_publish_topic_name = "/battery/return_signal"
 

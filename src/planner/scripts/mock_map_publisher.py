@@ -24,7 +24,21 @@ def publish_occupancy_grid():
         grid.info.origin.orientation.z = 0.0
         grid.info.origin.orientation.w = 1.0
         # Fill the grid with zeros (free space)
-        grid.data = [0] * 100  # 10x10 grid
+        # grid.data = [0] * 100  # 10x10 grid
+        grid.data = [
+            100, 100, 100, 100, 100, 100, 100, 100, 100, 100,
+            100, 100, 100, 100, 100, 100, 100, 100, 100, 100,
+            100, 100,   0,   0,   0,   0,   0,   0,   0, 100,
+            100, 100,   0, 100, 100, 100, 100,   1, 100, 100,
+            100, 100,   0, 100, 100, 100, 100, 100, 100, 100,
+            100, 100,   0, 100, 100, 100, 100, 100, 100, 100,
+            100, 100,   0, 100, 100, 100, 100, 100, 100, 100,
+            100, 100,   0, 100, 100, 100, 100, 100, 100, 100,
+            100, 100,   0,   1, 100, 100, 100, 100, 100, 100,
+            100, 100, 100, 100, 100, 100, 100, 100, 100, 100,
+        ]
+
+
         # Publish the occupancy grid
         pub.publish(grid)
         rospy.loginfo("Published mock occupancy grid")
