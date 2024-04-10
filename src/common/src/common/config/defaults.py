@@ -40,4 +40,4 @@ class Cockpit:
 
 
 class Planning:
-    BT_SETUP_TIMEOUT = 30
+    BT_SETUP_TIMEOUT = 60
