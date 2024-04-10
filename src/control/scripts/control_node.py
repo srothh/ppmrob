@@ -14,7 +14,6 @@ from control.msg import (
     PlanningMoveAction,
     PlanningMoveResult,
     PlanningCommandAction,
-    PlanningCommandResult
 )
 
 from common.config.defaults import Control, TelloCommands
@@ -30,7 +29,7 @@ class DroneControl:
         self.prev_y = None
         self.target_x = None
         self.target_y = None
-        self.prev_course = 0.0
+        self.prev_course = None
         self.drone_data = None
         self.planning_data = None
         self.mapping_data = None
@@ -107,11 +106,6 @@ class DroneControl:
             self.take_off_land_handler.handle_takeoff()
         elif command == TelloCommands.LAND:
             self.take_off_land_handler.handle_land()
-
-        result = PlanningCommandResult()
-        result.command_executed = True
-
-        self.planning_command_server.set_succeeded(result)
 
     def planning_callback(self, planning_data):
         rospy.loginfo(f"Received planning_data: {planning_data}")
