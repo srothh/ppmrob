@@ -11,10 +11,6 @@ drone_image_sensor_publish_delay = 0.5
 battery_publish_topic_name = "/battery/return_signal"
 
 
-class Odometry:
-    HOME_COORDS_TOPIC_NAME = "/odometry/home_coordinates"
-
-
 class Mapping:
     VICTIM_FOUND_TOPIC_NAME = "/mapping/victim_found"
 
