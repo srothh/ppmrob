@@ -1,5 +1,4 @@
-# Use the ROS Noetic image as the base
-FROM ros:noetic-ros-base
+FROM ros:noetic-perception
 
 # Create a workspace directory for the ROS project
 WORKDIR /catkin_ws/src
@@ -8,12 +7,18 @@ WORKDIR /catkin_ws/src
 ENV PACKAGE_NAME control
 ENV LAUNCH_FILE control.launch
 # Create a new ROS package for the package
-RUN /bin/bash -c "source /opt/ros/noetic/setup.bash && catkin_create_pkg $PACKAGE_NAME rospy std_msgs"
+RUN /bin/bash -c "source /opt/ros/noetic/setup.bash"
 
 # Copy the src of package into the container
-COPY . /catkin_ws/src/$PACKAGE_NAME/
+COPY src/$PACKAGE_NAME/ /catkin_ws/src/$PACKAGE_NAME/
+COPY src/common/ /catkin_ws/src/common/
+COPY src/drone/action/ /catkin_ws/src/drone/action/
+COPY src/drone/CMakeLists.txt src/drone/package.xml /catkin_ws/src/drone/
 
-RUN apt-get update && apt-get install -y dos2unix python3
+
+RUN apt-get update && apt-get install -y \
+    dos2unix \
+    python3 
 
 # Convert line endings in the Python script
 RUN dos2unix /catkin_ws/src/$PACKAGE_NAME/action/*
@@ -30,5 +35,8 @@ RUN source /opt/ros/noetic/setup.bash  && catkin_make && source /catkin_ws/devel
 # Set up environment variables for ROS
 ENV ROS_DISTRO noetic
 ENV ROS_WORKSPACE /catkin_ws
+
+RUN chmod +x /catkin_ws/src/${PACKAGE_NAME}/scripts/*
+
 # Source the ROS setup file every time a new container is run
 ENTRYPOINT ["/bin/bash", "-c", "source /opt/ros/$ROS_DISTRO/setup.bash && source /catkin_ws/devel/setup.bash && roslaunch $PACKAGE_NAME $LAUNCH_FILE --wait"]

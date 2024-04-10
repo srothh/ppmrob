@@ -13,18 +13,16 @@ upper_beige = np.array([40, 150, 255])
 def detect_lines(image):
     # Convert the frame to grayscale
     # For testing with different cam uncomment the 2 lines below
-    äframe = cv2.resize(image, (320, 240))
-    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     # TEST ALSO GRAYSCALE
-    (thresh, im_bw) = cv2.threshold(gray, 175, 255, cv2.THRESH_BINARY)
+    (thresh, im_bw) = cv2.threshold(image, 175, 255, cv2.THRESH_BINARY)
     # FOR TESTING
     # cv2.imshow('gray', im_bw)
     # Apply Gaussian blur to reduce noise
-    blurred = cv2.GaussianBlur(im_bw, (5, 5), 0)
+    blurred = cv2.GaussianBlur(im_bw, (3, 3), 0)
     # Apply Canny edge detection
     edges = cv2.Canny(blurred, 250, 150)
     # Detect lines using Hough Line Transform
-    lines = cv2.HoughLinesP(edges, rho=1, theta=np.pi / 180, threshold=75, minLineLength=100, maxLineGap=100)
+    lines = cv2.HoughLinesP(edges, rho=1, theta=np.pi / 180, threshold=40, minLineLength=50, maxLineGap=100)
     # Draw detected lines on the original frame
     if lines is not None:
         for line in lines:

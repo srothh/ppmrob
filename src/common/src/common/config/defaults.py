@@ -12,10 +12,6 @@ map_resolution = 0.3 # 30cm per grid cell
 battery_publish_topic_name = "/battery/return_signal"
 
 
-class Odometry:
-    HOME_COORDS_TOPIC_NAME = "/odometry/home_coordinates"
-
-
 class Mapping:
     VICTIM_FOUND_TOPIC_NAME = "/mapping/victim_found"
     OCCUPANCY_GRID_TOPIC_NAME = "/mapping/map"
@@ -43,5 +39,4 @@ class Cockpit:
 
 
 class Planning:
-    # TODO is 15 seconds enough? what setup is needed anyway - just the action servers in control package?
-    BT_SETUP_TIMEOUT = 15
+    BT_SETUP_TIMEOUT = 60

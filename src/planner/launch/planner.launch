@@ -7,7 +7,7 @@
     -->
     <arg name="number_of_victims"/>
     <!-- https://wiki.ros.org/Names#Resolving -->
-    <node name="planner_node" pkg="planner" type="planner_node.py" output="screen">
+    <node pkg="planner" name="planner_node"  type="planner_node.py" output="screen">
         <!-- 
         Set a private parameter for the node (since inside a node tag).
         These parameters will be stored on the Parameter Server before any nodes are launched.
