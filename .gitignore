@@ -223,3 +223,4 @@ src/CMakeLists.txt
 # ...
 __pycache__
 state-log.csv
+src/drone_dummy/data/camera/*

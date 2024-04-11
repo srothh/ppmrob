@@ -6,24 +6,37 @@ drone_launch_action_name = "launch"
 drone_move_action_name = "move"
 drone_command_action_name = "command"
 drone_emergency_action_name = "emergency"
+drone_image_sensor_publish_delay = 0.5
+map_resolution = 30  # 30cm per grid cell
 
 battery_publish_topic_name = "/battery/return_signal"
 
 
-class Odometry:
-    HOME_COORDS_TOPIC_NAME = "/odometry/home_coordinates"
-
-
 class Mapping:
     VICTIM_FOUND_TOPIC_NAME = "/mapping/victim_found"
+    OCCUPANCY_GRID_TOPIC_NAME = "/mapping/map"
 
 
-class Planning:
+class Control:
     MOVE_ACTION_NAMESPACE = "planning_move"
     COMMAND_ACTION_NAMESPACE = "planning_command"
+    WORLD_POSITION_TOPIC_NAME = "/control/world_pos"
 
 
 class TelloCommands:
     TAKEOFF = "takeoff"
     LAND = "land"
     STOP = "stop"
+
+
+class Drone:
+    BATTERY_THRESHOLD = 10.0
+
+
+class Cockpit:
+    map_xlim = (-300, 300)
+    map_ylim = (-300, 300)
+
+
+class Planning:
+    BT_SETUP_TIMEOUT = 60

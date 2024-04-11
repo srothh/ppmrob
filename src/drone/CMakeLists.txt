@@ -12,6 +12,8 @@ find_package(catkin REQUIRED COMPONENTS
   geometry_msgs
   rospy
   std_msgs
+  tf2_ros
+  sensor_msgs
 )
 
 ## System dependencies are found with CMake's conventions
@@ -77,10 +79,8 @@ ControlTransform.action
 ## Generate added messages and services with any dependencies listed here
 generate_messages(
 DEPENDENCIES
-std_msgs
-   actionlib_msgs
-   geometry_msgs
- )
+std_msgs actionlib_msgs geometry_msgs sensor_msgs
+)
 
 ################################################
 ## Declare ROS dynamic reconfigure parameters ##

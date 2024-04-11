@@ -79,7 +79,8 @@ find_package(catkin REQUIRED COMPONENTS
    FILES
    DroneActionCommand.action
    Move.action
-   Planning.action
+   PlanningCommand.action
+   PlanningMove.action
    Rotate.action
    Land.action
    TakeOff.action

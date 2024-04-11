@@ -1,3 +1,6 @@
+#!/usr/bin/env python3
+
+
 import socket, select
 import threading
 import time
@@ -14,7 +17,7 @@ import socketserver
 class Tello:
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     tello_address = ('192.168.10.1', 8889)
-    locaddr = ('',8889)
+    locaddr = ('',9000)
 
     state_port = 8890 
     state_recv_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -183,9 +186,9 @@ class Tello:
         return sent
     
     ## execute multiple commands after each other
-    def execute_commands(self, cmds, sleep=0.1):
+    def execute_commands(self, cmds, sleep=0.1, timeout=30):
         for cmd in cmds:
-            self.command(cmd)
+            self.command(cmd, timeout=1)
             time.sleep(sleep)
         return True
 

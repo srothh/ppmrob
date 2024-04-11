@@ -1,0 +1,6 @@
+<launch>
+    <node pkg="planner" type="mock_command_action_server.py" name="planning_command" output="screen"/>
+    <node pkg="planner" type="mock_move_action_server.py" name="planning_move" output="screen"/>
+    <node pkg="planner" type="mock_map_publisher.py" name="planning_map" output="screen"/>
+    <node pkg="planner" type="mock_control_position_publisher.py" name="planning_pos" output="screen"/>
+</launch>
