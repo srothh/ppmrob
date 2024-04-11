@@ -5,19 +5,17 @@ FROM ros:noetic-ros-base
 WORKDIR /catkin_ws/src
 
 #edit these for custom nodes
-ENV PACKAGE_NAME mapping
-ENV LAUNCH_FILE mapping.launch
+ENV PACKAGE_NAME mapping_simulation
+ENV LAUNCH_FILE mapping_simulation.launch
 # Create a new ROS package for the listener
 RUN /bin/bash -c "source /opt/ros/noetic/setup.bash && catkin_create_pkg $PACKAGE_NAME std_msgs rospy geometry_msgs nav_msgs"
+
+# Copy the mapping simulation package into the container
+COPY . /catkin_ws/src/$PACKAGE_NAME/
 
 RUN apt-get update && apt-get install -y dos2unix
 RUN apt-get update && apt-get install -y python3
 RUN apt-get install -y python3-pip
-RUN pip install opencv-python numpy-quaternion
-RUN apt-get update && apt-get install ffmpeg libsm6 libxext6  -y
-
-# Copy the mapping package into the container
-COPY . /catkin_ws/src/$PACKAGE_NAME/
 
 # Convert line endings in the Python script
 RUN dos2unix /catkin_ws/src/$PACKAGE_NAME/scripts/*

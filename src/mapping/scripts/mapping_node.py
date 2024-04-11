@@ -12,6 +12,7 @@ import math
 
 fov_x = 200
 fov_y = 200
+offset = 1000
 
 class CircularBuffer:
     def __init__(self, capacity):
@@ -25,6 +26,8 @@ class CircularBuffer:
 
 max_msgs = 1000
 odometry_msgs = CircularBuffer(max_msgs)
+
+counter = 0
 
 def calculate_fov_size(diagonal_fov_degrees, height):
     # Camera resolution aspect ratio: 162:121
@@ -122,7 +125,7 @@ class CustomOccupancyGrid:
         if lines is not None:
             for line in lines:
                 # Convert world coordinates to grid coordinates
-                x1, y1, x2, y2 = line[0]
+                x1, x2, y1, y2 = line
                 p1 = map_coordinate(x1, y1, x_d, y_d, fov_width, fov_height)
                 p2 = map_coordinate(x2, y2, x_d, y_d, fov_width, fov_height)
                 grid_x1, grid_y1 = self.world_to_grid(p1[0], p1[1])
@@ -142,27 +145,40 @@ class CustomOccupancyGrid:
                 self.grid[update_indices] = 100
 
 def lines_callback(data: PolygonStamped):
-    num_lines = len(data.polygon)
+    global counter
+    counter += 1
+    print(f"{counter}: RECEIVED LINES")
+    num_lines = len(data.polygon.points)
     timestamp = data.header.stamp.to_sec()
-    current_positions = odometry_msgs.get_buffer
-    closest_msg = current_positions[-1]
-    closest_diff = abs(closest_msg[1] - timestamp)
-    for msg in current_positions[::-1]:
-        if abs(msg[1] - timestamp) < closest_diff:
-            closest_msg = msg
-            closest_diff = msg[1] - timestamp
-        if abs(msg[1] - timestamp) > closest_diff:
-            break
-    lines = []
-    pos_point = closest_msg[0].position
-    drone_pos = pos_point.x + 1000, pos_point.y + 1000 # Avoid negative values for now
-    for i in range(0, num_lines, 2):
-        p1 = transform_ros_point(data.polygon.points[i])
-        p2 = transform_ros_point(data.polygon.points[i + 1])
-        x1, y1, x2, y2 = p1[0], p1[1], p2[0], p2[1]
-        lines.append((x1, y1, x2, y2))
-    
-    occ_grid.update_lines(drone_pos, lines, fov_x, fov_y)
+    current_positions = odometry_msgs.get_buffer()
+    if len(current_positions) > 0:
+        closest_msg = current_positions[-1]
+        closest_diff = abs(closest_msg[1] - timestamp)
+        for msg in current_positions[::-1]:
+            if abs(msg[1] - timestamp) < closest_diff:
+                closest_msg = msg
+                closest_diff = msg[1] - timestamp
+            if abs(msg[1] - timestamp) > closest_diff:
+                break
+        print("HERE 1")
+        lines = []
+        pos_point = closest_msg[0].position
+        orientation = closest_msg[0].orientation
+        x = orientation.x
+        y = orientation.y
+        z = orientation.z
+        w = orientation.w
+        orientation_quat = np.quaternion(w, x, y, z)
+        drone_pos = pos_point.x + offset, pos_point.y + offset # Avoid negative values for now
+        for i in range(0, num_lines, 2):
+            p1 = transform_ros_point(data.polygon.points[i], orientation_quat )
+            p2 = transform_ros_point(data.polygon.points[i + 1], orientation_quat)
+            x1, y1, x2, y2 = p1[0], p1[1], p2[0], p2[1]
+            lines.append((x1, y1, x2, y2))
+        print("HERE 2")
+
+        occ_grid.update_lines(drone_pos, lines, fov_x, fov_y)
+        print("HERE 3")
 
 def victim_callback(data: PolygonStamped):
     return
@@ -170,6 +186,9 @@ def victim_callback(data: PolygonStamped):
     
 
 def odometry_callback(data: PoseStamped):
+    global counter
+    counter += 1
+    # print(f"{counter}: RECEIVED OD")
     global odometry_msgs
     odometry_msgs.append((data.pose, data.header.stamp.to_sec()))
 
@@ -200,23 +219,25 @@ def publish_occupancy_grid(custom_grid: CustomOccupancyGrid):
     grid_pub.publish(grid_msg)
     
 
+print("STARTING")
+rospy.init_node('mapping')
+occ_grid = CustomOccupancyGrid(250, 250, 0.01)
+odometry_subscriber = rospy.Subscriber('/odometry/return_signal', PoseStamped, callback=odometry_callback)
+lines_subsriber = rospy.Subscriber('/cv/lines', PolygonStamped, callback=lines_callback)
+grid_pub = rospy.Publisher('/mapping/occupancy_grid', OccupancyGrid, queue_size=10)
+step = 0
 
-if __name__ == '__main__':
-    rospy.init_node('mapping')
-    occ_grid = CustomOccupancyGrid(250, 250, 0.01)
-    odometry_subscriber = rospy.Subscriber('/odometry/return_signal', PoseStamped, callback=odometry_callback)
-    lines_subsriber = rospy.Subscriber('/cv/lines', PolygonStamped, callback=lines_callback)
-    grid_pub = rospy.Publisher('/mapping/occupancy_grid', OccupancyGrid, queue_size=10)
-    step = 0
-    while not rospy.is_shutdown:
-        curr_time = rospy.Time().to_sec()
-        if step % 5 == 0:
-            current_positions = odometry_msgs.get_buffer
-            closest_msg = current_positions[-1]
-            pos_point = closest_msg[0].position
-            drone_pos = pos_point.x, pos_point.y
-            fov = calculate_fov_size(82.6, pos_point.z)
-            fov_x, fov_y = fov[0], fov[1]
-            occ_grid.update_fov(drone_pos, fov)
-        step += 1
+curr_time = rospy.Time().to_sec()
+if step % 5 == 0:
+    current_positions = odometry_msgs.get_buffer()
+    if len(current_positions) > 0:
+        closest_msg = current_positions[-1]
+        pos_point = closest_msg[0].position
+        drone_pos = pos_point.x, pos_point.y
+        fov = calculate_fov_size(82.6, pos_point.z)
+        fov_x, fov_y = fov[0], fov[1]
+        occ_grid.update_fov(drone_pos, fov)
+step += 1
+
+rospy.spin()
     

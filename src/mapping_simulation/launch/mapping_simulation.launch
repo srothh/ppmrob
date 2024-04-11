@@ -1,0 +1,3 @@
+<launch>
+  <node pkg="mapping_simulation" type="mapping_simulation_node.py" name="mapping_simulation_node" output="screen"/>
+</launch>

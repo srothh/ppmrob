@@ -75,10 +75,8 @@ services:
       - ros_master
   mapping:
     build: ./src/mapping
-    environment:
-      - "ROS_MASTER_URI=http://ros_master:11311"
-      - "ROS_LOG_LEVEL=info"
-      - "PYTHONUNBUFFERED=1"
+    env_file:
+      - docker.env
     ports:
       - "9007:9007"
     networks:
@@ -104,6 +102,19 @@ services:
       - control
       # - mapping
       # - odometry
+  mapping_simulation:
+    build: ./src/mapping_simulation
+    env_file:
+      - docker.env
+    ports:
+      - "9009:9009"
+    networks:
+      - ppmrob
+    depends_on:
+      - ros_master
+    working_dir: /catkin_ws/src/mapping_simulation/scripts
+    # stdin_open: true  # Keeps STDIN open
+    # tty: true         # Allocates a pseudo-TTY
 networks:
   ppmrob:
     driver: "bridge"
