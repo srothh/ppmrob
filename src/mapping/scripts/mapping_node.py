@@ -10,8 +10,8 @@ import cv2
 from collections import deque
 import math
 
-fov_x = 200
-fov_y = 200
+fov_x = 100
+fov_y = 100
 offset = 1000
 
 class CircularBuffer:
@@ -73,8 +73,8 @@ class CustomOccupancyGrid:
     def __init__(self, width, height, resolution):
         self.height = height
         self.width = width
-        self.grid = np.full((height, width), -1)  # -1 for unexplored, 0 for free, 1 for occupied
-        self.mask = np.full((height, width), 0)
+        self.grid = np.full((height, width), -1, np.uint8)  # -1 for unexplored, 0 for free, 1 for occupied
+        self.mask = np.full((height, width), 0, np.uint8)
         self.resolution = resolution
 
     def update_cell(self, x, y, value):
@@ -95,6 +95,7 @@ class CustomOccupancyGrid:
         new_mask = np.full((new_height, new_width), 0)
         new_grid[0:self.grid.shape[0], 0:self.grid.shape[1]] = self.grid
         new_mask[0:self.mask.shape[0], 0:self.mask.shape[1]] = self.mask
+
         self.grid = new_grid
         self.mask = new_mask
         self.height = new_height
@@ -128,6 +129,7 @@ class CustomOccupancyGrid:
                 x1, x2, y1, y2 = line
                 p1 = map_coordinate(x1, y1, x_d, y_d, fov_width, fov_height)
                 p2 = map_coordinate(x2, y2, x_d, y_d, fov_width, fov_height)
+
                 grid_x1, grid_y1 = self.world_to_grid(p1[0], p1[1])
                 grid_x2, grid_y2 = self.world_to_grid(p2[0], p2[1])
 
@@ -137,12 +139,14 @@ class CustomOccupancyGrid:
                     self.resize(new_grid_width, new_grid_height)
 
                 # Update the grid cells along the line as occupied
+                self.mask = self.mask.astype(np.uint8)
                 cv2.line(self.mask, (grid_x1, grid_y1), (grid_x2, grid_y2), 1, 1)  # Mark as occupied
 
                 # Find the indices where the grid is unexplored (-1) and the mask has the line drawn (1)
                 update_indices = np.where((self.grid == -1) & (self.mask == 1))
 
                 self.grid[update_indices] = 100
+
 
 def lines_callback(data: PolygonStamped):
     global counter
@@ -160,7 +164,6 @@ def lines_callback(data: PolygonStamped):
                 closest_diff = msg[1] - timestamp
             if abs(msg[1] - timestamp) > closest_diff:
                 break
-        print("HERE 1")
         lines = []
         pos_point = closest_msg[0].position
         orientation = closest_msg[0].orientation
@@ -175,10 +178,10 @@ def lines_callback(data: PolygonStamped):
             p2 = transform_ros_point(data.polygon.points[i + 1], orientation_quat)
             x1, y1, x2, y2 = p1[0], p1[1], p2[0], p2[1]
             lines.append((x1, y1, x2, y2))
-        print("HERE 2")
+
 
         occ_grid.update_lines(drone_pos, lines, fov_x, fov_y)
-        print("HERE 3")
+
 
 def victim_callback(data: PolygonStamped):
     return
@@ -221,7 +224,7 @@ def publish_occupancy_grid(custom_grid: CustomOccupancyGrid):
 
 print("STARTING")
 rospy.init_node('mapping')
-occ_grid = CustomOccupancyGrid(250, 250, 0.01)
+occ_grid = CustomOccupancyGrid(250, 250, 1)
 odometry_subscriber = rospy.Subscriber('/odometry/return_signal', PoseStamped, callback=odometry_callback)
 lines_subsriber = rospy.Subscriber('/cv/lines', PolygonStamped, callback=lines_callback)
 grid_pub = rospy.Publisher('/mapping/occupancy_grid', OccupancyGrid, queue_size=10)
