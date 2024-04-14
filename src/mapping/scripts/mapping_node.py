@@ -9,10 +9,11 @@ import quaternion # Still need to install
 import cv2
 from collections import deque
 import math
+import threading
 
 fov_x = 100
 fov_y = 100
-offset = 1000
+offset = 0
 
 class CircularBuffer:
     def __init__(self, capacity):
@@ -28,6 +29,10 @@ max_msgs = 1000
 odometry_msgs = CircularBuffer(max_msgs)
 
 counter = 0
+
+
+def spin_thread():
+    rospy.spin()
 
 def calculate_fov_size(diagonal_fov_degrees, height):
     # Camera resolution aspect ratio: 162:121
@@ -59,21 +64,21 @@ def transform_ros_point(point_msg, orientation_quaternion):
     point = np.array([point_msg.x, point_msg.y, point_msg.z])
 
     # Convert the point to a pure quaternion (zero real part)
-    point_quaternion = np.quaternion(0, *point)
+    # point_quaternion = np.quaternion(0, *point)
 
     # Apply the transformation: p' = q^(-1) * p * q
-    transformed_point_quaternion = orientation_quaternion.inverse() * point_quaternion * orientation_quaternion
+    # transformed_point_quaternion = orientation_quaternion.inverse() * point_quaternion * orientation_quaternion
 
     # Extract the vector part
-    transformed_point = quaternion.as_float_array(transformed_point_quaternion)[1:]
+    # transformed_point = quaternion.as_float_array(transformed_point_quaternion)[1:]
 
-    return transformed_point
+    return point
 
 class CustomOccupancyGrid:
     def __init__(self, width, height, resolution):
         self.height = height
         self.width = width
-        self.grid = np.full((height, width), -1, np.uint8)  # -1 for unexplored, 0 for free, 1 for occupied
+        self.grid = np.full((height, width), -1)  # -1 for unexplored, 0 for free, 1 for occupied
         self.mask = np.full((height, width), 0, np.uint8)
         self.resolution = resolution
 
@@ -123,10 +128,11 @@ class CustomOccupancyGrid:
     def update_lines(self, drone_pos, lines, fov_width, fov_height):
         x_d = drone_pos[0]
         y_d = drone_pos[1]
+        # print(drone_pos, lines)
         if lines is not None:
             for line in lines:
                 # Convert world coordinates to grid coordinates
-                x1, x2, y1, y2 = line
+                x1, y1, x2, y2 = line
                 p1 = map_coordinate(x1, y1, x_d, y_d, fov_width, fov_height)
                 p2 = map_coordinate(x2, y2, x_d, y_d, fov_width, fov_height)
 
@@ -151,7 +157,7 @@ class CustomOccupancyGrid:
 def lines_callback(data: PolygonStamped):
     global counter
     counter += 1
-    print(f"{counter}: RECEIVED LINES")
+    # print(f"{counter}: RECEIVED LINES")
     num_lines = len(data.polygon.points)
     timestamp = data.header.stamp.to_sec()
     current_positions = odometry_msgs.get_buffer()
@@ -174,11 +180,11 @@ def lines_callback(data: PolygonStamped):
         orientation_quat = np.quaternion(w, x, y, z)
         drone_pos = pos_point.x + offset, pos_point.y + offset # Avoid negative values for now
         for i in range(0, num_lines, 2):
-            p1 = transform_ros_point(data.polygon.points[i], orientation_quat )
+            p1 = transform_ros_point(data.polygon.points[i], orientation_quat)
             p2 = transform_ros_point(data.polygon.points[i + 1], orientation_quat)
             x1, y1, x2, y2 = p1[0], p1[1], p2[0], p2[1]
             lines.append((x1, y1, x2, y2))
-
+        # print(drone_pos, lines)
 
         occ_grid.update_lines(drone_pos, lines, fov_x, fov_y)
 
@@ -196,7 +202,7 @@ def odometry_callback(data: PoseStamped):
     odometry_msgs.append((data.pose, data.header.stamp.to_sec()))
 
 
-def publish_occupancy_grid(custom_grid: CustomOccupancyGrid):
+def publish_occupancy_grid(custom_grid: CustomOccupancyGrid, print_grid=False):
     # Initialize the message
     grid_msg = OccupancyGrid()
     grid_msg.header = Header()
@@ -215,14 +221,20 @@ def publish_occupancy_grid(custom_grid: CustomOccupancyGrid):
     grid_msg.info.origin.orientation.z = 0.0
     grid_msg.info.origin.orientation.w = 1.0
 
+    # Specify the path where the file should be saved inside the container
+    # file_path = '/catkin_ws/src/mapping/occ_grid.npy'
+    #
+    # if print_grid:
+    #     np.save(file_path, custom_grid.grid)
+    #     print("SAVED")
+
     # Flatten the grid array and convert it to a list for the message
     grid_msg.data = list(custom_grid.grid.flatten())
 
     # Publish the message
     grid_pub.publish(grid_msg)
-    
 
-print("STARTING")
+
 rospy.init_node('mapping')
 occ_grid = CustomOccupancyGrid(250, 250, 1)
 odometry_subscriber = rospy.Subscriber('/odometry/return_signal', PoseStamped, callback=odometry_callback)
@@ -230,17 +242,24 @@ lines_subsriber = rospy.Subscriber('/cv/lines', PolygonStamped, callback=lines_c
 grid_pub = rospy.Publisher('/mapping/occupancy_grid', OccupancyGrid, queue_size=10)
 step = 0
 
+spin_thread = threading.Thread(target=spin_thread)
+spin_thread.start()
+
 curr_time = rospy.Time().to_sec()
-if step % 5 == 0:
-    current_positions = odometry_msgs.get_buffer()
+
+while not rospy.is_shutdown():
+    if step % 1 == 0:
+        current_positions = odometry_msgs.get_buffer()
     if len(current_positions) > 0:
         closest_msg = current_positions[-1]
         pos_point = closest_msg[0].position
         drone_pos = pos_point.x, pos_point.y
         fov = calculate_fov_size(82.6, pos_point.z)
-        fov_x, fov_y = fov[0], fov[1]
-        occ_grid.update_fov(drone_pos, fov)
-step += 1
-
-rospy.spin()
+        # fov_x, fov_y = fov[0], fov[1]
+        # occ_grid.update_fov(drone_pos, fov)
+        # print_grid = False
+        # if 505.65 <= drone_pos[0] <= 505.70:
+        #     print_grid = True
+        publish_occupancy_grid(occ_grid)
+    step += 1
     
