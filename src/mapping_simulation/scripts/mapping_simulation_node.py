@@ -53,13 +53,13 @@ for timestep in simulation_data['timesteps']:
     if 'drone_pos' in keys:
         od_msg = create_pose_stamped_msg(timestep['drone_pos']['x'], timestep['drone_pos']['y'], timestep['od_time'])
         odom_pub.publish(od_msg)
-        print("Published drone position")
+        print(f"Published drone position {timestep['drone_pos']['x'], timestep['drone_pos']['y']}")
 
     # Publish lines
     if 'lines' in keys:
         line_msg = create_polygon_stamped_msg(timestep['lines'], timestep['line_time'])
         line_pub.publish(line_msg)
-        print("Published line")
+        print(f"Published line {timestep['lines']}")
 
     rate.sleep()
 

@@ -25,7 +25,7 @@ class CircularBuffer:
     def get_buffer(self):
         return list(self.buffer)
 
-max_msgs = 1000
+max_msgs = 10000
 odometry_msgs = CircularBuffer(max_msgs)
 
 counter = 0
@@ -64,15 +64,15 @@ def transform_ros_point(point_msg, orientation_quaternion):
     point = np.array([point_msg.x, point_msg.y, point_msg.z])
 
     # Convert the point to a pure quaternion (zero real part)
-    # point_quaternion = np.quaternion(0, *point)
+    point_quaternion = np.quaternion(0, *point)
 
     # Apply the transformation: p' = q^(-1) * p * q
-    # transformed_point_quaternion = orientation_quaternion.inverse() * point_quaternion * orientation_quaternion
+    transformed_point_quaternion = orientation_quaternion.inverse() * point_quaternion * orientation_quaternion
 
     # Extract the vector part
-    # transformed_point = quaternion.as_float_array(transformed_point_quaternion)[1:]
+    transformed_point = quaternion.as_float_array(transformed_point_quaternion)[1:]
 
-    return point
+    return transformed_point
 
 class CustomOccupancyGrid:
     def __init__(self, width, height, resolution):
@@ -109,8 +109,8 @@ class CustomOccupancyGrid:
     def update_fov(self, drone_pos, fov_size):
         # Convert the drone's position to grid coordinates
         drone_grid_x, drone_grid_y = self.world_to_grid(*drone_pos)
-        buffer_x = int(fov_size[0]*0.05)
-        buffer_y = int(fov_size[1]*0.05)
+        buffer_x = 0 # int(fov_size[0]*0.05)
+        buffer_y = 0 # int(fov_size[1]*0.05)
 
         # Calculate the top-left and bottom-right corners of the FOV in grid coordinates
         half_fov_x, half_fov_y = self.world_to_grid(fov_size[0] // 2 - buffer_x, fov_size[1] // 2 - buffer_y)
@@ -254,8 +254,10 @@ while not rospy.is_shutdown():
         closest_msg = current_positions[-1]
         pos_point = closest_msg[0].position
         drone_pos = pos_point.x, pos_point.y
-        fov = calculate_fov_size(82.6, pos_point.z)
+        # TODO: CHECK WHATS WRONG WITH THE FOV COMPUTATION (probably something with the height, i.e. pos_point.z)
+        # fov = calculate_fov_size(82.6, pos_point.z)
         # fov_x, fov_y = fov[0], fov[1]
+        fov = (fov_x, fov_y)
         # occ_grid.update_fov(drone_pos, fov)
         # print_grid = False
         # if 505.65 <= drone_pos[0] <= 505.70:
