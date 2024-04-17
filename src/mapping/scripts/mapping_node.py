@@ -50,6 +50,10 @@ def calculate_fov_size(diagonal_fov_degrees, height):
     width = 2 * height * math.tan(horizontal_fov_radians / 2)
     depth = 2 * height * math.tan(vertical_fov_radians / 2)
 
+    # Round up fov values to multiples of 3
+    width = width + (width % 3)
+    depth = depth + (depth % 3)
+
     return width, depth
 
 
@@ -78,7 +82,8 @@ class CustomOccupancyGrid:
     def __init__(self, width, height, resolution):
         self.height = height
         self.width = width
-        self.grid = np.full((height, width), -1)  # -1 for unexplored, 0 for free, 1 for occupied
+        self.grid = np.full((height, width), -1)
+        self.planning_grid = np.full((height, width), -1)
         self.mask = np.full((height, width), 0, np.uint8)
         self.resolution = resolution
 
@@ -97,11 +102,14 @@ class CustomOccupancyGrid:
             return
 
         new_grid = np.full((new_height, new_width), -1)
+        new_planning_grid = np.full((new_height, new_width), -1)
         new_mask = np.full((new_height, new_width), 0)
         new_grid[0:self.grid.shape[0], 0:self.grid.shape[1]] = self.grid
+        new_planning_grid[0:self.planning_grid.shape[0], 0:self.planning_grid.shape[1]] = self.planning_grid
         new_mask[0:self.mask.shape[0], 0:self.mask.shape[1]] = self.mask
 
         self.grid = new_grid
+        self.planning_grid = new_planning_grid
         self.mask = new_mask
         self.height = new_height
         self.width = new_width
@@ -111,6 +119,11 @@ class CustomOccupancyGrid:
         drone_grid_x, drone_grid_y = self.world_to_grid(*drone_pos)
         buffer_x = 0 # int(fov_size[0]*0.05)
         buffer_y = 0 # int(fov_size[1]*0.05)
+
+        if drone_grid_x > self.width or drone_grid_y > self.height:
+            new_grid_width = max(int(1.05*self.width), drone_grid_x + 1)
+            new_grid_height = max(int(1.05*self.height), drone_grid_y + 1)
+            self.resize(new_grid_width, new_grid_height)
 
         # Calculate the top-left and bottom-right corners of the FOV in grid coordinates
         half_fov_x, half_fov_y = self.world_to_grid(fov_size[0] // 2 - buffer_x, fov_size[1] // 2 - buffer_y)
@@ -122,8 +135,15 @@ class CustomOccupancyGrid:
         # print(top_left_x, top_left_y, bottom_right_x, bottom_right_y)
 
         # Update the grid cells within the FOV to mark them as free
-        # Ensure to check bounds to avoid out-of-index errors
-        self.grid[top_left_y - 1:bottom_right_y, top_left_x - 1:bottom_right_x] = np.where(self.grid[top_left_y - 1:bottom_right_y, top_left_x - 1:bottom_right_x] != 100, 0, 100)
+        self.grid[top_left_y - 1:bottom_right_y, top_left_x - 1:bottom_right_x] =\
+            np.where(self.grid[top_left_y - 1:bottom_right_y, top_left_x - 1:bottom_right_x] != 100, 0, 100)
+
+        # Update planning grid cells
+        planning_grid_fov = self.planning_grid[top_left_y - 1:bottom_right_y, top_left_x - 1:bottom_right_x]
+        self.planning_grid[top_left_y - 1:bottom_right_y, top_left_x - 1:bottom_right_x] =\
+            np.where(np.logical_or(planning_grid_fov == 0, planning_grid_fov == 100), planning_grid_fov, 50)
+        self.planning_grid[drone_grid_y, drone_grid_x] = 0
+
 
     def update_lines(self, drone_pos, lines, fov_width, fov_height):
         x_d = drone_pos[0]
@@ -140,8 +160,8 @@ class CustomOccupancyGrid:
                 grid_x2, grid_y2 = self.world_to_grid(p2[0], p2[1])
 
                 if grid_x1 > self.width or grid_x2 > self.width or grid_y1 > self.height or grid_y2 > self.height:
-                    new_grid_width = max(2*self.width, max(grid_x1, grid_x2))
-                    new_grid_height = max(2*self.height, max(grid_y1, grid_y2))
+                    new_grid_width = max(int(1.05*self.width), max(grid_x1, grid_x2))
+                    new_grid_height = max(int(1.05*self.height), max(grid_y1, grid_y2))
                     self.resize(new_grid_width, new_grid_height)
 
                 # Update the grid cells along the line as occupied
@@ -149,9 +169,10 @@ class CustomOccupancyGrid:
                 cv2.line(self.mask, (grid_x1, grid_y1), (grid_x2, grid_y2), 1, 1)  # Mark as occupied
 
                 # Find the indices where the grid is unexplored (-1) and the mask has the line drawn (1)
-                update_indices = np.where((self.grid == -1) & (self.mask == 1))
+                update_indices = np.where(self.mask == 1) # update_indices = np.where((self.grid == -1) & (self.mask == 1))
 
                 self.grid[update_indices] = 100
+                self.planning_grid[update_indices] = 100
 
 
 def lines_callback(data: PolygonStamped):
@@ -202,7 +223,7 @@ def odometry_callback(data: PoseStamped):
     odometry_msgs.append((data.pose, data.header.stamp.to_sec()))
 
 
-def publish_occupancy_grid(custom_grid: CustomOccupancyGrid, print_grid=False):
+def publish_occupancy_grid(grid, resolution, publisher):
     # Initialize the message
     grid_msg = OccupancyGrid()
     grid_msg.header = Header()
@@ -210,9 +231,9 @@ def publish_occupancy_grid(custom_grid: CustomOccupancyGrid, print_grid=False):
     grid_msg.header.frame_id = "world"  # or another appropriate frame
 
     # Set the grid metadata (adjust according to your grid's configuration)
-    grid_msg.info.resolution = custom_grid.resolution  # Grid resolution in meters/cell
-    grid_msg.info.width = custom_grid.grid.shape[1]
-    grid_msg.info.height = custom_grid.grid.shape[0]
+    grid_msg.info.resolution = resolution  # Grid resolution in meters/cell
+    grid_msg.info.width = grid.shape[1]
+    grid_msg.info.height = grid.shape[0]
     grid_msg.info.origin.position.x = 0.0
     grid_msg.info.origin.position.y = 0.0
     grid_msg.info.origin.position.z = 0.0
@@ -229,10 +250,10 @@ def publish_occupancy_grid(custom_grid: CustomOccupancyGrid, print_grid=False):
     #     print("SAVED")
 
     # Flatten the grid array and convert it to a list for the message
-    grid_msg.data = list(custom_grid.grid.flatten())
+    grid_msg.data = list(grid.flatten())
 
     # Publish the message
-    grid_pub.publish(grid_msg)
+    publisher.publish(grid_msg)
 
 
 rospy.init_node('mapping')
@@ -240,6 +261,7 @@ occ_grid = CustomOccupancyGrid(250, 250, 1)
 odometry_subscriber = rospy.Subscriber('/odometry/return_signal', PoseStamped, callback=odometry_callback)
 lines_subsriber = rospy.Subscriber('/cv/lines', PolygonStamped, callback=lines_callback)
 grid_pub = rospy.Publisher('/mapping/occupancy_grid', OccupancyGrid, queue_size=10)
+planning_grid_pub = rospy.Publisher('mapping/map', OccupancyGrid, queue_size=10)
 step = 0
 
 spin_thread = threading.Thread(target=spin_thread)
@@ -248,20 +270,17 @@ spin_thread.start()
 curr_time = rospy.Time().to_sec()
 
 while not rospy.is_shutdown():
-    if step % 1 == 0:
-        current_positions = odometry_msgs.get_buffer()
+    current_positions = odometry_msgs.get_buffer()
     if len(current_positions) > 0:
         closest_msg = current_positions[-1]
         pos_point = closest_msg[0].position
         drone_pos = pos_point.x, pos_point.y
-        # TODO: CHECK WHATS WRONG WITH THE FOV COMPUTATION (probably something with the height, i.e. pos_point.z)
+        # TODO: CHECK WHATS WRONG WITH THE FOV COMPUTATION (maybe it's just because the height is 0 in this simulation)
         # fov = calculate_fov_size(82.6, pos_point.z)
         # fov_x, fov_y = fov[0], fov[1]
         fov = (fov_x, fov_y)
-        # occ_grid.update_fov(drone_pos, fov)
-        # print_grid = False
-        # if 505.65 <= drone_pos[0] <= 505.70:
-        #     print_grid = True
-        publish_occupancy_grid(occ_grid)
+        occ_grid.update_fov(drone_pos, fov)
+        publish_occupancy_grid(occ_grid.grid, occ_grid.resolution, grid_pub)
+        publish_occupancy_grid(occ_grid.planning_grid, occ_grid.resolution, planning_grid_pub)
     step += 1
     
