@@ -10,10 +10,16 @@ import cv2
 from collections import deque
 import math
 import threading
+from online_kmeans import OnlineKMeans
 
 fov_x = 100
 fov_y = 100
 offset = 0
+
+num_victims = 3
+min_distance_victims = 150 # Minimum distance between two victims in cm
+
+victims = OnlineKMeans(num_victims, min_distance_victims)
 
 class CircularBuffer:
     def __init__(self, capacity):
@@ -175,22 +181,29 @@ class CustomOccupancyGrid:
                 self.planning_grid[update_indices] = 100
 
 
+def find_center(upper_left, bottom_right):
+    x_center = (upper_left[0] + bottom_right[0]) / 2
+    y_center = (upper_left[1] + bottom_right[1]) / 2
+    return x_center, y_center
+
+
+def find_closest_message(timestamp, current_positions):
+    closest_msg = current_positions[-1]
+    closest_diff = abs(closest_msg[1] - timestamp)
+    for msg in current_positions[::-1]:
+        if abs(msg[1] - timestamp) < closest_diff:
+            closest_msg = msg
+            closest_diff = msg[1] - timestamp
+        if abs(msg[1] - timestamp) > closest_diff:
+            break
+    return closest_msg
+
 def lines_callback(data: PolygonStamped):
-    global counter
-    counter += 1
-    # print(f"{counter}: RECEIVED LINES")
     num_lines = len(data.polygon.points)
     timestamp = data.header.stamp.to_sec()
     current_positions = odometry_msgs.get_buffer()
     if len(current_positions) > 0:
-        closest_msg = current_positions[-1]
-        closest_diff = abs(closest_msg[1] - timestamp)
-        for msg in current_positions[::-1]:
-            if abs(msg[1] - timestamp) < closest_diff:
-                closest_msg = msg
-                closest_diff = msg[1] - timestamp
-            if abs(msg[1] - timestamp) > closest_diff:
-                break
+        closest_msg = find_closest_message(timestamp, current_positions)
         lines = []
         pos_point = closest_msg[0].position
         orientation = closest_msg[0].orientation
@@ -199,6 +212,7 @@ def lines_callback(data: PolygonStamped):
         z = orientation.z
         w = orientation.w
         orientation_quat = np.quaternion(w, x, y, z)
+        # TODO: DO NOT FORGET TO UPDATE OFFSET FOR LAB
         drone_pos = pos_point.x + offset, pos_point.y + offset # Avoid negative values for now
         for i in range(0, num_lines, 2):
             p1 = transform_ros_point(data.polygon.points[i], orientation_quat)
@@ -211,14 +225,29 @@ def lines_callback(data: PolygonStamped):
 
 
 def victim_callback(data: PolygonStamped):
-    return
+    timestamp = data.header.stamp.to_sec()
+    current_positions = odometry_msgs.get_buffer()
+    if len(current_positions) > 0:
+        closest_msg = find_closest_message(timestamp, current_positions)
+        lines = []
+        pos_point = closest_msg[0].position
+        orientation = closest_msg[0].orientation
+        x = orientation.x
+        y = orientation.y
+        z = orientation.z
+        w = orientation.w
+        orientation_quat = np.quaternion(w, x, y, z)
+        # TODO: DO NOT FORGET TO UPDATE OFFSET FOR LAB
+        drone_pos = pos_point.x + offset, pos_point.y + offset # Avoid negative values for now
+        upper_left = transform_ros_point(data.polygon.points[0], orientation_quat)
+        bottom_right = transform_ros_point(data.polygon.points[1], orientation_quat)
+        center = find_center(upper_left ,bottom_right)
+        victims.add_point(center)
+        # TODO: Add to list of victims and then look if it will be published or not!
 
     
 
 def odometry_callback(data: PoseStamped):
-    global counter
-    counter += 1
-    # print(f"{counter}: RECEIVED OD")
     global odometry_msgs
     odometry_msgs.append((data.pose, data.header.stamp.to_sec()))
 
