@@ -12,12 +12,12 @@ import math
 import threading
 from online_kmeans import OnlineKMeans
 
-fov_x = 100
-fov_y = 100
+fov_x = 150
+fov_y = 150
 offset = 0
 
 num_victims = 3
-min_distance_victims = 150 # Minimum distance between two victims in cm
+min_distance_victims = 150  # Minimum distance between two victims in cm
 
 victims = OnlineKMeans(num_victims, min_distance_victims)
 
@@ -241,9 +241,11 @@ def victim_callback(data: PolygonStamped):
         drone_pos = pos_point.x + offset, pos_point.y + offset # Avoid negative values for now
         upper_left = transform_ros_point(data.polygon.points[0], orientation_quat)
         bottom_right = transform_ros_point(data.polygon.points[1], orientation_quat)
-        center = find_center(upper_left ,bottom_right)
+        center = find_center(upper_left, bottom_right)
+        center = map_coordinate(center[0], center[1], drone_pos[0], drone_pos[1], fov_x, fov_y)
         victims.add_point(center)
         # TODO: Add to list of victims and then look if it will be published or not!
+        print("Received victim")
 
     
 
@@ -257,7 +259,7 @@ def publish_occupancy_grid(grid, resolution, publisher):
     grid_msg = OccupancyGrid()
     grid_msg.header = Header()
     grid_msg.header.stamp = rospy.Time.now()
-    grid_msg.header.frame_id = "world"  # or another appropriate frame
+    grid_msg.header.frame_id = "map"
 
     # Set the grid metadata (adjust according to your grid's configuration)
     grid_msg.info.resolution = resolution  # Grid resolution in meters/cell
@@ -289,6 +291,7 @@ rospy.init_node('mapping')
 occ_grid = CustomOccupancyGrid(250, 250, 1)
 odometry_subscriber = rospy.Subscriber('/odometry/return_signal', PoseStamped, callback=odometry_callback)
 lines_subsriber = rospy.Subscriber('/cv/lines', PolygonStamped, callback=lines_callback)
+victim_subscriber = rospy.Subscriber('/cv/victims', PolygonStamped, callback=victim_callback)
 grid_pub = rospy.Publisher('/mapping/occupancy_grid', OccupancyGrid, queue_size=10)
 planning_grid_pub = rospy.Publisher('mapping/map', OccupancyGrid, queue_size=10)
 step = 0
@@ -311,5 +314,7 @@ while not rospy.is_shutdown():
         occ_grid.update_fov(drone_pos, fov)
         publish_occupancy_grid(occ_grid.grid, occ_grid.resolution, grid_pub)
         publish_occupancy_grid(occ_grid.planning_grid, occ_grid.resolution, planning_grid_pub)
+    if step % 100 == 0:
+        print(victims.cluster_centers)
     step += 1
     
