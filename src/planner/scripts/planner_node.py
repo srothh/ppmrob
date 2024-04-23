@@ -277,6 +277,7 @@ def create_root():
         expected_value=True,
     )
     is_victim_found_inverter = py_trees.decorators.Inverter(child=is_victim_found)
+
     path_planning = py_trees.composites.Selector("Path planning")
     dynamic = DynamicPlan("Dynamic planning")
     unexplored = UnexploredPlan("Plan path to unexplored cell")
