@@ -19,7 +19,8 @@ offset = 0
 num_victims = 3
 min_distance_victims = 150  # Minimum distance between two victims in cm
 
-victims = OnlineKMeans(num_victims, min_distance_victims)
+victims = OnlineKMeans(num_victims, min_distance_victims, init_points=[[1,0], [2, 0], [3, 0]])
+print(f"Initialized victims {victims}")
 
 class CircularBuffer:
     def __init__(self, capacity):
@@ -243,9 +244,10 @@ def victim_callback(data: PolygonStamped):
         bottom_right = transform_ros_point(data.polygon.points[1], orientation_quat)
         center = find_center(upper_left, bottom_right)
         center = map_coordinate(center[0], center[1], drone_pos[0], drone_pos[1], fov_x, fov_y)
+        if victims.is_first_point(center):
+            print("New Victim", center)
+            # TODO: Publish victim
         victims.add_point(center)
-        # TODO: Add to list of victims and then look if it will be published or not!
-        print("Received victim")
 
     
 
@@ -314,7 +316,7 @@ while not rospy.is_shutdown():
         occ_grid.update_fov(drone_pos, fov)
         publish_occupancy_grid(occ_grid.grid, occ_grid.resolution, grid_pub)
         publish_occupancy_grid(occ_grid.planning_grid, occ_grid.resolution, planning_grid_pub)
-    if step % 100 == 0:
-        print(victims.cluster_centers)
+    # if step % 10000 == 0:
+        # print(victims.cluster_centers)
     step += 1
     
