@@ -9,6 +9,10 @@ VictimFound2BB [fillcolor=gray, fontcolor=black, fontsize=11, shape=ellipse, sty
 Topics2BB -> VictimFound2BB;
 Battery2BB [fillcolor=gray, fontcolor=black, fontsize=11, shape=ellipse, style=filled];
 Topics2BB -> Battery2BB;
+Map2BB [fillcolor=gray, fontcolor=black, fontsize=11, shape=ellipse, style=filled];
+Topics2BB -> Map2BB;
+WorldPos2BB [fillcolor=gray, fontcolor=black, fontsize=11, shape=ellipse, style=filled];
+Topics2BB -> WorldPos2BB;
 Priorities [fillcolor=cyan, fontcolor=black, fontsize=11, shape=octagon, style=filled];
 Mission -> Priorities;
 "Battery check" [fillcolor=orange, fontcolor=black, fontsize=11, shape=box, style=filled];
