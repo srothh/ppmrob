@@ -2,9 +2,10 @@
 
 import rospy  # the library should be added as package dependency for the package on which working here
 import cv2
-from geometry_msgs.msg import PoseStamped, TwistStamped, Polygon, Pose
+from geometry_msgs.msg import PoseStamped, TwistStamped, PolygonStamped, Pose
 from sensor_msgs.msg import Image
 from std_msgs.msg import UInt8, Bool
+from sensor_msgs.msg import BatteryState
 import matplotlib.pyplot as plt
 from matplotlib import gridspec, transforms, patches
 import numpy as np
@@ -72,9 +73,9 @@ def drone_twist_callback(data: TwistStamped):
     twist = (data.twist.linear.x, data.twist.linear.y, data.twist.linear.z)
     twists.append(twist)
 
-def drone_battery_callback(data: UInt8):
+def drone_battery_callback(data: BatteryState):
     global batteries
-    bat = (data.data)
+    bat = (data.percentage)
     batteries.append(bat)
 
 def battery_signal_callback(data: Bool):
@@ -87,19 +88,19 @@ def drone_camera_callback(data: Image):
     image = br.imgmsg_to_cv2(data, desired_encoding='bgr8')
     #cv2.imshow("Image window", image)
 
-def cv_victim_callback(data: Polygon):
+def cv_victim_callback(data: PolygonStamped):
     global victims
     #rospy.loginfo('points: (%s)' % (data.points))
     victims = []
     #iterate over pairs of data.points
-    for f, s in pairwise(data.points):
+    for f, s in pairwise(data.polygon.points):
         victims.append([(f.x, f.y), (s.x, s.y)])
 
-def cv_lines_callback(data: Polygon):
+def cv_lines_callback(data: PolygonStamped):
     global lines
     lines = []
     #iterate over pairs of data.points
-    for f, s in pairwise(data.points):
+    for f, s in pairwise(data.polygon.points):
         lines.append([(f.x, f.y), (s.x, s.y)])
 
 def on_press(event):
@@ -142,11 +143,11 @@ odo_subscriber = rospy.Subscriber('/odometry/return_signal', PoseStamped, callba
 control_subscriber = rospy.Subscriber('/'+common.config.defaults.Control.MOVE_ACTION_NAMESPACE + '/goal', control.msg.PlanningMoveActionGoal, callback=control_callback)
 drone_subscriber = rospy.Subscriber('/'+common.config.defaults.drone_move_action_name + '/goal', drone.msg.MoveActionGoal, callback=drone_move_callback)
 twist_subscriber = rospy.Subscriber(common.config.defaults.drone_twist_sensor_publish_topic_name, TwistStamped, callback=drone_twist_callback)
-drone_battery_subscriber = rospy.Subscriber(common.config.defaults.drone_battery_sensor_publish_topic_name, UInt8, callback=drone_battery_callback)
+drone_battery_subscriber = rospy.Subscriber(common.config.defaults.drone_battery_sensor_publish_topic_name, BatteryState, callback=drone_battery_callback)
 battery_signal_subscriber = rospy.Subscriber(common.config.defaults.battery_publish_topic_name, Bool, callback=battery_signal_callback)
 drone_camera_subsriber = rospy.Subscriber(common.config.defaults.drone_image_sensor_publish_topic_name, Image, callback=drone_camera_callback)
-cv_victim_subsriber = rospy.Subscriber('/cv/victim', Polygon, callback=cv_victim_callback)
-cv_lines_subsriber = rospy.Subscriber('/cv/lines', Polygon, callback=cv_lines_callback)
+cv_victim_subsriber = rospy.Subscriber('/cv/victim', PolygonStamped, callback=cv_victim_callback)
+cv_lines_subsriber = rospy.Subscriber('/cv/lines', PolygonStamped, callback=cv_lines_callback)
 
 waypoint_publisher = rospy.Publisher('/cockpit/waypoint', Pose, queue_size=10) 
 

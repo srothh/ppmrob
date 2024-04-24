@@ -43,12 +43,13 @@ def publish_occupancy_grid():
             100, 100, 100, 100, 100, 100, 100, 100, 100, 100,
         ]
 
-
         # Publish the occupancy grid
         pub.publish(grid)
         rospy.loginfo("Published mock occupancy grid")
         rate.sleep()
-if __name__ == '__main__':
+
+
+if __name__ == "__main__":
     try:
         publish_occupancy_grid()
     except rospy.ROSInterruptException:
