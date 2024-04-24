@@ -103,14 +103,20 @@ class Leaf(py_trees.Behaviour):
 class ReturnHomeDynamicActionClient(py_trees_ros.actions.ActionClient):
     def initialise(self):
         planned_path = py_trees.blackboard.Blackboard().plan
-        rospy.loginfo("Returning home...")
+        if len(planned_path) == 0:
+            rospy.loginfo("Path could not be calculated")
+        else:
+            rospy.loginfo("Returning home...")
         self.action_goal = control.msg.PlanningMoveGoal(target=planned_path)
         super().initialise()
 
 class PlanningMoveDynamicActionClient(py_trees_ros.actions.ActionClient):
     def initialise(self):
         planned_path = py_trees.blackboard.Blackboard().plan
-        rospy.loginfo(f"Planned path: {planned_path}")
+        if len(planned_path) == 0:
+            rospy.loginfo("Path could not be calculated")
+        else:
+            rospy.loginfo(f"Planned path: {planned_path}")
         self.action_goal = control.msg.PlanningMoveGoal(target=planned_path)
         super().initialise()
 
@@ -136,13 +142,21 @@ class IncrementBbVar(py_trees.behaviours.Success):
 
 
 def dynamic_plan():
-    print(py_trees.blackboard.Blackboard().get(BB_VAR_MAP_DATA))
     if py_trees.blackboard.Blackboard().get(BB_VAR_MAP_WIDTH) == 0:
         return []
     grid = flat_to_2d(py_trees.blackboard.Blackboard().get(BB_VAR_MAP_DATA), py_trees.blackboard.Blackboard().get(BB_VAR_MAP_WIDTH))
+
+    print(grid)
+
     world_pos = py_trees.blackboard.Blackboard().get(BB_VAR_WORLD_POS)
+
+    print(world_pos)
+
     grid_pos_x, grid_pos_y = world_to_grid(world_pos.x,
                                            world_pos.z)
+
+    print(grid_pos_x, grid_pos_y)
+
     path = []
     if grid[grid_pos_x][grid_pos_y + 1] == 50:
         path = [Point(world_pos.x + DRONE_MOVEMENT_INCREMENT, world_pos.y, world_pos.z)]
@@ -189,7 +203,7 @@ def path_to_pos(x, y):
     for point in path_indices:
         w_pos = grid_to_world(point[0], point[1])
         path.append(Point(w_pos[0], py_trees.blackboard.Blackboard().get(BB_VAR_WORLD_POS).y, w_pos[1]))
-    print("world_path: ",path)
+    # print("world_path: ",path)
     return path
 
 
@@ -306,7 +320,7 @@ def create_root():
     victim_rescued = IncrementBbVar("Rescued victim", BB_VAR_NUM_OF_RESCUED_VICTIMS)
     # tree
     root.add_children([topics2bb, priorities])
-    topics2bb.add_children([victim_found2bb, battery2bb, map2bb, world_pos2bb])
+    topics2bb.add_children([world_pos2bb, map2bb, victim_found2bb, battery2bb])
     priorities.add_children([battery_check, search_and_rescue])
     battery_check.add_children([is_battery_low, return_home])
     return_home.add_children([plan_home, fly_home, land_home, terminate])

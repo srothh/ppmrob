@@ -25,11 +25,16 @@ def publish_occupancy_grid():
         grid.info.origin.orientation.w = 1.0
         # Fill the grid with zeros (free space)
         # grid.data = [0] * 100  # 10x10 grid
+
+        #Test grid. 0/0 is in the top left corner.
+        #Starting position published by mock control pos publisher is 75/255 which is 2/8 in the grid, or the first 0 bottom left
+        #Path planning should plan path to the 50
+        #System interprets it the other way around, as 8/2. Gotta know how mapping constructs the grid to fix the dimensions
         grid.data = [
             100, 100, 100, 100, 100, 100, 100, 100, 100, 100,
             100, 100, 100, 100, 100, 100, 100, 100, 100, 100,
-            100, 100,   0,   0,   0,   0,   0,   0,   0, 100,
-            100, 100,   0, 100, 100, 100, 100,   1, 100, 100,
+            100, 100,   0,   0,   0,   0,   0, 100, 100, 100,
+            100, 100,   0, 100, 100,   50, 100, 100, 100, 100,
             100, 100,   0, 100, 100, 100, 100, 100, 100, 100,
             100, 100,   0, 100, 100, 100, 100, 100, 100, 100,
             100, 100,   0, 100, 100, 100, 100, 100, 100, 100,
