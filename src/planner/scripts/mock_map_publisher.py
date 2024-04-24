@@ -23,6 +23,7 @@ def publish_occupancy_grid():
         grid.info.origin.orientation.y = 0.0
         grid.info.origin.orientation.z = 0.0
         grid.info.origin.orientation.w = 1.0
+
         # Fill the grid with zeros (free space)
         # grid.data = [0] * 100  # 10x10 grid
 
