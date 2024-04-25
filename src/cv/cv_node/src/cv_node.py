@@ -32,7 +32,6 @@ Both publish a geometry_msgs/Polygon message, and every pair of Point32 in the m
 
 
 def callback(data):
-    rospy.loginfo("Received image frame: %d %dx%d" % (data.height, data.height, data.width))
     br = CvBridge()
     # note: swich encoding to bgr8
     frame = br.imgmsg_to_cv2(data, desired_encoding='bgr8')

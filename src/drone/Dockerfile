@@ -14,14 +14,6 @@ RUN /bin/bash -c "source /opt/ros/noetic/setup.bash && catkin_create_pkg $PACKAG
 RUN apt-get update && apt-get install -y dos2unix python3.10 python3-pip netcat net-tools python3-tk
 RUN pip3 install av image
 
-RUN dos2unix /catkin_ws/src/$PACKAGE_NAME/action/*
-RUN dos2unix /catkin_ws/src/$PACKAGE_NAME/scripts/*
-RUN dos2unix /catkin_ws/src/$PACKAGE_NAME/scripts/action/*
-RUN dos2unix /catkin_ws/src/$PACKAGE_NAME/scripts/sensor/*
-RUN dos2unix /catkin_ws/src/$PACKAGE_NAME/scripts/tello/*
-RUN dos2unix /catkin_ws/src/$PACKAGE_NAME/scripts/test/*
-RUN dos2unix /catkin_ws/src/$PACKAGE_NAME/scripts/util/*
-
 
 # Convert line endings in the Python script
 #RUN find /catkin_ws/src/$PACKAGE_NAME -type f -print0 | xargs -0 dos2unix -
@@ -33,6 +25,14 @@ WORKDIR /catkin_ws
 COPY ./$PACKAGE_NAME/ /catkin_ws/src/$PACKAGE_NAME/
 COPY ./common/ /catkin_ws/src/common/
 #COPY ./control/ /catkin_ws/src/control/
+RUN dos2unix /catkin_ws/src/$PACKAGE_NAME/action/*
+RUN dos2unix /catkin_ws/src/$PACKAGE_NAME/scripts/*
+RUN dos2unix /catkin_ws/src/$PACKAGE_NAME/scripts/action/*
+RUN dos2unix /catkin_ws/src/$PACKAGE_NAME/scripts/sensor/*
+RUN dos2unix /catkin_ws/src/$PACKAGE_NAME/scripts/tello/*
+RUN dos2unix /catkin_ws/src/$PACKAGE_NAME/scripts/test/*
+RUN dos2unix /catkin_ws/src/$PACKAGE_NAME/scripts/util/*
+
 
 # Run catkin_make to build the ROS project
 SHELL ["/bin/bash", "-c"]
