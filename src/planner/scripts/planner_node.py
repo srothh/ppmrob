@@ -111,9 +111,9 @@ class Leaf(py_trees.Behaviour):
 
 class ReturnHomeDynamicActionClient(py_trees_ros.actions.ActionClient):
     def initialise(self):
-        planned_path = py_trees.blackboard.Blackboard().plan
+        # planned_path = py_trees.blackboard.Blackboard().plan
         rospy.loginfo("Returning home...")
-        self.action_goal = control.msg.PlanningMoveGoal(target=planned_path)
+        self.action_goal = control.msg.PlanningMoveGoal(target=[Point(x=0, y=0)])
         super().initialise()
 
 
@@ -317,7 +317,7 @@ def create_root():
     topics2bb.add_children([victim_found2bb, battery2bb])
     priorities.add_children([battery_check, search_and_rescue])
     battery_check.add_children([is_battery_low, return_home])
-    return_home.add_children([ fly_home, land_home, terminate])
+    return_home.add_children([fly_home, land_home, terminate])
     search_and_rescue.add_children([takeoff, search_subtree_condition, rescue_subtree])
     search_subtree.add_children(
         [
@@ -482,13 +482,13 @@ if __name__ == "__main__":
         rospy.init_node("planner")
 
         # Occupancy grid subscriber
-        map_subscriber = rospy.Subscriber(
-            defaults.Mapping.OCCUPANCY_GRID_TOPIC_NAME, OccupancyGrid, map_callback
-        )
+        # map_subscriber = rospy.Subscriber(
+        #     defaults.Mapping.OCCUPANCY_GRID_TOPIC_NAME, OccupancyGrid, map_callback
+        # )
         # World position subscriber
-        position_subscriber = rospy.Subscriber(
-            defaults.Control.WORLD_POSITION_TOPIC_NAME, PoseStamped, position_callback
-        )
+        # position_subscriber = rospy.Subscriber(
+        #     defaults.Control.WORLD_POSITION_TOPIC_NAME, PoseStamped, position_callback
+        # )
 
         # for testing purpose
         # py_trees.logging.level = py_trees.logging.Level.DEBUG
