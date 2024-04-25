@@ -118,10 +118,19 @@ class ReturnHomeDynamicActionClient(py_trees_ros.actions.ActionClient):
 
 
 class PlanningMoveDynamicActionClient(py_trees_ros.actions.ActionClient):
+    path = [
+        Point(x=20, y=0),
+        Point(x=20, y=40),
+        Point(x=20, y=-40),
+        Point(x=0, y=0),
+    ]
+
     def initialise(self):
-        planned_path = py_trees.blackboard.Blackboard().plan
-        rospy.loginfo(f"Planned path: {planned_path}")
-        self.action_goal = control.msg.PlanningMoveGoal(target=planned_path)
+        # planned_path = py_trees.blackboard.Blackboard().plan
+        # rospy.loginfo(f"Planned path: {planned_path}")
+        self.action_goal = control.msg.PlanningMoveGoal(
+            target=PlanningMoveDynamicActionClient.path.pop
+        )
         super().initialise()
 
 
