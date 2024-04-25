@@ -53,7 +53,7 @@ services:
       dockerfile: ./cockpit/Dockerfile
     environment:
       - "QT_X11_NO_MITSHM=1"
-      - "DISPLAY=$DISPLAY"
+      - "DISPLAY=0"
     env_file:
       - docker.env
     networks:
