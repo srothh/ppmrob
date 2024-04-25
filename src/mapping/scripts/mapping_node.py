@@ -3,7 +3,7 @@
 import rospy
 from geometry_msgs.msg import PolygonStamped, PoseStamped
 from nav_msgs.msg import OccupancyGrid
-from std_msgs.msg import Header
+from std_msgs.msg import Header, Bool
 import numpy as np
 import quaternion # Still need to install
 import cv2
@@ -11,6 +11,7 @@ from collections import deque
 import math
 import threading
 from online_kmeans import OnlineKMeans
+# from src.common.src.common.config.defaults import Mapping
 
 fov_x = 150
 fov_y = 150
@@ -244,9 +245,13 @@ def victim_callback(data: PolygonStamped):
         bottom_right = transform_ros_point(data.polygon.points[1], orientation_quat)
         center = find_center(upper_left, bottom_right)
         center = map_coordinate(center[0], center[1], drone_pos[0], drone_pos[1], fov_x, fov_y)
+        # rand = np.random.randint(100)
+        # print("#"*rand)
         if victims.is_first_point(center):
-            print("New Victim", center)
-            # TODO: Publish victim
+            print("\n\nNew Victim\n\n with Center:", center)
+            victim_found_msg = Bool()
+            victim_found_msg.data = True
+            victim_pub.publish(victim_found_msg)
         victims.add_point(center)
 
     
@@ -295,7 +300,8 @@ odometry_subscriber = rospy.Subscriber('/odometry/return_signal', PoseStamped, c
 lines_subsriber = rospy.Subscriber('/cv/lines', PolygonStamped, callback=lines_callback)
 victim_subscriber = rospy.Subscriber('/cv/victims', PolygonStamped, callback=victim_callback)
 grid_pub = rospy.Publisher('/mapping/occupancy_grid', OccupancyGrid, queue_size=10)
-planning_grid_pub = rospy.Publisher('mapping/map', OccupancyGrid, queue_size=10)
+planning_grid_pub = rospy.Publisher('/mapping/map', OccupancyGrid, queue_size=10)
+victim_pub = rospy.Publisher('/mapping/victim_found', Bool, queue_size=10)
 step = 0
 
 spin_thread = threading.Thread(target=spin_thread)
