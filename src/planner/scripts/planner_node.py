@@ -38,7 +38,11 @@ class DynamicPlan(py_trees.behaviour.Behaviour):
     def update(self):
         path = dynamic_plan()
         py_trees.blackboard.Blackboard().plan = path
-        return py_trees.common.Status.FAILURE if len(path) == 0 else py_trees.common.Status.SUCCESS
+        return (
+            py_trees.common.Status.FAILURE
+            if len(path) == 0
+            else py_trees.common.Status.SUCCESS
+        )
 
 
 class UnexploredPlan(py_trees.behaviour.Behaviour):
@@ -48,7 +52,11 @@ class UnexploredPlan(py_trees.behaviour.Behaviour):
     def update(self):
         path = path_to_unexplored()
         py_trees.blackboard.Blackboard().plan = path
-        return py_trees.common.Status.FAILURE if len(path) == 0 else py_trees.common.Status.SUCCESS
+        return (
+            py_trees.common.Status.FAILURE
+            if len(path) == 0
+            else py_trees.common.Status.SUCCESS
+        )
 
 
 class HomePlan(py_trees.behaviour.Behaviour):
@@ -58,7 +66,11 @@ class HomePlan(py_trees.behaviour.Behaviour):
     def update(self):
         path = path_home()
         py_trees.blackboard.Blackboard().plan = path
-        return py_trees.common.Status.FAILURE if len(path) == 0 else py_trees.common.Status.SUCCESS
+        return (
+            py_trees.common.Status.FAILURE
+            if len(path) == 0
+            else py_trees.common.Status.SUCCESS
+        )
 
 
 class Leaf(py_trees.Behaviour):
@@ -97,12 +109,14 @@ class Leaf(py_trees.Behaviour):
             % (self.name, self.__class__.__name__, self.status, new_status)
         )
 
+
 class ReturnHomeDynamicActionClient(py_trees_ros.actions.ActionClient):
     def initialise(self):
         planned_path = py_trees.blackboard.Blackboard().plan
         rospy.loginfo("Returning home...")
         self.action_goal = control.msg.PlanningMoveGoal(target=planned_path)
         super().initialise()
+
 
 class PlanningMoveDynamicActionClient(py_trees_ros.actions.ActionClient):
     def initialise(self):
@@ -133,10 +147,12 @@ class IncrementBbVar(py_trees.behaviours.Success):
 
 
 def dynamic_plan():
-    grid = flat_to_2d(py_trees.blackboard.Blackboard().map_data, py_trees.blackboard.Blackboard().map_width)
+    grid = flat_to_2d(
+        py_trees.blackboard.Blackboard().map_data,
+        py_trees.blackboard.Blackboard().map_width,
+    )
     world_pos = py_trees.blackboard.Blackboard().world_pos
-    grid_pos_x, grid_pos_y = world_to_grid(world_pos.x,
-                                           world_pos.z)
+    grid_pos_x, grid_pos_y = world_to_grid(world_pos.x, world_pos.z)
     path = []
     if grid[grid_pos_x][grid_pos_y + 1] == 1:
         path = [Point(world_pos.x + DRONE_MOVEMENT_INCREMENT, world_pos.y, world_pos.z)]
@@ -150,7 +166,10 @@ def dynamic_plan():
 
 
 def path_to_unexplored():
-    grid = flat_to_2d(py_trees.blackboard.Blackboard().map_data, py_trees.blackboard.Blackboard().map_width)
+    grid = flat_to_2d(
+        py_trees.blackboard.Blackboard().map_data,
+        py_trees.blackboard.Blackboard().map_width,
+    )
     for row in range(len(grid)):
         for cell in range(len(grid[row])):
             if grid[row][cell] == 1:
@@ -164,12 +183,17 @@ def path_home():
 
 def path_to_pos(x, y):
     # print(x, " : ", y)
-    grid = flat_to_2d(py_trees.blackboard.Blackboard().map_data, py_trees.blackboard.Blackboard().map_width)
+    grid = flat_to_2d(
+        py_trees.blackboard.Blackboard().map_data,
+        py_trees.blackboard.Blackboard().map_width,
+    )
     # print("---------")
     # print(grid)
     # print("---------")
-    grid_pos_x, grid_pos_y = world_to_grid(py_trees.blackboard.Blackboard().world_pos.x,
-                                           py_trees.blackboard.Blackboard().world_pos.z)
+    grid_pos_x, grid_pos_y = world_to_grid(
+        py_trees.blackboard.Blackboard().world_pos.x,
+        py_trees.blackboard.Blackboard().world_pos.z,
+    )
     current = (grid_pos_x, grid_pos_y)
     # print("current grid_pos: ",current)
     target = (x, y)
@@ -178,7 +202,9 @@ def path_to_pos(x, y):
     path = []
     for point in path_indices:
         w_pos = grid_to_world(point[0], point[1])
-        path.append(Point(w_pos[0], py_trees.blackboard.Blackboard().world_pos.y, w_pos[1]))
+        path.append(
+            Point(w_pos[0], py_trees.blackboard.Blackboard().world_pos.y, w_pos[1])
+        )
     # print("world_path: ",path)
     return path
 
@@ -360,15 +386,15 @@ def run_bt(behavior_tree: py_trees_ros.trees.BehaviourTree, rate_hz=2):
     Fetch the private parameter from the parameter server.
     KeyError is raised if the parameter is not set (see launch file for how to run).
     """
-    # num_of_victims_to_rescue = rospy.get_param("~num_of_victims_to_rescue")
-    # rospy.loginfo(f"Number of victims to rescue: {num_of_victims_to_rescue}")
+    num_of_victims_to_rescue = rospy.get_param("~num_of_victims_to_rescue")
+    rospy.loginfo(f"Number of victims to rescue: {num_of_victims_to_rescue}")
     while not rospy.is_shutdown():
-        # if (
-        #         py_trees.blackboard.Blackboard().get(BB_VAR_NUM_OF_RESCUED_VICTIMS)
-        #         == num_of_victims_to_rescue
-        # ):
-        #     rospy.loginfo("Mission completed.")
-        #     break
+        if (
+            py_trees.blackboard.Blackboard().get(BB_VAR_NUM_OF_RESCUED_VICTIMS)
+            == num_of_victims_to_rescue
+        ):
+            rospy.loginfo("Mission completed.")
+            break
         """
         When a behaviour tree ticks, it traverses the behaviours (starting at the root of the tree), ticking each behaviour, catching its result and then using that result to make decisions on the direction the tree traversal will take. This is the decision part of the tree. Once the traversal ends back at the root, the tick is over.
         Any blocking work should be happening somewhere else with a behaviour simply in charge of starting/monitoring and catching the result of that work.
@@ -379,9 +405,9 @@ def run_bt(behavior_tree: py_trees_ros.trees.BehaviourTree, rate_hz=2):
             break
         bt_tip = behavior_tree.tip()
         if (
-                bt_tip
-                # and bt_tip.name == LEAF_CHECK_VICTIM_FOUND_NAME
-                and bt_tip.status == py_trees.common.Status.FAILURE
+            bt_tip
+            # and bt_tip.name == LEAF_CHECK_VICTIM_FOUND_NAME
+            and bt_tip.status == py_trees.common.Status.FAILURE
         ):
             break
         rate.sleep()
@@ -393,7 +419,9 @@ def run_bt(behavior_tree: py_trees_ros.trees.BehaviourTree, rate_hz=2):
 # Map callback function
 def map_callback(msg):
     py_trees.blackboard.Blackboard().map_width = msg.info.width
-    py_trees.blackboard.Blackboard().map_data = flat_to_2d(list(msg.data), msg.info.width)
+    py_trees.blackboard.Blackboard().map_data = flat_to_2d(
+        list(msg.data), msg.info.width
+    )
 
 
 # Position callback function
@@ -409,14 +437,16 @@ def world_to_grid(world_x, world_y):
 
 
 def grid_to_world(x, y):
-    x_world = (x+0.5) * defaults.map_resolution
-    y_world = (y+0.5) * defaults.map_resolution
+    x_world = (x + 0.5) * defaults.map_resolution
+    y_world = (y + 0.5) * defaults.map_resolution
     return y_world, x_world
 
 
 def flat_to_2d(flat_array, width):
     if len(flat_array) % width != 0:
-        raise ValueError("The length of the flat array is not evenly divisible by the width")
+        raise ValueError(
+            "The length of the flat array is not evenly divisible by the width"
+        )
     return numpy.reshape(flat_array, (width, width))
 
 
@@ -444,9 +474,13 @@ if __name__ == "__main__":
         rospy.init_node("planner")
 
         # Occupancy grid subscriber
-        map_subscriber = rospy.Subscriber(defaults.Mapping.OCCUPANCY_GRID_TOPIC_NAME, OccupancyGrid, map_callback)
+        map_subscriber = rospy.Subscriber(
+            defaults.Mapping.OCCUPANCY_GRID_TOPIC_NAME, OccupancyGrid, map_callback
+        )
         # World position subscriber
-        position_subscriber = rospy.Subscriber(defaults.Control.WORLD_POSITION_TOPIC_NAME, Point, position_callback)
+        position_subscriber = rospy.Subscriber(
+            defaults.Control.WORLD_POSITION_TOPIC_NAME, Point, position_callback
+        )
 
         # for testing purpose
         # py_trees.logging.level = py_trees.logging.Level.DEBUG
