@@ -111,17 +111,26 @@ class Leaf(py_trees.Behaviour):
 
 class ReturnHomeDynamicActionClient(py_trees_ros.actions.ActionClient):
     def initialise(self):
-        planned_path = py_trees.blackboard.Blackboard().plan
+        # planned_path = py_trees.blackboard.Blackboard().plan
         rospy.loginfo("Returning home...")
-        self.action_goal = control.msg.PlanningMoveGoal(target=planned_path)
+        self.action_goal = control.msg.PlanningMoveGoal(target=[Point(x=0, y=0)])
         super().initialise()
 
 
 class PlanningMoveDynamicActionClient(py_trees_ros.actions.ActionClient):
+    path = [
+        Point(x=20, y=0),
+        Point(x=20, y=40),
+        Point(x=20, y=-40),
+        Point(x=0, y=0),
+    ]
+
     def initialise(self):
-        planned_path = py_trees.blackboard.Blackboard().plan
-        rospy.loginfo(f"Planned path: {planned_path}")
-        self.action_goal = control.msg.PlanningMoveGoal(target=planned_path)
+        # planned_path = py_trees.blackboard.Blackboard().plan
+        # rospy.loginfo(f"Planned path: {planned_path}")
+        self.action_goal = control.msg.PlanningMoveGoal(
+            target=PlanningMoveDynamicActionClient.path
+        )
         super().initialise()
 
 
@@ -238,7 +247,7 @@ def create_root():
         expected_value=True,
     )
     return_home = py_trees.composites.Sequence("Return home")
-    plan_home = HomePlan("Plan path home")
+    # plan_home = HomePlan("Plan path home")
     fly_home = ReturnHomeDynamicActionClient(
         name="Fly home",
         action_spec=control.msg.PlanningMoveAction,
@@ -277,10 +286,10 @@ def create_root():
     )
     is_victim_found_inverter = py_trees.decorators.Inverter(child=is_victim_found)
 
-    path_planning = py_trees.composites.Selector("Path planning")
-    dynamic = DynamicPlan("Dynamic planning")
-    unexplored = UnexploredPlan("Plan path to unexplored cell")
-    path_planning.add_children([dynamic, unexplored, plan_home])
+    # path_planning = py_trees.composites.Selector("Path planning")
+    # dynamic = DynamicPlan("Dynamic planning")
+    # unexplored = UnexploredPlan("Plan path to unexplored cell")
+    # path_planning.add_children([dynamic, unexplored, plan_home])
     move_to_next_position = PlanningMoveDynamicActionClient(
         name="Move to next position",
         action_spec=control.msg.PlanningMoveAction,
@@ -308,12 +317,12 @@ def create_root():
     topics2bb.add_children([victim_found2bb, battery2bb])
     priorities.add_children([battery_check, search_and_rescue])
     battery_check.add_children([is_battery_low, return_home])
-    return_home.add_children([plan_home, fly_home, land_home, terminate])
+    return_home.add_children([fly_home, land_home, terminate])
     search_and_rescue.add_children([takeoff, search_subtree_condition, rescue_subtree])
     search_subtree.add_children(
         [
             is_victim_found_inverter,
-            path_planning,
+            # path_planning,
             move_to_next_position,
         ]
     )
@@ -473,13 +482,13 @@ if __name__ == "__main__":
         rospy.init_node("planner")
 
         # Occupancy grid subscriber
-        map_subscriber = rospy.Subscriber(
-            defaults.Mapping.OCCUPANCY_GRID_TOPIC_NAME, OccupancyGrid, map_callback
-        )
+        # map_subscriber = rospy.Subscriber(
+        #     defaults.Mapping.OCCUPANCY_GRID_TOPIC_NAME, OccupancyGrid, map_callback
+        # )
         # World position subscriber
-        position_subscriber = rospy.Subscriber(
-            defaults.Control.WORLD_POSITION_TOPIC_NAME, PoseStamped, position_callback
-        )
+        # position_subscriber = rospy.Subscriber(
+        #     defaults.Control.WORLD_POSITION_TOPIC_NAME, PoseStamped, position_callback
+        # )
 
         # for testing purpose
         # py_trees.logging.level = py_trees.logging.Level.DEBUG
