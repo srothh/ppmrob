@@ -11,12 +11,11 @@ import py_trees_ros
 import rospy
 
 from std_msgs.msg import String, Bool
-from geometry_msgs.msg import Point
+from geometry_msgs.msg import Point, PoseStamped
 from nav_msgs.msg import OccupancyGrid
 import pathfinding
 import common.config.defaults as defaults  # TODO add to dockerfile as per issue!
 
-import common.config.defaults as defaults
 import control.msg
 
 DRONE_MOVEMENT_INCREMENT = 30
@@ -426,7 +425,7 @@ def map_callback(msg):
 
 # Position callback function
 def position_callback(msg):
-    py_trees.blackboard.Blackboard().world_pos = msg
+    py_trees.blackboard.Blackboard().world_pos = msg.pose.position
 
 
 # Drone world position in centimetres -> Drone position in grid
@@ -479,7 +478,7 @@ if __name__ == "__main__":
         )
         # World position subscriber
         position_subscriber = rospy.Subscriber(
-            defaults.Control.WORLD_POSITION_TOPIC_NAME, Point, position_callback
+            defaults.Control.WORLD_POSITION_TOPIC_NAME, PoseStamped, position_callback
         )
 
         # for testing purpose

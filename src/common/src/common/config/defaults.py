@@ -20,7 +20,7 @@ class Mapping:
 class Control:
     MOVE_ACTION_NAMESPACE = "planning_move"
     COMMAND_ACTION_NAMESPACE = "planning_command"
-    WORLD_POSITION_TOPIC_NAME = "/control/world_pos"
+    WORLD_POSITION_TOPIC_NAME = "/odometry/return_signal"
 
 
 class TelloCommands:

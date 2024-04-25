@@ -6,7 +6,7 @@ WORKDIR /catkin_ws/src
 
 #edit these for custom nodes
 ENV PACKAGE_NAME planner
-ENV LAUNCH_FILE planner.launch
+ENV LAUNCH_FILE mocks.launch
 # Create a new ROS package for the package
 RUN /bin/bash -c "source /opt/ros/noetic/setup.bash"
 
