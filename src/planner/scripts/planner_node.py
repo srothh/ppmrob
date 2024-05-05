@@ -400,15 +400,15 @@ def run_bt(behavior_tree: py_trees_ros.trees.BehaviourTree, rate_hz=2):
     Fetch the private parameter from the parameter server.
     KeyError is raised if the parameter is not set (see launch file for how to run).
     """
-    # num_of_victims_to_rescue = rospy.get_param("~num_of_victims_to_rescue")
-    # rospy.loginfo(f"Number of victims to rescue: {num_of_victims_to_rescue}")
+    num_of_victims_to_rescue = rospy.get_param("~num_of_victims_to_rescue")
+    rospy.loginfo(f"Number of victims to rescue: {num_of_victims_to_rescue}")
     while not rospy.is_shutdown():
-        # if (
-        #         py_trees.blackboard.Blackboard().get(BB_VAR_NUM_OF_RESCUED_VICTIMS)
-        #         == num_of_victims_to_rescue
-        # ):
-        #     rospy.loginfo("Mission completed.")
-        #     break
+        if (
+                py_trees.blackboard.Blackboard().get(BB_VAR_NUM_OF_RESCUED_VICTIMS)
+                == num_of_victims_to_rescue
+        ):
+            rospy.loginfo("Mission completed.")
+            break
         """
         When a behaviour tree ticks, it traverses the behaviours (starting at the root of the tree), ticking each behaviour, catching its result and then using that result to make decisions on the direction the tree traversal will take. This is the decision part of the tree. Once the traversal ends back at the root, the tick is over.
         Any blocking work should be happening somewhere else with a behaviour simply in charge of starting/monitoring and catching the result of that work.
@@ -428,18 +428,6 @@ def run_bt(behavior_tree: py_trees_ros.trees.BehaviourTree, rate_hz=2):
     bt_tip = behavior_tree.tip()
     if bt_tip and bt_tip.status == py_trees.common.Status.FAILURE:
         lead_drone_into_safe_state()
-
-
-# Map callback function
-# def map_callback(msg):
-#     py_trees.blackboard.Blackboard().BB_VAR_MAP_WIDTH = msg.info.width
-#     py_trees.blackboard.Blackboard().BB_VAR_MAP_DATA = flat_to_2d(list(msg.data), msg.info.width)
-
-
-# Position callback function
-# def position_callback(msg):
-#     py_trees.blackboard.Blackboard().BB_VAR_WORLD_POS = msg
-
 
 # Drone world position in centimetres -> Drone position in grid
 def world_to_grid(world_x, world_y):
@@ -483,13 +471,8 @@ if __name__ == "__main__":
         # register the node with roscore, allowing it to communicate with other nodes
         rospy.init_node("planner")
 
-        # Occupancy grid subscriber
-        # map_subscriber = rospy.Subscriber(defaults.Mapping.OCCUPANCY_GRID_TOPIC_NAME, OccupancyGrid, map_callback)
-        # World position subscriber
-        # position_subscriber = rospy.Subscriber(defaults.Control.WORLD_POSITION_TOPIC_NAME, Point, position_callback)
-
         # for testing purpose
-        py_trees.logging.level = py_trees.logging.Level.DEBUG
+        # py_trees.logging.level = py_trees.logging.Level.DEBUG
         tree = setup_bt()
         py_trees.display.render_dot_tree(tree.root, name="planner_tree")
         run_bt(tree)
