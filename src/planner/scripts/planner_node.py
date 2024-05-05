@@ -14,8 +14,7 @@ from std_msgs.msg import String, Bool
 from geometry_msgs.msg import Point, PoseStamped
 from nav_msgs.msg import OccupancyGrid
 import pathfinding
-import common.config.defaults as defaults  # TODO add to dockerfile as per issue!
-
+import common.config.defaults as defaults
 import control.msg
 
 DRONE_MOVEMENT_INCREMENT = 30
@@ -118,13 +117,6 @@ class ReturnHomeDynamicActionClient(py_trees_ros.actions.ActionClient):
 
 
 class PlanningMoveDynamicActionClient(py_trees_ros.actions.ActionClient):
-    path = [
-        Point(x=20, y=0),
-        Point(x=20, y=40),
-        Point(x=20, y=-40),
-        Point(x=0, y=0),
-    ]
-
     def initialise(self):
         # planned_path = py_trees.blackboard.Blackboard().plan
         # rospy.loginfo(f"Planned path: {planned_path}")
@@ -285,11 +277,9 @@ def create_root():
         expected_value=True,
     )
     is_victim_found_inverter = py_trees.decorators.Inverter(child=is_victim_found)
-
     # path_planning = py_trees.composites.Selector("Path planning")
     # dynamic = DynamicPlan("Dynamic planning")
     # unexplored = UnexploredPlan("Plan path to unexplored cell")
-    # path_planning.add_children([dynamic, unexplored, plan_home])
     move_to_next_position = PlanningMoveDynamicActionClient(
         name="Move to next position",
         action_spec=control.msg.PlanningMoveAction,
@@ -326,6 +316,7 @@ def create_root():
             move_to_next_position,
         ]
     )
+    # path_planning.add_children([dynamic, unexplored, plan_home])
     rescue_subtree.add_children(
         [is_victim_actually_found, land_where_victim_found, victim_rescued]
     )
@@ -335,7 +326,7 @@ def create_root():
 def post_tick_handler(snapshot_visitor, tree):
     # print(py_trees.display.ascii_tree(tree.root, snapshot_information=snapshot_visitor))
     # the following actually shows more info than the above
-    # py_trees.display.print_ascii_tree(tree.root, show_status=True)
+    py_trees.display.print_ascii_tree(tree.root, show_status=True)
     pass
 
 
