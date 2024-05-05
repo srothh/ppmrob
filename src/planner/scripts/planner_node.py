@@ -20,7 +20,6 @@ import control.msg
 DRONE_MOVEMENT_INCREMENT = 30
 
 BB_VAR_RETURNED_HOME = "returned_home"
-BB_VAR_HOME_COORDINATES = "home_coordinates"
 BB_VAR_VICTIM_FOUND = "victim_found"
 BB_VAR_WAYPOINT = "waypoint"
 BB_VAR_NUM_OF_RESCUED_VICTIMS = "num_of_rescued_victims"
