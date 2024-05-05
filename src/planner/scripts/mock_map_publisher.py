@@ -5,12 +5,9 @@ from std_msgs.msg import Header
 
 import common.config.defaults as defaults  # TODO add to dockerfile as per issue!
 
-
 def publish_occupancy_grid():
-    rospy.init_node("mock_occupancy_grid_publisher", anonymous=True)
-    pub = rospy.Publisher(
-        defaults.Mapping.OCCUPANCY_GRID_TOPIC_NAME, OccupancyGrid, queue_size=10
-    )
+    rospy.init_node('mock_occupancy_grid_publisher', anonymous=True)
+    pub = rospy.Publisher(defaults.Mapping.OCCUPANCY_GRID_TOPIC_NAME, OccupancyGrid, queue_size=10)
     rate = rospy.Rate(1)  # 1 Hz
     while not rospy.is_shutdown():
         # Create a dummy occupancy grid
@@ -26,114 +23,30 @@ def publish_occupancy_grid():
         grid.info.origin.orientation.y = 0.0
         grid.info.origin.orientation.z = 0.0
         grid.info.origin.orientation.w = 1.0
+
         # Fill the grid with zeros (free space)
         # grid.data = [0] * 100  # 10x10 grid
+
+        #Test grid. 0/0 is in the top left corner.
+        #Starting position published by mock control pos publisher is 75/255 which is 2/8 in the grid, or the first 0 bottom left
+        #Path planning should plan path to the 50
+        #System interprets it the other way around, as 8/2. Gotta know how mapping constructs the grid to fix the dimensions
         grid.data = [
-            100,
-            100,
-            100,
-            100,
-            100,
-            100,
-            100,
-            100,
-            100,
-            100,
-            100,
-            100,
-            100,
-            100,
-            100,
-            100,
-            100,
-            100,
-            100,
-            100,
-            100,
-            100,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            100,
-            100,
-            100,
-            0,
-            100,
-            100,
-            100,
-            100,
-            1,
-            100,
-            100,
-            100,
-            100,
-            0,
-            100,
-            100,
-            100,
-            100,
-            100,
-            100,
-            100,
-            100,
-            100,
-            0,
-            100,
-            100,
-            100,
-            100,
-            100,
-            100,
-            100,
-            100,
-            100,
-            0,
-            100,
-            100,
-            100,
-            100,
-            100,
-            100,
-            100,
-            100,
-            100,
-            0,
-            100,
-            100,
-            100,
-            100,
-            100,
-            100,
-            100,
-            100,
-            100,
-            0,
-            100,
-            100,
-            100,
-            100,
-            100,
-            100,
-            100,
-            100,
-            100,
-            100,
-            100,
-            100,
-            100,
-            100,
-            100,
-            100,
-            100,
+            100, 100, 100, 100, 100, 100, 100, 100, 100, 100,
+            100, 100, 100, 100, 100, 100, 100, 100, 100, 100,
+            100, 100,   0,   0,   0,   0,   0, 100, 100, 100,
+            100, 100,   0, 100, 100,   50, 100, 100, 100, 100,
+            100, 100,   0, 100, 100, 100, 100, 100, 100, 100,
+            100, 100,   0, 100, 100, 100, 100, 100, 100, 100,
+            100, 100,   0, 100, 100, 100, 100, 100, 100, 100,
+            100, 100,   0, 100, 100, 100, 100, 100, 100, 100,
+            100, 100,   0, 100, 100, 100, 100, 100, 100, 100,
+            100, 100, 100, 100, 100, 100, 100, 100, 100, 100,
         ]
 
         # Publish the occupancy grid
         pub.publish(grid)
-        # rospy.loginfo("Published mock occupancy grid")
+        rospy.loginfo("Published mock occupancy grid")
         rate.sleep()
 
 
