@@ -6,6 +6,7 @@
     Usage: `roslaunch %YOUR_ROS_PKG% %YOUR_LAUNCH_FILE% %ARG_NAME%:=%VALUE%`
     -->
     <arg name="number_of_victims"/>
+    <arg name="interactive"/>
     <!-- https://wiki.ros.org/Names#Resolving -->
     <node pkg="planner" name="planner_node"  type="planner_node.py" output="screen">
         <!-- 
@@ -15,5 +16,6 @@
         -->
         <!-- https://wiki.ros.org/roslaunch/XML#substitution_args -->
         <param name="num_of_victims_to_rescue" value="$(arg number_of_victims)" type="int"/>
+        <param name="interactive_waypoints" value="$(arg interactive)" type="bool"/>
     </node>
 </launch>
