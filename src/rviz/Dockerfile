@@ -11,3 +11,4 @@ ENV DISPLAY=host.docker.internal:0
 
 # Run RViz as the default command
 CMD ["rviz"]
+

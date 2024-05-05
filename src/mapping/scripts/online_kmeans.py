@@ -29,12 +29,17 @@ class OnlineKMeans:
     def find_nearest_cluster(self, point):
         distances = np.linalg.norm(self.cluster_centers - point, axis=1)
         nearest_cluster = np.argmin(distances)
+        sorted_distances = np.sort(distances)
+        if sorted_distances[0] > self.min_dist:
+            for i in range(len(distances)):
+                if self.first_point[i]:
+                    nearest_cluster = i
+                    break
         return nearest_cluster
 
     def add_point(self, point):
         # Find the nearest cluster center
         nearest_cluster = self.find_nearest_cluster(point)
-
         # Update the cluster center
         self.cluster_centers[nearest_cluster] += (point - self.cluster_centers[nearest_cluster]) / self.counts[nearest_cluster]
         self.counts[nearest_cluster] += 1

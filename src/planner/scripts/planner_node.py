@@ -11,12 +11,11 @@ import py_trees_ros
 import rospy
 
 from std_msgs.msg import String, Bool
-from geometry_msgs.msg import Point
+from geometry_msgs.msg import Point, PoseStamped
 from nav_msgs.msg import OccupancyGrid
 import pathfinding
 import common.config.defaults as defaults  # TODO add to dockerfile as per issue!
 
-import common.config.defaults as defaults
 import control.msg
 
 DRONE_MOVEMENT_INCREMENT = 30
@@ -41,7 +40,11 @@ class DynamicPlan(py_trees.behaviour.Behaviour):
     def update(self):
         path = dynamic_plan()
         py_trees.blackboard.Blackboard().plan = path
-        return py_trees.common.Status.FAILURE if len(path) == 0 else py_trees.common.Status.SUCCESS
+        return (
+            py_trees.common.Status.FAILURE
+            if len(path) == 0
+            else py_trees.common.Status.SUCCESS
+        )
 
 
 class UnexploredPlan(py_trees.behaviour.Behaviour):
@@ -51,7 +54,11 @@ class UnexploredPlan(py_trees.behaviour.Behaviour):
     def update(self):
         path = path_to_unexplored()
         py_trees.blackboard.Blackboard().plan = path
-        return py_trees.common.Status.FAILURE if len(path) == 0 else py_trees.common.Status.SUCCESS
+        return (
+            py_trees.common.Status.FAILURE
+            if len(path) == 0
+            else py_trees.common.Status.SUCCESS
+        )
 
 
 class HomePlan(py_trees.behaviour.Behaviour):
@@ -61,7 +68,11 @@ class HomePlan(py_trees.behaviour.Behaviour):
     def update(self):
         path = path_home()
         py_trees.blackboard.Blackboard().plan = path
-        return py_trees.common.Status.FAILURE if len(path) == 0 else py_trees.common.Status.SUCCESS
+        return (
+            py_trees.common.Status.FAILURE
+            if len(path) == 0
+            else py_trees.common.Status.SUCCESS
+        )
 
 
 class Leaf(py_trees.Behaviour):
@@ -100,6 +111,7 @@ class Leaf(py_trees.Behaviour):
             % (self.name, self.__class__.__name__, self.status, new_status)
         )
 
+
 class ReturnHomeDynamicActionClient(py_trees_ros.actions.ActionClient):
     def initialise(self):
         planned_path = py_trees.blackboard.Blackboard().plan
@@ -110,7 +122,15 @@ class ReturnHomeDynamicActionClient(py_trees_ros.actions.ActionClient):
         self.action_goal = control.msg.PlanningMoveGoal(target=planned_path)
         super().initialise()
 
+
 class PlanningMoveDynamicActionClient(py_trees_ros.actions.ActionClient):
+    path = [
+        Point(x=20, y=0),
+        Point(x=20, y=40),
+        Point(x=20, y=-40),
+        Point(x=0, y=0),
+    ]
+
     def initialise(self):
         planned_path = py_trees.blackboard.Blackboard().plan
         if len(planned_path) == 0:
@@ -156,7 +176,6 @@ def dynamic_plan():
                                            world_pos.z)
 
     print(grid_pos_x, grid_pos_y)
-
     path = []
     if grid[grid_pos_x][grid_pos_y + 1] == 50:
         path = [Point(world_pos.x + DRONE_MOVEMENT_INCREMENT, world_pos.y, world_pos.z)]
@@ -202,7 +221,9 @@ def path_to_pos(x, y):
     path = []
     for point in path_indices:
         w_pos = grid_to_world(point[0], point[1])
+
         path.append(Point(w_pos[0], py_trees.blackboard.Blackboard().get(BB_VAR_WORLD_POS).y, w_pos[1]))
+
     # print("world_path: ",path)
     return path
 
@@ -253,7 +274,7 @@ def create_root():
         expected_value=True,
     )
     return_home = py_trees.composites.Sequence("Return home")
-    plan_home = HomePlan("Plan path home")
+    # plan_home = HomePlan("Plan path home")
     fly_home = ReturnHomeDynamicActionClient(
         name="Fly home",
         action_spec=control.msg.PlanningMoveAction,
@@ -292,10 +313,10 @@ def create_root():
     )
     is_victim_found_inverter = py_trees.decorators.Inverter(child=is_victim_found)
 
-    path_planning = py_trees.composites.Selector("Path planning")
-    dynamic = DynamicPlan("Dynamic planning")
-    unexplored = UnexploredPlan("Plan path to unexplored cell")
-    path_planning.add_children([dynamic, unexplored, plan_home])
+    # path_planning = py_trees.composites.Selector("Path planning")
+    # dynamic = DynamicPlan("Dynamic planning")
+    # unexplored = UnexploredPlan("Plan path to unexplored cell")
+    # path_planning.add_children([dynamic, unexplored, plan_home])
     move_to_next_position = PlanningMoveDynamicActionClient(
         name="Move to next position",
         action_spec=control.msg.PlanningMoveAction,
@@ -323,12 +344,12 @@ def create_root():
     topics2bb.add_children([world_pos2bb, map2bb, victim_found2bb, battery2bb])
     priorities.add_children([battery_check, search_and_rescue])
     battery_check.add_children([is_battery_low, return_home])
-    return_home.add_children([plan_home, fly_home, land_home, terminate])
+    return_home.add_children([fly_home, land_home, terminate])
     search_and_rescue.add_children([takeoff, search_subtree_condition, rescue_subtree])
     search_subtree.add_children(
         [
             is_victim_found_inverter,
-            path_planning,
+            # path_planning,
             move_to_next_position,
         ]
     )
@@ -403,10 +424,8 @@ def run_bt(behavior_tree: py_trees_ros.trees.BehaviourTree, rate_hz=2):
     num_of_victims_to_rescue = rospy.get_param("~num_of_victims_to_rescue")
     rospy.loginfo(f"Number of victims to rescue: {num_of_victims_to_rescue}")
     while not rospy.is_shutdown():
-        if (
-                py_trees.blackboard.Blackboard().get(BB_VAR_NUM_OF_RESCUED_VICTIMS)
-                == num_of_victims_to_rescue
-        ):
+        if (py_trees.blackboard.Blackboard().get(BB_VAR_NUM_OF_RESCUED_VICTIMS)
+                == num_of_victims_to_rescue):
             rospy.loginfo("Mission completed.")
             break
         """
@@ -419,9 +438,9 @@ def run_bt(behavior_tree: py_trees_ros.trees.BehaviourTree, rate_hz=2):
             break
         bt_tip = behavior_tree.tip()
         if (
-                bt_tip
-                # and bt_tip.name == LEAF_CHECK_VICTIM_FOUND_NAME
-                and bt_tip.status == py_trees.common.Status.FAILURE
+            bt_tip
+            # and bt_tip.name == LEAF_CHECK_VICTIM_FOUND_NAME
+            and bt_tip.status == py_trees.common.Status.FAILURE
         ):
             break
         rate.sleep()
@@ -437,14 +456,16 @@ def world_to_grid(world_x, world_y):
 
 
 def grid_to_world(x, y):
-    x_world = (x+0.5) * defaults.map_resolution
-    y_world = (y+0.5) * defaults.map_resolution
+    x_world = (x + 0.5) * defaults.map_resolution
+    y_world = (y + 0.5) * defaults.map_resolution
     return y_world, x_world
 
 
 def flat_to_2d(flat_array, width):
     if len(flat_array) % width != 0:
-        raise ValueError("The length of the flat array is not evenly divisible by the width")
+        raise ValueError(
+            "The length of the flat array is not evenly divisible by the width"
+        )
     return numpy.reshape(flat_array, (width, width))
 
 

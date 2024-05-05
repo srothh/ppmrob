@@ -53,7 +53,7 @@ services:
       dockerfile: ./cockpit/Dockerfile
     environment:
       - "QT_X11_NO_MITSHM=1"
-      - "DISPLAY=$DISPLAY"
+      - "DISPLAY=0"
     env_file:
       - docker.env
     networks:
@@ -102,21 +102,20 @@ services:
       # FIXME adjust to actual dependencies
       - ros_master
       - control
-      # - mapping
-      # - odometry
-  mapping_simulation:
-    build: ./src/mapping_simulation
-    env_file:
-      - docker.env
-    ports:
-      - "9009:9009"
-    networks:
-      - ppmrob
-    depends_on:
-      - ros_master
-    working_dir: /catkin_ws/src/mapping_simulation/scripts
-    # stdin_open: true  # Keeps STDIN open
-    # tty: true         # Allocates a pseudo-TTY
+      - mapping
+      # mapping_simulation:
+      #   build: ./src/mapping_simulation
+      #   env_file:
+      #     - docker.env
+      #   ports:
+      #     - "9009:9009"
+      #   networks:
+      #     - ppmrob
+      #   depends_on:
+      #     - ros_master
+      #   working_dir: /catkin_ws/src/mapping_simulation/scripts
+      #   # stdin_open: true  # Keeps STDIN open
+      #   # tty: true         # Allocates a pseudo-TTY
   rviz:
     build: ./src/rviz
     networks:

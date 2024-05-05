@@ -3,24 +3,29 @@
 import rospy
 from geometry_msgs.msg import PolygonStamped, PoseStamped
 from nav_msgs.msg import OccupancyGrid
-from std_msgs.msg import Header
+from std_msgs.msg import Header, Bool
 import numpy as np
-import quaternion # Still need to install
+import quaternion  # Still need to install
 import cv2
 from collections import deque
 import math
 import threading
 from online_kmeans import OnlineKMeans
 
+# from src.common.src.common.config.defaults import Mapping
+
 fov_x = 150
 fov_y = 150
-offset = 0
+offset = 250
 
 num_victims = 3
 min_distance_victims = 150  # Minimum distance between two victims in cm
 
-victims = OnlineKMeans(num_victims, min_distance_victims, init_points=[[1,0], [2, 0], [3, 0]])
+victims = OnlineKMeans(
+    num_victims, min_distance_victims, init_points=[[1, 0], [2, 0], [3, 0]]
+)
 print(f"Initialized victims {victims}")
+
 
 class CircularBuffer:
     def __init__(self, capacity):
@@ -32,6 +37,7 @@ class CircularBuffer:
     def get_buffer(self):
         return list(self.buffer)
 
+
 max_msgs = 10000
 odometry_msgs = CircularBuffer(max_msgs)
 
@@ -40,6 +46,7 @@ counter = 0
 
 def spin_thread():
     rospy.spin()
+
 
 def calculate_fov_size(diagonal_fov_degrees, height):
     # Camera resolution aspect ratio: 162:121
@@ -50,8 +57,20 @@ def calculate_fov_size(diagonal_fov_degrees, height):
     diagonal_fov_radians = math.radians(diagonal_fov_degrees)
 
     # Calculate the horizontal and vertical FoV
-    horizontal_fov_radians = 2 * math.atan(math.tan(diagonal_fov_radians / 2) * (aspect_ratio_width / math.sqrt(aspect_ratio_width**2 + aspect_ratio_height**2)))
-    vertical_fov_radians = 2 * math.atan(math.tan(diagonal_fov_radians / 2) * (aspect_ratio_height / math.sqrt(aspect_ratio_width**2 + aspect_ratio_height**2)))
+    horizontal_fov_radians = 2 * math.atan(
+        math.tan(diagonal_fov_radians / 2)
+        * (
+            aspect_ratio_width
+            / math.sqrt(aspect_ratio_width**2 + aspect_ratio_height**2)
+        )
+    )
+    vertical_fov_radians = 2 * math.atan(
+        math.tan(diagonal_fov_radians / 2)
+        * (
+            aspect_ratio_height
+            / math.sqrt(aspect_ratio_width**2 + aspect_ratio_height**2)
+        )
+    )
 
     # Calculate the field of view dimensions at the given height
     width = 2 * height * math.tan(horizontal_fov_radians / 2)
@@ -66,9 +85,10 @@ def calculate_fov_size(diagonal_fov_degrees, height):
 
 # Assumes square window and absolute drone position
 def map_coordinate(x, y, x_d, y_d, fov_width, fov_height):
-    x_p = int(x_d) - fov_width//2 + x
-    y_p = int(y_d) - fov_height//2 + y
+    x_p = int(x_d) - fov_width // 2 + x
+    y_p = int(y_d) - fov_height // 2 + y
     return x_p, y_p
+
 
 def transform_ros_point(point_msg, orientation_quaternion):
     # Extract point data from the message
@@ -78,12 +98,15 @@ def transform_ros_point(point_msg, orientation_quaternion):
     point_quaternion = np.quaternion(0, *point)
 
     # Apply the transformation: p' = q^(-1) * p * q
-    transformed_point_quaternion = orientation_quaternion.inverse() * point_quaternion * orientation_quaternion
+    transformed_point_quaternion = (
+        orientation_quaternion.inverse() * point_quaternion * orientation_quaternion
+    )
 
     # Extract the vector part
     transformed_point = quaternion.as_float_array(transformed_point_quaternion)[1:]
 
     return transformed_point
+
 
 class CustomOccupancyGrid:
     def __init__(self, width, height, resolution):
@@ -111,9 +134,11 @@ class CustomOccupancyGrid:
         new_grid = np.full((new_height, new_width), -1)
         new_planning_grid = np.full((new_height, new_width), -1)
         new_mask = np.full((new_height, new_width), 0)
-        new_grid[0:self.grid.shape[0], 0:self.grid.shape[1]] = self.grid
-        new_planning_grid[0:self.planning_grid.shape[0], 0:self.planning_grid.shape[1]] = self.planning_grid
-        new_mask[0:self.mask.shape[0], 0:self.mask.shape[1]] = self.mask
+        new_grid[0 : self.grid.shape[0], 0 : self.grid.shape[1]] = self.grid
+        new_planning_grid[
+            0 : self.planning_grid.shape[0], 0 : self.planning_grid.shape[1]
+        ] = self.planning_grid
+        new_mask[0 : self.mask.shape[0], 0 : self.mask.shape[1]] = self.mask
 
         self.grid = new_grid
         self.planning_grid = new_planning_grid
@@ -124,16 +149,18 @@ class CustomOccupancyGrid:
     def update_fov(self, drone_pos, fov_size):
         # Convert the drone's position to grid coordinates
         drone_grid_x, drone_grid_y = self.world_to_grid(*drone_pos)
-        buffer_x = 0 # int(fov_size[0]*0.05)
-        buffer_y = 0 # int(fov_size[1]*0.05)
+        buffer_x = 0  # int(fov_size[0]*0.05)
+        buffer_y = 0  # int(fov_size[1]*0.05)
 
         if drone_grid_x > self.width or drone_grid_y > self.height:
-            new_grid_width = max(int(1.05*self.width), drone_grid_x + 1)
-            new_grid_height = max(int(1.05*self.height), drone_grid_y + 1)
+            new_grid_width = max(int(1.05 * self.width), drone_grid_x + 1)
+            new_grid_height = max(int(1.05 * self.height), drone_grid_y + 1)
             self.resize(new_grid_width, new_grid_height)
 
         # Calculate the top-left and bottom-right corners of the FOV in grid coordinates
-        half_fov_x, half_fov_y = self.world_to_grid(fov_size[0] // 2 - buffer_x, fov_size[1] // 2 - buffer_y)
+        half_fov_x, half_fov_y = self.world_to_grid(
+            fov_size[0] // 2 - buffer_x, fov_size[1] // 2 - buffer_y
+        )
         top_left_x = max(drone_grid_x - half_fov_x, 0)
         top_left_y = max(drone_grid_y - half_fov_y, 0)
         bottom_right_x = min(drone_grid_x + half_fov_x, self.grid.shape[1] - 1)
@@ -142,15 +169,29 @@ class CustomOccupancyGrid:
         # print(top_left_x, top_left_y, bottom_right_x, bottom_right_y)
 
         # Update the grid cells within the FOV to mark them as free
-        self.grid[top_left_y - 1:bottom_right_y, top_left_x - 1:bottom_right_x] =\
-            np.where(self.grid[top_left_y - 1:bottom_right_y, top_left_x - 1:bottom_right_x] != 100, 0, 100)
+        self.grid[top_left_y - 1 : bottom_right_y, top_left_x - 1 : bottom_right_x] = (
+            np.where(
+                self.grid[
+                    top_left_y - 1 : bottom_right_y, top_left_x - 1 : bottom_right_x
+                ]
+                != 100,
+                0,
+                100,
+            )
+        )
 
         # Update planning grid cells
-        planning_grid_fov = self.planning_grid[top_left_y - 1:bottom_right_y, top_left_x - 1:bottom_right_x]
-        self.planning_grid[top_left_y - 1:bottom_right_y, top_left_x - 1:bottom_right_x] =\
-            np.where(np.logical_or(planning_grid_fov == 0, planning_grid_fov == 100), planning_grid_fov, 50)
+        planning_grid_fov = self.planning_grid[
+            top_left_y - 1 : bottom_right_y, top_left_x - 1 : bottom_right_x
+        ]
+        self.planning_grid[
+            top_left_y - 1 : bottom_right_y, top_left_x - 1 : bottom_right_x
+        ] = np.where(
+            np.logical_or(planning_grid_fov == 0, planning_grid_fov == 100),
+            planning_grid_fov,
+            50,
+        )
         self.planning_grid[drone_grid_y, drone_grid_x] = 0
-
 
     def update_lines(self, drone_pos, lines, fov_width, fov_height):
         x_d = drone_pos[0]
@@ -166,17 +207,28 @@ class CustomOccupancyGrid:
                 grid_x1, grid_y1 = self.world_to_grid(p1[0], p1[1])
                 grid_x2, grid_y2 = self.world_to_grid(p2[0], p2[1])
 
-                if grid_x1 > self.width or grid_x2 > self.width or grid_y1 > self.height or grid_y2 > self.height:
-                    new_grid_width = max(int(1.05*self.width), max(grid_x1, grid_x2))
-                    new_grid_height = max(int(1.05*self.height), max(grid_y1, grid_y2))
+                if (
+                    grid_x1 > self.width
+                    or grid_x2 > self.width
+                    or grid_y1 > self.height
+                    or grid_y2 > self.height
+                ):
+                    new_grid_width = max(int(1.05 * self.width), max(grid_x1, grid_x2))
+                    new_grid_height = max(
+                        int(1.05 * self.height), max(grid_y1, grid_y2)
+                    )
                     self.resize(new_grid_width, new_grid_height)
 
                 # Update the grid cells along the line as occupied
                 self.mask = self.mask.astype(np.uint8)
-                cv2.line(self.mask, (grid_x1, grid_y1), (grid_x2, grid_y2), 1, 1)  # Mark as occupied
+                cv2.line(
+                    self.mask, (grid_x1, grid_y1), (grid_x2, grid_y2), 1, 1
+                )  # Mark as occupied
 
                 # Find the indices where the grid is unexplored (-1) and the mask has the line drawn (1)
-                update_indices = np.where(self.mask == 1) # update_indices = np.where((self.grid == -1) & (self.mask == 1))
+                update_indices = np.where(
+                    self.mask == 1
+                )  # update_indices = np.where((self.grid == -1) & (self.mask == 1))
 
                 self.grid[update_indices] = 100
                 self.planning_grid[update_indices] = 100
@@ -199,6 +251,7 @@ def find_closest_message(timestamp, current_positions):
             break
     return closest_msg
 
+
 def lines_callback(data: PolygonStamped):
     num_lines = len(data.polygon.points)
     timestamp = data.header.stamp.to_sec()
@@ -214,7 +267,10 @@ def lines_callback(data: PolygonStamped):
         w = orientation.w
         orientation_quat = np.quaternion(w, x, y, z)
         # TODO: DO NOT FORGET TO UPDATE OFFSET FOR LAB
-        drone_pos = pos_point.x + offset, pos_point.y + offset # Avoid negative values for now
+        drone_pos = (
+            pos_point.x + offset,
+            pos_point.y + offset,
+        )  # Avoid negative values for now
         for i in range(0, num_lines, 2):
             p1 = transform_ros_point(data.polygon.points[i], orientation_quat)
             p2 = transform_ros_point(data.polygon.points[i + 1], orientation_quat)
@@ -239,17 +295,25 @@ def victim_callback(data: PolygonStamped):
         w = orientation.w
         orientation_quat = np.quaternion(w, x, y, z)
         # TODO: DO NOT FORGET TO UPDATE OFFSET FOR LAB
-        drone_pos = pos_point.x + offset, pos_point.y + offset # Avoid negative values for now
+        drone_pos = (
+            pos_point.x + offset,
+            pos_point.y + offset,
+        )  # Avoid negative values for now
         upper_left = transform_ros_point(data.polygon.points[0], orientation_quat)
         bottom_right = transform_ros_point(data.polygon.points[1], orientation_quat)
         center = find_center(upper_left, bottom_right)
-        center = map_coordinate(center[0], center[1], drone_pos[0], drone_pos[1], fov_x, fov_y)
+        center = map_coordinate(
+            center[0], center[1], drone_pos[0], drone_pos[1], fov_x, fov_y
+        )
+        # rand = np.random.randint(100)
+        # print("#"*rand)
         if victims.is_first_point(center):
-            print("New Victim", center)
-            # TODO: Publish victim
+            print("\n\nNew Victim\n\n with Center:", center)
+            victim_found_msg = Bool()
+            victim_found_msg.data = True
+            victim_pub.publish(victim_found_msg)
         victims.add_point(center)
 
-    
 
 def odometry_callback(data: PoseStamped):
     global odometry_msgs
@@ -289,13 +353,18 @@ def publish_occupancy_grid(grid, resolution, publisher):
     publisher.publish(grid_msg)
 
 
-rospy.init_node('mapping')
-occ_grid = CustomOccupancyGrid(250, 250, 1)
-odometry_subscriber = rospy.Subscriber('/odometry/return_signal', PoseStamped, callback=odometry_callback)
-lines_subsriber = rospy.Subscriber('/cv/lines', PolygonStamped, callback=lines_callback)
-victim_subscriber = rospy.Subscriber('/cv/victims', PolygonStamped, callback=victim_callback)
-grid_pub = rospy.Publisher('/mapping/occupancy_grid', OccupancyGrid, queue_size=10)
-planning_grid_pub = rospy.Publisher('mapping/map', OccupancyGrid, queue_size=10)
+rospy.init_node("mapping")
+occ_grid = CustomOccupancyGrid(250, 250, 5)
+odometry_subscriber = rospy.Subscriber(
+    "/odometry/return_signal", PoseStamped, callback=odometry_callback
+)
+lines_subsriber = rospy.Subscriber("/cv/lines", PolygonStamped, callback=lines_callback)
+victim_subscriber = rospy.Subscriber(
+    "/cv/victims", PolygonStamped, callback=victim_callback
+)
+grid_pub = rospy.Publisher("/mapping/occupancy_grid", OccupancyGrid, queue_size=10)
+planning_grid_pub = rospy.Publisher("/mapping/map", OccupancyGrid, queue_size=10)
+victim_pub = rospy.Publisher("/mapping/victim_found", Bool, queue_size=10)
 step = 0
 
 spin_thread = threading.Thread(target=spin_thread)
@@ -315,8 +384,9 @@ while not rospy.is_shutdown():
         fov = (fov_x, fov_y)
         occ_grid.update_fov(drone_pos, fov)
         publish_occupancy_grid(occ_grid.grid, occ_grid.resolution, grid_pub)
-        publish_occupancy_grid(occ_grid.planning_grid, occ_grid.resolution, planning_grid_pub)
+        publish_occupancy_grid(
+            occ_grid.planning_grid, occ_grid.resolution, planning_grid_pub
+        )
     # if step % 10000 == 0:
-        # print(victims.cluster_centers)
+    # print(victims.cluster_centers)
     step += 1
-    
