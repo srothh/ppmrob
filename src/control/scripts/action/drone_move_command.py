@@ -38,15 +38,14 @@ class DroneMoveCommand(object):
         rospy.loginfo("Move-command: x: %.2f y: %.2f z: %.2f r: %.2f " % (
             x, y, z, r))
 
-        goal = ControlTransformActionGoal()
-        goal.target = Transform()
-        self.drone_move_client.send_goal(Vector3(x, y, z), Quaternion(0, 0, r, 0))
-        self.drone_move_client.wait_for_server()
+        goal = MoveGoal(target=Transform(Vector3(x, y, z), Quaternion(0, 0, r, 0))))
+        self.drone_move_client.send_goal(goal)
+        #self.drone_move_client.wait_for_server()
 
         # For publishing as topic
         rospy.loginfo("Control: Publishing Transform Action Goal: x: %.2f y: %.2f z: %.2f r: %.2f " % (
             x, y, z, r))
-        self.move_pub.publish(goal)
+        #self.move_pub.publish(goal)
 
         # self.drone_move_client.send_goal_and_wait(
         #     drone.msg.MoveActionGoal(target=Transform(Vector3(x, y, z), Quaternion(0, 0, r, 0))))

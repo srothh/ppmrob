@@ -58,10 +58,11 @@ def odometry_callback(data: PoseStamped):
     coordinates = (data.pose.position.x, data.pose.position.y, data.pose.position.z, data.pose.orientation.z)
     positions.append(coordinates)
 
-def control_callback(data: drone.msg.ControlTransformActionGoal):
+def control_callback(data: control.msg.PlanningMoveGoal):
     global targets
-    target = (data.goal.target.translation.x, data.goal.target.translation.y, data.goal.target.translation.z)
-    targets.append(target)
+    for point in data.goal.target:
+        target = (point.x, point.y, point.z)
+        targets.append(target)
 
 def drone_move_callback(data: drone.msg.MoveActionGoal):
     global moves
@@ -140,6 +141,7 @@ def resize_map(amount = 0):
 rospy.init_node('cockpit')  # register the node with roscore, allowing it to communicate with other nodes
 odo_subscriber = rospy.Subscriber('/odometry/return_signal', PoseStamped, callback=odometry_callback)
 #control_subscriber = rospy.Subscriber('/TransformActionServer/goal', drone.msg.ControlTransformActionGoal, callback=control_callback)
+#control_subscriber = rospy.Subscriber('/'+common.config.defaults.Control.MOVE_ACTION_NAMESPACE + '/goal', control.msg.PlanningMoveActionGoal, callback=control_callback)
 control_subscriber = rospy.Subscriber('/'+common.config.defaults.Control.MOVE_ACTION_NAMESPACE + '/goal', control.msg.PlanningMoveActionGoal, callback=control_callback)
 drone_subscriber = rospy.Subscriber('/'+common.config.defaults.drone_move_action_name + '/goal', drone.msg.MoveActionGoal, callback=drone_move_callback)
 twist_subscriber = rospy.Subscriber(common.config.defaults.drone_twist_sensor_publish_topic_name, TwistStamped, callback=drone_twist_callback)

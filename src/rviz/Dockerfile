@@ -8,6 +8,7 @@ RUN apt-get update && apt-get install -y \
 
 # Set the environment variable for the X11 display
 ENV DISPLAY=host.docker.internal:0
+ENV LIBGL_ALWAYS_SOFTWARE=1
 
 # Run RViz as the default command
 #CMD ["rviz"]

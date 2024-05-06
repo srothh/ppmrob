@@ -7,8 +7,10 @@ from geometry_msgs.msg import PoseStamped, Pose
 from std_msgs.msg import Header
 import tf2_ros
 from geometry_msgs.msg import TransformStamped
+import numpy as np
 
-ODOMETRY_DEFAULT_RATE = 100  
+ODOMETRY_DEFAULT_RATE = 10
+
 
 class Odometry:
     def __init__(self, rate=ODOMETRY_DEFAULT_RATE):
@@ -17,32 +19,50 @@ class Odometry:
         self._pub = rospy.Publisher('/odometry/return_signal', PoseStamped, queue_size=10) 
         self._tf = tf2_ros.TransformBroadcaster()
         self._rate = rospy.Rate(rate) 
+        self._messages = []
     
     
         self._sens_data = Twist()
-        self._pose = Pose()
-        self._pose.orientation.w = 1
-        self._dt = 1/rate
+        #self._pose = Pose()
+        #self._pose.orientation.w = 1
+        #self._dt = 1/rate
 
         while not rospy.is_shutdown():
             try:
-                self.update_odom()
+                pose = self.update_odom()
                 #rospy.loginfo(self._pose)
-                self.send_pose()
-                self.send_tf()
+                self.send_pose(pose)
+                #self.send_tf(pose)
                 self._rate.sleep()
             except Exception as e:
                 rospy.loginfo(e)
 
     def update_odom(self):
-
+        pose = Pose()
+        pose.orientation.w = 1
         # Integrate velocities to obtain the position
-        self._pose.position.x += self._sens_data.linear.x*self._dt
-        self._pose.position.y += self._sens_data.linear.y*self._dt
-        self._pose.position.z += self._sens_data.linear.z*self._dt
-        pitch_rad = math.radians(self._sens_data.angular.x)
-        roll_rad = math.radians(self._sens_data.angular.y)
-        yaw_rad = math.radians(self._sens_data.angular.z)
+        times = []
+        vx = []
+        vy = []
+        vz = []
+        yaw = 0
+        messages = self._messages.copy()
+        for mess in messages:
+            # queue size of twiststamped should be = 2
+            times.append(mess.header.stamp.to_sec())
+            vx.append(mess.twist.linear.x)
+            vy.append(mess.twist.linear.y)
+            vz.append(mess.twist.linear.z)
+        if (len(times) > 2):
+            deltaTimeS=np.diff(times)
+            pose.position.x =  sum(vx[1:len(vx)]*deltaTimeS)*(-10)
+            pose.position.y =  sum(vy[1:len(vy)]*deltaTimeS)*(10)
+            pose.position.z =  sum(vz[1:len(vz)]*deltaTimeS)*10
+
+        last = messages[-1]
+        pitch_rad = math.radians(last.twist.angular.x)
+        roll_rad = math.radians(last.twist.angular.y)
+        yaw_rad = math.radians(last.twist.angular.z)
 
         # Compute quaternion components
         cy = math.cos(yaw_rad * 0.5)
@@ -51,31 +71,33 @@ class Odometry:
         sp = math.sin(pitch_rad * 0.5)
         cr = math.cos(roll_rad * 0.5)
         sr = math.sin(roll_rad * 0.5)
-        self._pose.orientation.w = cy * cp * cr + sy * sp * sr
-        self._pose.orientation.x = cy * cp * sr - sy * sp * cr
-        self._pose.orientation.y = sy * cp * sr + cy * sp * cr
-        self._pose.orientation.z = sy * cp * cr - cy * sp * sr
+        pose.orientation.w = cy * cp * cr + sy * sp * sr
+        pose.orientation.x = cy * cp * sr - sy * sp * cr
+        pose.orientation.y = sy * cp * sr + cy * sp * cr
+        pose.orientation.z = sy * cp * cr - cy * sp * sr
+
+        return pose
 
     def read_vel(self, data: TwistStamped): # Never call this func. yourself, called when msg arrives
         self._sens_data = data.twist
 
-    def send_pose(self):     
+    def send_pose(self, pose):     
         msg = PoseStamped()
         msg.header = Header()
         msg.header.frame_id = "position"
         msg.header.stamp = rospy.Time.now()
-        msg.pose = self._pose
+        msg.pose = pose
         
         self._pub.publish(msg)
 
-    def send_tf(self): # Function used to visualize
+    def send_tf(self, pose): # Function used to visualize
         # Publish the odometry TF data
         odom_tf = TransformStamped()
         odom_tf.header.stamp = rospy.Time.now()
         odom_tf.header.frame_id = "odom"
         odom_tf.child_frame_id = "base_link"  
-        odom_tf.transform.translation = self._pose.position
-        odom_tf.transform.rotation = self._pose.orientation  # Rotation (Quaternion, with w=1.0 indicating no rotation)
+        odom_tf.transform.translation = pose.position
+        odom_tf.transform.rotation = pose.orientation  # Rotation (Quaternion, with w=1.0 indicating no rotation)
         
         self._tf.sendTransform(odom_tf)
 

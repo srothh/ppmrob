@@ -30,7 +30,7 @@ class DroneControl:
         self.prev_y = None
         self.target_x = None
         self.target_y = None
-        self.prev_course = None
+        self.prev_course = 0.0
         self.drone_data = None
         self.planning_data = None
         self.mapping_data = None
