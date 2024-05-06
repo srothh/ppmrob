@@ -120,11 +120,8 @@ class ReturnHomeDynamicActionClient(py_trees_ros.actions.ActionClient):
 
 class PlanningMoveDynamicActionClient(py_trees_ros.actions.ActionClient):
     def initialise(self):
-        # planned_path = py_trees.blackboard.Blackboard().plan
-        # rospy.loginfo(f"Planned path: {planned_path}")
-        self.action_goal = control.msg.PlanningMoveGoal(
-            target=PlanningMoveDynamicActionClient.path
-        )
+        planned_path = py_trees.blackboard.Blackboard().plan
+        self.action_goal = control.msg.PlanningMoveGoal(target=planned_path)
         super().initialise()
 
 
@@ -283,7 +280,6 @@ def create_root_interactive():
         expected_value=True,
     )
     is_victim_found_inverter = py_trees.decorators.Inverter(child=is_victim_found)
-    # TODO underneath
     move_to_next_position = PlanningMoveInteractiveActionClient(
         name="Move to next position",
         action_spec=control.msg.PlanningMoveAction,
@@ -359,7 +355,7 @@ def create_root():
         expected_value=True,
     )
     return_home = py_trees.composites.Sequence("Return home")
-    # plan_home = HomePlan("Plan path home")
+    plan_home = HomePlan("Plan path home")
     fly_home = ReturnHomeDynamicActionClient(
         name="Fly home",
         action_spec=control.msg.PlanningMoveAction,
@@ -397,9 +393,9 @@ def create_root():
         expected_value=True,
     )
     is_victim_found_inverter = py_trees.decorators.Inverter(child=is_victim_found)
-    # path_planning = py_trees.composites.Selector("Path planning")
-    # dynamic = DynamicPlan("Dynamic planning")
-    # unexplored = UnexploredPlan("Plan path to unexplored cell")
+    path_planning = py_trees.composites.Selector("Path planning")
+    dynamic = DynamicPlan("Dynamic planning")
+    unexplored = UnexploredPlan("Plan path to unexplored cell")
     move_to_next_position = PlanningMoveDynamicActionClient(
         name="Move to next position",
         action_spec=control.msg.PlanningMoveAction,
@@ -408,7 +404,7 @@ def create_root():
     )
     rescue_subtree = py_trees.composites.Sequence(name="Rescue victim")
     is_victim_actually_found = py_trees.blackboard.CheckBlackboardVariable(
-        name=LEAF_CHECK_VICTIM_FOUND_NAME,
+        name="Victim actually found?",
         variable_name=BB_VAR_VICTIM_FOUND,
         expected_value=True,
     )
@@ -432,11 +428,11 @@ def create_root():
     search_subtree.add_children(
         [
             is_victim_found_inverter,
-            # path_planning,
+            path_planning,
             move_to_next_position,
         ]
     )
-    # path_planning.add_children([dynamic, unexplored, plan_home])
+    path_planning.add_children([dynamic, unexplored, plan_home])
     rescue_subtree.add_children(
         [is_victim_actually_found, land_where_victim_found, victim_rescued]
     )
