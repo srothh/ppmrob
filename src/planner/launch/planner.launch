@@ -5,7 +5,9 @@
     Default value can be overriden by command-line argument.
     Usage: `roslaunch %YOUR_ROS_PKG% %YOUR_LAUNCH_FILE% %ARG_NAME%:=%VALUE%`
     -->
-    <arg name="number_of_victims"/>
+    <arg name="number_of_victims" default="1"/>
+    <arg name="interactive" default="false"/>
+    <arg name="waypoints" default="[]"/>
     <!-- https://wiki.ros.org/Names#Resolving -->
     <node pkg="planner" name="planner_node"  type="planner_node.py" output="screen">
         <!-- 
@@ -15,5 +17,7 @@
         -->
         <!-- https://wiki.ros.org/roslaunch/XML#substitution_args -->
         <param name="num_of_victims_to_rescue" value="$(arg number_of_victims)" type="int"/>
+        <param name="interactive_waypoints" value="$(arg interactive)" type="bool"/>
+        <param name="waypoints_arr" value="$(arg waypoints)" type="str"/>
     </node>
 </launch>
