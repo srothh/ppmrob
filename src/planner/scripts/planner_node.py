@@ -1,6 +1,10 @@
 #!/usr/bin/env python3
 
+from collections import deque
 import functools
+import json
+import os
+from typing import List
 
 import numpy
 from numpy import array
@@ -23,7 +27,6 @@ BB_VAR_RETURNED_HOME = "returned_home"
 BB_VAR_VICTIM_FOUND = "victim_found"
 BB_VAR_WAYPOINT = "waypoint"
 BB_VAR_NUM_OF_RESCUED_VICTIMS = "num_of_rescued_victims"
-LEAF_CHECK_VICTIM_FOUND_NAME = "Victim actually found?"
 
 BB_VAR_WAYPOINTS = "waypoints"
 
@@ -109,9 +112,9 @@ class Leaf(py_trees.Behaviour):
 
 class ReturnHomeDynamicActionClient(py_trees_ros.actions.ActionClient):
     def initialise(self):
-        # planned_path = py_trees.blackboard.Blackboard().plan
+        planned_path = py_trees.blackboard.Blackboard().plan
         rospy.loginfo("Returning home...")
-        self.action_goal = control.msg.PlanningMoveGoal(target=[Point(x=0, y=0)])
+        self.action_goal = control.msg.PlanningMoveGoal(target=planned_path)
         super().initialise()
 
 
@@ -122,6 +125,14 @@ class PlanningMoveDynamicActionClient(py_trees_ros.actions.ActionClient):
         self.action_goal = control.msg.PlanningMoveGoal(
             target=PlanningMoveDynamicActionClient.path
         )
+        super().initialise()
+
+
+class PlanningMoveInteractiveActionClient(py_trees_ros.actions.ActionClient):
+
+    def initialise(self):
+        waypoint = py_trees.blackboard.Blackboard().waypoints.popleft()
+        self.action_goal = control.msg.PlanningMoveGoal(target=[waypoint])
         super().initialise()
 
 
@@ -136,13 +147,12 @@ class IncrementBbVar(py_trees.behaviours.Success):
 
     @py_trees.utilities.static_variables(counter=0)
     def initialise(self):
-        self.blackboard = py_trees.blackboard.Blackboard()
+        blackboard = py_trees.blackboard.Blackboard()
         IncrementBbVar.initialise.counter += 1
-        self.blackboard.set(
+        blackboard.set(
             self.variable_name, IncrementBbVar.initialise.counter, overwrite=True
         )
         rospy.loginfo(f"Number of rescued victims: {IncrementBbVar.initialise.counter}")
-        # print(self.blackboard)
 
 
 def dynamic_plan():
@@ -206,6 +216,117 @@ def path_to_pos(x, y):
         )
     # print("world_path: ",path)
     return path
+
+
+def create_root_interactive():
+    # nodes
+    root = py_trees.composites.Parallel("Mission")
+    topics2bb = py_trees.composites.Sequence("Topics2BB")
+    # preferred way of getting data from a topic according to docs (instead of, e.g., `py_trees_ros.subscribers.CheckData`)
+    victim_found2bb = py_trees_ros.subscribers.ToBlackboard(
+        name="VictimFound2BB",
+        topic_name=defaults.Mapping.VICTIM_FOUND_TOPIC_NAME,
+        topic_type=Bool,
+        # get rid of the annoying sub-data field
+        blackboard_variables={BB_VAR_VICTIM_FOUND: "data"},
+        initialise_variables={BB_VAR_VICTIM_FOUND: False},
+    )
+    battery2bb = py_trees_ros.battery.ToBlackboard(
+        name="Battery2BB",
+        topic_name=defaults.drone_battery_sensor_publish_topic_name,
+        threshold=defaults.Drone.BATTERY_THRESHOLD,
+    )
+    priorities = py_trees.composites.Selector("Priorities")
+    battery_check = py_trees.composites.Sequence("Battery check")
+    is_battery_low = py_trees.blackboard.CheckBlackboardVariable(
+        name="Battery low?",
+        variable_name="battery_low_warning",
+        expected_value=True,
+    )
+    return_home = py_trees.composites.Sequence("Return home")
+    fly_home = py_trees_ros.actions.ActionClient(
+        name="Fly home",
+        action_spec=control.msg.PlanningMoveAction,
+        action_goal=control.msg.PlanningMoveGoal(target=[Point(x=0, y=0)]),
+        action_namespace=defaults.Control.MOVE_ACTION_NAMESPACE,
+        override_feedback_message_on_running="Returning home...",
+    )
+    land_home = py_trees_ros.actions.ActionClient(
+        name="Land home",
+        action_spec=control.msg.PlanningCommandAction,
+        action_goal=control.msg.PlanningCommandGoal(
+            command=defaults.TelloCommands.LAND
+        ),
+        action_namespace=defaults.Control.COMMAND_ACTION_NAMESPACE,
+        override_feedback_message_on_running="Landing...",
+    )
+    terminate = py_trees.blackboard.SetBlackboardVariable(
+        name="Terminate", variable_name=BB_VAR_RETURNED_HOME, variable_value=True
+    )
+    search_and_rescue = py_trees.composites.Sequence(name="Search & rescue victim")
+    takeoff = py_trees_ros.actions.ActionClient(
+        name="Takeoff",
+        action_spec=control.msg.PlanningCommandAction,
+        action_goal=control.msg.PlanningCommandGoal(
+            command=defaults.TelloCommands.TAKEOFF
+        ),
+        action_namespace=defaults.Control.COMMAND_ACTION_NAMESPACE,
+        override_feedback_message_on_running="Taking off...",
+    )
+    search_subtree = py_trees.composites.Sequence(name="Search victim")
+    search_subtree_condition = py_trees.decorators.Condition(
+        child=search_subtree, status=py_trees.common.Status.FAILURE
+    )
+    is_victim_found = py_trees.blackboard.CheckBlackboardVariable(
+        name="Victim found?",
+        variable_name=BB_VAR_VICTIM_FOUND,
+        expected_value=True,
+    )
+    is_victim_found_inverter = py_trees.decorators.Inverter(child=is_victim_found)
+    # TODO underneath
+    move_to_next_position = PlanningMoveInteractiveActionClient(
+        name="Move to next position",
+        action_spec=control.msg.PlanningMoveAction,
+        action_namespace=defaults.Control.MOVE_ACTION_NAMESPACE,
+        override_feedback_message_on_running="Moving to next position...",
+    )
+    is_waypoints_empty = py_trees.meta.inverter(
+        py_trees.blackboard.CheckBlackboardVariable
+    )(
+        name="All waypoints flown?",
+        variable_name=BB_VAR_WAYPOINTS,
+        expected_value=deque([]),
+    )
+    rescue_subtree = py_trees.composites.Sequence(name="Rescue victim")
+    is_victim_actually_found = py_trees.blackboard.CheckBlackboardVariable(
+        name="Victim actually found?",
+        variable_name=BB_VAR_VICTIM_FOUND,
+        expected_value=True,
+    )
+    land_where_victim_found = py_trees_ros.actions.ActionClient(
+        name="Land where victim found",
+        action_spec=control.msg.PlanningCommandAction,
+        action_goal=control.msg.PlanningCommandGoal(
+            command=defaults.TelloCommands.LAND
+        ),
+        action_namespace=defaults.Control.COMMAND_ACTION_NAMESPACE,
+        override_feedback_message_on_running="Landing where victim found...",
+    )
+    victim_rescued = IncrementBbVar("Rescued victim", BB_VAR_NUM_OF_RESCUED_VICTIMS)
+    # tree
+    root.add_children([topics2bb, priorities])
+    topics2bb.add_children([victim_found2bb, battery2bb])
+    priorities.add_children([battery_check, search_and_rescue])
+    battery_check.add_children([is_battery_low, return_home])
+    return_home.add_children([fly_home, land_home, terminate])
+    search_and_rescue.add_children([takeoff, search_subtree_condition, rescue_subtree])
+    search_subtree.add_children(
+        [is_victim_found_inverter, move_to_next_position, is_waypoints_empty]
+    )
+    rescue_subtree.add_children(
+        [is_victim_actually_found, land_where_victim_found, victim_rescued]
+    )
+    return root
 
 
 def create_root():
@@ -338,7 +459,11 @@ def setup_bt(timeout=defaults.Planning.BT_SETUP_TIMEOUT):
     Returns:
         py_trees_ros.trees.BehaviourTree: The configured behaviour tree.
     """
-    root = create_root()
+
+    if rospy.get_param("~interactive_waypoints"):
+        root = create_root_interactive()
+    else:
+        root = create_root()
     tree = py_trees_ros.trees.BehaviourTree(root)
     # `SnapshotVisitor` collects runtime data to be used by visualisations
     snapshot_visitor = py_trees.visitors.SnapshotVisitor()
@@ -448,6 +573,15 @@ def flat_to_2d(flat_array, width):
     return numpy.reshape(flat_array, (width, width))
 
 
+def parse_waypoints():
+    waypoints_str = rospy.get_param("~waypoints_arr")
+    waypoints = json.loads(str(waypoints_str))
+    # Convert the waypoints to a list of Points
+    return deque(
+        [Point(waypoints[i], waypoints[i + 1], 0) for i in range(0, len(waypoints), 2)]
+    )
+
+
 if __name__ == "__main__":
     # pathfinding test
     # occupancy_grid = [
@@ -480,6 +614,10 @@ if __name__ == "__main__":
         #     defaults.Control.WORLD_POSITION_TOPIC_NAME, PoseStamped, position_callback
         # )
 
+        if rospy.get_param("~interactive_waypoints"):
+            waypoints = parse_waypoints()
+            blackboard = py_trees.blackboard.Blackboard()
+            blackboard.waypoints = waypoints
         # for testing purpose
         # py_trees.logging.level = py_trees.logging.Level.DEBUG
         tree = setup_bt()
