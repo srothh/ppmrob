@@ -44,6 +44,9 @@ def a_star(occupancy_grid, start, goal):
                 heapq.heappush(frontier, (priority, next))
                 came_from[next] = current
 
+    if len(came_from)<=1:
+        return []
+
     # Reconstruct path from goal to start (backtracking)
     current = goal
     path = []
@@ -63,6 +66,6 @@ def neighbors(grid, current):
     result = []
     for direction in directions:
         neighbor = (current[0] + direction[0], current[1] + direction[1])
-        if 0 <= neighbor[0] < len(grid) and 0 <= neighbor[1] < len(grid[0]) and (grid[neighbor[0]][neighbor[1]] == 0 or grid[neighbor[0]][neighbor[1]] == 1):
+        if 0 <= neighbor[0] < len(grid) and 0 <= neighbor[1] < len(grid[0]) and (grid[neighbor[0]][neighbor[1]] == 0 or grid[neighbor[0]][neighbor[1]] == 50):
             result.append(neighbor)
     return result
