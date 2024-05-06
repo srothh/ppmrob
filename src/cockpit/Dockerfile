@@ -6,7 +6,7 @@ WORKDIR /catkin_ws/src
 
 #edit these for custom nodes
 ENV PACKAGE_NAME cockpit
-ENV LAUNCH_FILE mobrob.launch
+ENV LAUNCH_FILE cockpit.launch
 RUN /bin/bash -c "source /opt/ros/noetic/setup.bash && catkin_create_pkg $PACKAGE_NAME rospy std_msgs"
 
 #RUN add-apt-repository ppa:deadsnakes/ppa

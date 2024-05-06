@@ -1,17 +1,6 @@
 <launch>
-    <!-- <node pkg="planner" type="mock_command_action_server.py" name="planning_command" output="screen"/> -->
-    <!-- <node pkg="planner" type="mock_move_action_server.py" name="planning_move" output="screen"/> -->
-    <!-- <node pkg="planner" type="mock_map_publisher.py" name="planning_map" output="screen"/> -->
-    <!-- <node pkg="planner" type="mock_control_position_publisher.py" name="planning_pos" output="screen"/> -->
-    <arg name="number_of_victims"/>
-    <!-- https://wiki.ros.org/Names#Resolving -->
-    <node pkg="planner" name="planner_node"  type="planner_node.py" output="screen">
-        <!-- 
-        Set a private parameter for the node (since inside a node tag).
-        These parameters will be stored on the Parameter Server before any nodes are launched.
-        Usage: `rosrun %YOUR_ROS_PKG% %YOUR_NODE% _%PARAM_NAME%:=%VALUE%`
-        -->
-        <!-- https://wiki.ros.org/roslaunch/XML#substitution_args -->
-        <param name="num_of_victims_to_rescue" value="2" type="int"/>
-    </node>
+    <node pkg="planner" type="mock_command_action_server.py" name="planning_command" output="screen"/>
+    <node pkg="planner" type="mock_move_action_server.py" name="planning_move" output="screen"/>
+    <node pkg="planner" type="mock_map_publisher.py" name="planning_map" output="screen"/>
+    <node pkg="planner" type="mock_control_position_publisher.py" name="planning_pos" output="screen"/>
 </launch>

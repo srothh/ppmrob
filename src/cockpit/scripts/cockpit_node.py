@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
 
+import matplotlib
+
+matplotlib.use('tkagg', force=True)
+
 import rospy  # the library should be added as package dependency for the package on which working here
 import cv2
 from geometry_msgs.msg import PoseStamped, TwistStamped, PolygonStamped, Pose
@@ -10,6 +14,7 @@ import matplotlib.pyplot as plt
 from matplotlib import gridspec, transforms, patches
 import numpy as np
 import drone.msg
+
 import control.msg
 import common.config.defaults
 from cv_bridge import CvBridge, CvBridgeError
@@ -20,7 +25,6 @@ from matplotlib.collections import LineCollection, PatchCollection
 import matplotlib.patches as patches
 import actionlib 
 import sys
-
 
 positions = []
 targets = []

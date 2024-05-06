@@ -47,12 +47,14 @@ def callback(data):
     if pub_lines is not None:
         lines_msg = PolygonStamped()
         lines_msg.polygon.points = []
+        lines_msg.header = header
         if lines is not None:
             lines_msg = build_polygon_msg(lines, lines_msg, header)
         pub_lines.publish(lines_msg)
     if pub_victim is not None:
         victim_msg = PolygonStamped()
         victim_msg.polygon.points = []
+        victim_msg.header = header
         if detected is not None:
             victim_msg = build_polygon_msg(detected, victim_msg, header)
         pub_victim.publish(victim_msg)

@@ -11,6 +11,5 @@ ENV DISPLAY=host.docker.internal:0
 ENV LIBGL_ALWAYS_SOFTWARE=1
 
 # Run RViz as the default command
-#CMD ["rviz"]
-ENTRYPOINT ["/bin/bash", "-c", "while true; do sleep 1000; done"]
+CMD ["rviz"]
 
