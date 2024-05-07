@@ -165,7 +165,10 @@ class IncrementBbVar(py_trees.behaviours.Success):
 def dynamic_plan():
     if py_trees.blackboard.Blackboard().get(BB_VAR_MAP_WIDTH) == 0:
         return []
-    grid = flat_to_2d(py_trees.blackboard.Blackboard().get(BB_VAR_MAP_DATA), py_trees.blackboard.Blackboard().get(BB_VAR_MAP_WIDTH))
+    grid = flat_to_2d(
+        py_trees.blackboard.Blackboard().get(BB_VAR_MAP_DATA),
+        py_trees.blackboard.Blackboard().get(BB_VAR_MAP_WIDTH),
+    )
 
     print(grid)
 
@@ -173,8 +176,7 @@ def dynamic_plan():
 
     print(world_pos)
 
-    grid_pos_x, grid_pos_y = world_to_grid(world_pos.x,
-                                           world_pos.z)
+    grid_pos_x, grid_pos_y = world_to_grid(world_pos.x, world_pos.z)
 
     print(grid_pos_x, grid_pos_y)
     path = []
@@ -192,7 +194,10 @@ def dynamic_plan():
 def path_to_unexplored():
     if py_trees.blackboard.Blackboard().get(BB_VAR_MAP_WIDTH) == 0:
         return []
-    grid = flat_to_2d(py_trees.blackboard.Blackboard().get(BB_VAR_MAP_DATA), py_trees.blackboard.Blackboard().get(BB_VAR_MAP_WIDTH))
+    grid = flat_to_2d(
+        py_trees.blackboard.Blackboard().get(BB_VAR_MAP_DATA),
+        py_trees.blackboard.Blackboard().get(BB_VAR_MAP_WIDTH),
+    )
     for row in range(len(grid)):
         for cell in range(len(grid[row])):
             if grid[row][cell] == 50:
@@ -208,12 +213,17 @@ def path_to_pos(x, y):
     if py_trees.blackboard.Blackboard().get(BB_VAR_MAP_WIDTH) == 0:
         return []
     # print(x, " : ", y)
-    grid = flat_to_2d(py_trees.blackboard.Blackboard().get(BB_VAR_MAP_DATA), py_trees.blackboard.Blackboard().get(BB_VAR_MAP_WIDTH))
+    grid = flat_to_2d(
+        py_trees.blackboard.Blackboard().get(BB_VAR_MAP_DATA),
+        py_trees.blackboard.Blackboard().get(BB_VAR_MAP_WIDTH),
+    )
     # print("---------")
     # print(grid)
     # print("---------")
-    grid_pos_x, grid_pos_y = world_to_grid(py_trees.blackboard.Blackboard().get(BB_VAR_WORLD_POS).x,
-                                           py_trees.blackboard.Blackboard().get(BB_VAR_WORLD_POS).z)
+    grid_pos_x, grid_pos_y = world_to_grid(
+        py_trees.blackboard.Blackboard().get(BB_VAR_WORLD_POS).x,
+        py_trees.blackboard.Blackboard().get(BB_VAR_WORLD_POS).z,
+    )
     current = (grid_pos_x, grid_pos_y)
     # print("current grid_pos: ",current)
     target = (x, y)
@@ -223,7 +233,13 @@ def path_to_pos(x, y):
     for point in path_indices:
         w_pos = grid_to_world(point[0], point[1])
 
-        path.append(Point(w_pos[0], py_trees.blackboard.Blackboard().get(BB_VAR_WORLD_POS).y, w_pos[1]))
+        path.append(
+            Point(
+                w_pos[0],
+                py_trees.blackboard.Blackboard().get(BB_VAR_WORLD_POS).y,
+                w_pos[1],
+            )
+        )
 
     # print("world_path: ",path)
     return path
@@ -366,14 +382,14 @@ def create_root():
         topic_name=defaults.Mapping.OCCUPANCY_GRID_TOPIC_NAME,
         topic_type=OccupancyGrid,
         blackboard_variables={BB_VAR_MAP_WIDTH: "info.width", BB_VAR_MAP_DATA: "data"},
-        initialise_variables={BB_VAR_MAP_WIDTH: 0, BB_VAR_MAP_DATA: []}
+        initialise_variables={BB_VAR_MAP_WIDTH: 0, BB_VAR_MAP_DATA: []},
     )
     world_pos2bb = py_trees_ros.subscribers.ToBlackboard(
         name="WorldPos2BB",
         topic_name=defaults.Control.WORLD_POSITION_TOPIC_NAME,
         topic_type=Point,
         blackboard_variables={BB_VAR_WORLD_POS: None},
-        initialise_variables={BB_VAR_WORLD_POS: Point(0, 0, 0)}
+        initialise_variables={BB_VAR_WORLD_POS: Point(0, 0, 0)},
     )
     priorities = py_trees.composites.Selector("Priorities")
     battery_check = py_trees.composites.Sequence("Battery check")
@@ -536,8 +552,10 @@ def run_bt(behavior_tree: py_trees_ros.trees.BehaviourTree, rate_hz=2):
     num_of_victims_to_rescue = rospy.get_param("~num_of_victims_to_rescue")
     rospy.loginfo(f"Number of victims to rescue: {num_of_victims_to_rescue}")
     while not rospy.is_shutdown():
-        if (py_trees.blackboard.Blackboard().get(BB_VAR_NUM_OF_RESCUED_VICTIMS)
-                == num_of_victims_to_rescue):
+        if (
+            py_trees.blackboard.Blackboard().get(BB_VAR_NUM_OF_RESCUED_VICTIMS)
+            == num_of_victims_to_rescue
+        ):
             rospy.loginfo("Mission completed.")
             break
         """
@@ -559,6 +577,7 @@ def run_bt(behavior_tree: py_trees_ros.trees.BehaviourTree, rate_hz=2):
     bt_tip = behavior_tree.tip()
     if bt_tip and bt_tip.status == py_trees.common.Status.FAILURE:
         lead_drone_into_safe_state()
+
 
 # Drone world position in centimetres -> Drone position in grid
 def world_to_grid(world_x, world_y):
