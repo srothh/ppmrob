@@ -18,9 +18,9 @@ def detect_lines(image):
     # FOR TESTING
     # cv2.imshow('gray', im_bw)
     # Apply Gaussian blur to reduce noise
-    blurred = cv2.GaussianBlur(im_bw, (3, 3), 0)
+    blurred = cv2.GaussianBlur(image, (3, 3), 0)
     # Apply Canny edge detection
-    edges = cv2.Canny(blurred, 250, 150)
+    edges = cv2.Canny(blurred, 150, 150)
     # Detect lines using Hough Line Transform
     lines = cv2.HoughLinesP(edges, rho=1, theta=np.pi / 180, threshold=40, minLineLength=50, maxLineGap=100)
     # Draw detected lines on the original frame
