@@ -17,6 +17,7 @@ from online_kmeans import OnlineKMeans
 fov_x = 50
 fov_y = 50
 offset = 100
+initial_size = 100
 
 num_victims = 3
 min_distance_victims = 150  # Minimum distance between two victims in cm
@@ -355,7 +356,7 @@ def publish_occupancy_grid(grid, resolution, publisher):
 
 
 rospy.init_node("mapping")
-occ_grid = CustomOccupancyGrid(250, 250, resolution)
+occ_grid = CustomOccupancyGrid(initial_size, initial_size, resolution)
 odometry_subscriber = rospy.Subscriber(
     "/odometry/return_signal", PoseStamped, callback=odometry_callback
 )
