@@ -107,10 +107,10 @@ def transform_ros_point(point_msg, orientation_quaternion):
         orientation_quaternion.inverse() * point_quaternion * orientation_quaternion
     )
 
+    
     # Extract the vector part
     transformed_point = quaternion.as_float_array(transformed_point_quaternion)[1:]
-
-    return transformed_point
+    return point
 
 
 class CustomOccupancyGrid:
