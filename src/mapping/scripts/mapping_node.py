@@ -14,14 +14,17 @@ from online_kmeans import OnlineKMeans
 
 # from src.common.src.common.config.defaults import Mapping
 
-fov_x = 50
-fov_y = 50
+fov_x = 100
+fov_y = 100
 offset = 100
 initial_size = 100
 
+frame_width = 320
+frame_height = 240
+
 num_victims = 3
 min_distance_victims = 150  # Minimum distance between two victims in cm
-resolution = 5
+resolution = 2
 
 victims = OnlineKMeans(
     num_victims, min_distance_victims, init_points=[[1, 0], [2, 0], [3, 0]]
@@ -87,8 +90,8 @@ def calculate_fov_size(diagonal_fov_degrees, height):
 
 # Assumes square window and absolute drone position
 def map_coordinate(x, y, x_d, y_d, fov_width, fov_height):
-    x_p = int(x_d) - fov_width // 2 + x
-    y_p = int(y_d) - fov_height // 2 + y
+    x_p = int(x_d) - fov_width // 2 + int(x*(fov_width/frame_width))
+    y_p = int(y_d) - fov_height // 2 + int(y*(fov_height/frame_height))
     return x_p, y_p
 
 
