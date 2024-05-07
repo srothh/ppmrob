@@ -9,7 +9,7 @@ import tf2_ros
 from geometry_msgs.msg import TransformStamped
 import numpy as np
 
-ODOMETRY_DEFAULT_RATE = 100  
+ODOMETRY_DEFAULT_RATE = 10  
 
 
 class Odometry:
