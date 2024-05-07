@@ -55,7 +55,7 @@ class Odometry:
             vz.append(mess.twist.linear.z)
         if (len(times) > 2):
             deltaTimeS=np.diff(times)
-            pose.position.x =  sum(vx[1:len(vx)]*deltaTimeS)*(-10)
+            pose.position.x =  sum(vx[1:len(vx)]*deltaTimeS)*(10)
             pose.position.y =  sum(vy[1:len(vy)]*deltaTimeS)*(10)
             pose.position.z =  sum(vz[1:len(vz)]*deltaTimeS)*10
 

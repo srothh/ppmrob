@@ -614,6 +614,7 @@ if __name__ == "__main__":
         rospy.init_node("planner")
         if rospy.get_param("~interactive_waypoints"):
             waypoints = parse_waypoints()
+            rospy.loginfo(f"Parsed waypoints: {waypoints}")
             blackboard = py_trees.blackboard.Blackboard()
             blackboard.waypoints = waypoints
         # for testing purpose
