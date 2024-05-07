@@ -14,12 +14,13 @@ from online_kmeans import OnlineKMeans
 
 # from src.common.src.common.config.defaults import Mapping
 
-fov_x = 150
-fov_y = 150
-offset = 250
+fov_x = 50
+fov_y = 50
+offset = 100
 
 num_victims = 3
 min_distance_victims = 150  # Minimum distance between two victims in cm
+resolution = 5
 
 victims = OnlineKMeans(
     num_victims, min_distance_victims, init_points=[[1, 0], [2, 0], [3, 0]]
@@ -354,7 +355,7 @@ def publish_occupancy_grid(grid, resolution, publisher):
 
 
 rospy.init_node("mapping")
-occ_grid = CustomOccupancyGrid(250, 250, 5)
+occ_grid = CustomOccupancyGrid(250, 250, resolution)
 odometry_subscriber = rospy.Subscriber(
     "/odometry/return_signal", PoseStamped, callback=odometry_callback
 )
