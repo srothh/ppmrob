@@ -127,7 +127,7 @@ class ReturnHomeDynamicActionClient(py_trees_ros.actions.ActionClient):
 class PlanningMoveDynamicActionClient(py_trees_ros.actions.ActionClient):
     def initialise(self):
         planned_path = py_trees.blackboard.Blackboard().plan
-         if len(planned_path) == 0:
+        if len(planned_path) == 0:
             rospy.loginfo("Path could not be calculated")
         else:
             rospy.loginfo(f"Planned path: {planned_path}")
@@ -375,8 +375,6 @@ def create_root():
         blackboard_variables={BB_VAR_WORLD_POS: None},
         initialise_variables={BB_VAR_WORLD_POS: Point(0, 0, 0)}
     )
-
-
     priorities = py_trees.composites.Selector("Priorities")
     battery_check = py_trees.composites.Sequence("Battery check")
     is_battery_low = py_trees.blackboard.CheckBlackboardVariable(
