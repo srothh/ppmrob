@@ -15,18 +15,17 @@ RUN apt-get update && apt-get install -y dos2unix python3.10 python3-pip netcat 
 RUN pip3 install av image
 
 
-
-
-# Convert line endings in the Python script
-#RUN find /catkin_ws/src/$PACKAGE_NAME -type f -print0 | xargs -0 dos2unix -
-
 # Change back to the root of the workspace
 WORKDIR /catkin_ws
 
 # Copy the src of package into the container
 COPY ./$PACKAGE_NAME/ /catkin_ws/src/$PACKAGE_NAME/
 COPY ./common/ /catkin_ws/src/common/
-#COPY ./control/ /catkin_ws/src/control/
+COPY ./odometry/ /catkin_ws/src/odometry/
+
+
+# Convert line endings in the Python script
+#RUN find /catkin_ws/src/$PACKAGE_NAME -type f -print0 | xargs -0 dos2unix -
 
 RUN dos2unix /catkin_ws/src/$PACKAGE_NAME/action/*
 RUN dos2unix /catkin_ws/src/$PACKAGE_NAME/scripts/*

@@ -10,7 +10,7 @@ ENV LAUNCH_FILE cockpit.launch
 RUN /bin/bash -c "source /opt/ros/noetic/setup.bash && catkin_create_pkg $PACKAGE_NAME rospy std_msgs"
 
 #RUN add-apt-repository ppa:deadsnakes/ppa
-RUN apt-get update && apt-get install -y dos2unix python3.10 python3-pip python3-tk python3-pyqt5
+RUN apt-get update && apt-get install -y dos2unix python3.10 python3-pip python3-tk python3-pyqt5 python3-pil.imagetk
 RUN pip3 install av image matplotlib scipy pandas
 
 # Change back to the root of the workspace

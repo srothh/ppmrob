@@ -143,6 +143,9 @@ def resize_map(amount = 0):
 
 
 rospy.init_node('cockpit')  # register the node with roscore, allowing it to communicate with other nodes
+
+matplotlib.use("tkAgg")
+
 odo_subscriber = rospy.Subscriber('/odometry/return_signal', PoseStamped, callback=odometry_callback)
 #control_subscriber = rospy.Subscriber('/TransformActionServer/goal', drone.msg.ControlTransformActionGoal, callback=control_callback)
 #control_subscriber = rospy.Subscriber('/'+common.config.defaults.Control.MOVE_ACTION_NAMESPACE + '/goal', control.msg.PlanningMoveActionGoal, callback=control_callback)
@@ -263,15 +266,15 @@ def update(frame_number):
             #pos_current.axes.set_xlim(np.min([cur_xlim[0], xcp]), np.max([cur_xlim[1], xcp]))
             #pos_current.axes.set_ylim(np.min([cur_ylim[0], ycp]), np.max([cur_ylim[1], ycp]))
             pos_current.set_data([xcp], [ycp])
-            xp = [i for i, j, k, l in positions[:-1]]
-            yp = [j for i, j, k, l in positions[:-1]]  
-            pos_history.set_data(xp ,yp)             
+            #xp = [i for i, j, k, l in positions[:-1]]
+            #yp = [j for i, j, k, l in positions[:-1]]  
+            #pos_history.set_data(xp ,yp)             
             #for i in range(0, len(pos_history)):
             #    s = pos_history[i][0]
             #    print(s)
             #    s.set_data(xp[i*10:(i+1)*10],yp[i*10:(i+1)*10])
 
-            azimuth_current.set_data(x=0,y=0,dx=np.deg2rad(azimuth),dy=1)
+            #azimuth_current.set_data(x=0,y=0,dx=np.deg2rad(azimuth),dy=1)
             #azimuth_current.axes.set_theta_offset(np.deg2rad(azimuth)+np.pi/2)
             #move_currrent = ax4.fill_between(np.linspace(np.deg2rad(rm)+np.deg2rad(azimuth), np.deg2rad(azimuth), 100), 0, 1, color='lightblue', alpha=0.9)
         
@@ -285,17 +288,17 @@ def update(frame_number):
                 #rot_current.set_data(np.deg2rad(rm)+np.deg2rad(azimuth), 1)
                 #if rm is not 0
 
-                if rm != 0.0:
-                    move_current_x.set_visible(False)
-                    move_current_y.set_visible(False)
-                    az_diff = rm + azimuth
-                    rot_current.set_data([0,np.deg2rad(rm + azimuth)], [0,np.pi])
-                else:
-                    rot_current.set_data([0],[0])
-                    if xm != 0.0:
-                        move_current_x.set_visible(True)
-                    elif ym != 0.0:
-                        move_current_y.set_visible(True)
+                #if rm != 0.0:
+                #    move_current_x.set_visible(False)
+                #    move_current_y.set_visible(False)
+                #    az_diff = rm + azimuth
+                #    rot_current.set_data([0,np.deg2rad(rm + azimuth)], [0,np.pi])
+                #else:
+                #    rot_current.set_data([0],[0])
+                #    if xm != 0.0:
+                #        move_current_x.set_visible(True)
+                #    elif ym != 0.0:
+                #        move_current_y.set_visible(True)
 
         if len(image) > 0:
             image_current.set_data(image)
