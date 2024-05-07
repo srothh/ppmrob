@@ -43,5 +43,5 @@ ENV ROS_WORKSPACE /catkin_ws
 RUN chmod +x /catkin_ws/src/${PACKAGE_NAME}/scripts/*
 
 # Source the ROS setup file every time a new container is run
-ENTRYPOINT ["/bin/bash", "-c", "source /opt/ros/$ROS_DISTRO/setup.bash && source /catkin_ws/devel/setup.bash && roslaunch $PACKAGE_NAME $LAUNCH_FILE number_of_victims:=$NUMBER_OF_VICTIMS  --wait"]
+ENTRYPOINT ["/bin/bash", "-c", "source /opt/ros/$ROS_DISTRO/setup.bash && source /catkin_ws/devel/setup.bash && roslaunch $PACKAGE_NAME $LAUNCH_FILE number_of_victims:=$NUMBER_OF_VICTIMS interactive:=$INTERACTIVE_WAYPOINTS --wait"]
 # `--wait` waits for master to start before launching

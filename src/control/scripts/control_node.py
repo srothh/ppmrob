@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 import math
-
+import time
 import actionlib
 import rospy
 from action import DroneMoveCommand
@@ -13,6 +13,7 @@ from control.msg import (
     MoveFeedback,
     PlanningMoveAction,
     PlanningMoveResult,
+    PlanningMoveFeedback,
     PlanningCommandAction,
     PlanningCommandResult
 )
@@ -30,7 +31,7 @@ class DroneControl:
         self.prev_y = None
         self.target_x = None
         self.target_y = None
-        self.prev_course = None
+        self.prev_course = 0.0
         self.drone_data = None
         self.planning_data = None
         self.mapping_data = None
@@ -194,24 +195,29 @@ class DroneControl:
             if bear != 0.0:
                 while True:
                     result = self.drone_move_command.move_drone(0.0, 0.0, 0.0, bear)
+                    rospy.loginfo(result)
                     if result.success:
                         rospy.loginfo("Rotation was successful")
                         break
                     else:
                         rospy.loginfo("Retrying to rotate")
+                        time.sleep(1)
 
             while True:
                 result = self.drone_move_command.move_drone(distance, 0.0, 0.0, 0.0)
+                rospy.loginfo(result)
                 if result.success:
                     rospy.loginfo("Translation was successful")
                     break
                 else:
                     rospy.loginfo("Retrying to translate")
+                    time.sleep(1)
 
             # Send feedback via move action server for planning node
-            feedback = MoveFeedback()
-            feedback.progress = result.progress
-            self.move_action_server.publish_feedback(feedback)
+            # TODO: is feedback needed?
+            #feedback = PlanningMoveFeedback()
+            #feedback.progress = result.progress
+            #self.move_action_server.publish_feedback(feedback)
 
         # Set result for move action server for planning node
         result_msg = PlanningMoveResult()
