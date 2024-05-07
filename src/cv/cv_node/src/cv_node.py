@@ -35,7 +35,7 @@ def callback(data):
     rospy.loginfo("Received image frame: %d %dx%d" % (data.height, data.height, data.width))
     br = CvBridge()
     # note: swich encoding to bgr8
-    frame = br.imgmsg_to_cv2(data, desired_encoding='bgr8')
+    frame = br.imgmsg_to_cv2(data, desired_encoding='mono8')
     # show image
     # cv2.imshow("Image window", frame)
     # cv2.waitKey(3)
