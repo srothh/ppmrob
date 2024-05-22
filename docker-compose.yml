@@ -13,15 +13,17 @@ services:
       - ppmrob
   cv:
     build: ./src/cv/cv_node
-    # environment:
+    environment:
+        - ROS_MASTER_URI=http://thinkLapos3:11311/
+        - ROS_LOG_LEVEL=info
+        - PYTHONUNBUFFERED=1
     #   - DISPLAY=host.docker.internal:0 # Uncomment only if running VcXsrv on Windows (https://sourceforge.net/projects/vcxsrv/), it will show gui things like imshow(). Will cause crash without it.
     #   - "NVIDIA_VISIBLE_DEVICES=all" GPU needs extra work
-    env_file:
-      - docker.env
-    networks:
-      - ppmrob
-    depends_on:
-      - ros_master
+    #env_file:
+    #  - docker.env
+    network_mode: host
+    #depends_on:
+    #  - ros_master
   drone:
     build:
       context: ./src
