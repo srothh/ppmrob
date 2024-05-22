@@ -3,7 +3,7 @@ from .detect_line import detect_lines
 from .detect_victim import yolo_detection
 
 
-def img_processing(frame, window=None, confidence_threshhold=0.9):
+def img_processing(frame, window=None, confidence_threshhold=0.8):
     # Detect lines in the image
     # Check if a victim was detected
     # victim_detected = bool(classify_image(frame).item()) # not using classification anymore

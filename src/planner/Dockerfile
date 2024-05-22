@@ -1,5 +1,5 @@
-# Use the ROS Noetic image as the base
-FROM ros:noetic-ros-base
+# Use the custom ROS image with py_trees dependencies as the base
+FROM petervrabel/my-py-trees-ros-img:latest
 
 # Create a workspace directory for the ROS project
 WORKDIR /catkin_ws/src
@@ -14,11 +14,7 @@ RUN /bin/bash -c "source /opt/ros/noetic/setup.bash"
 
 RUN apt-get update && apt-get install -y \
     dos2unix \
-    python3 \
-    ros-noetic-py-trees \
-    ros-noetic-py-trees-msgs \
-    ros-noetic-py-trees-ros \
-    ros-noetic-rqt-py-trees
+    python3
 
 # Copy the src of package into the container
 COPY src/$PACKAGE_NAME/ /catkin_ws/src/$PACKAGE_NAME/
@@ -43,5 +39,5 @@ ENV ROS_WORKSPACE /catkin_ws
 RUN chmod +x /catkin_ws/src/${PACKAGE_NAME}/scripts/*
 
 # Source the ROS setup file every time a new container is run
-ENTRYPOINT ["/bin/bash", "-c", "source /opt/ros/$ROS_DISTRO/setup.bash && source /catkin_ws/devel/setup.bash && roslaunch $PACKAGE_NAME $LAUNCH_FILE number_of_victims:=$NUMBER_OF_VICTIMS interactive:=$INTERACTIVE_WAYPOINTS --wait"]
+ENTRYPOINT ["/bin/bash", "-c", "source /opt/ros/$ROS_DISTRO/setup.bash && source /catkin_ws/devel/setup.bash && roslaunch $PACKAGE_NAME $LAUNCH_FILE number_of_victims:=$NUMBER_OF_VICTIMS interactive:=$INTERACTIVE_WAYPOINTS waypoints:=$WAYPOINTS --wait"]
 # `--wait` waits for master to start before launching

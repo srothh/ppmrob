@@ -1,4 +1,5 @@
 <launch>
+    <!-- I chose to avoid doing https://roboticsbackend.com/ros-param-yaml-format/ as that would require to run `docker compose up` with `build` option. -->
     <!-- 
     Specify values that are passed via the command-line.
     You must explicitly pass arg values to an included file, much like you would in a method call.
