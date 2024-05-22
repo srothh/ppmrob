@@ -6,9 +6,9 @@ import rospy
 import drone.msg
 
 from std_msgs.msg import String
-from geometry_msgs.msg import Transform, Vector3, Quaternion, Polygon, Point32
+from geometry_msgs.msg import Transform, Vector3, Quaternion, PolygonStamped, Point32
 from actionlib_msgs.msg import GoalStatus
-
+from std_msgs.msg import Header
 
 
 if __name__ == '__main__':
@@ -17,19 +17,21 @@ if __name__ == '__main__':
         rospy.loginfo("cv node started")
 
         rate = rospy.Rate(1)
-        pub_victim = rospy.Publisher('/cv/victim', Polygon, queue_size=10)  # change message type
-        pub_line = rospy.Publisher('/cv/lines', Polygon, queue_size=10)  # change message type
+        pub_victim = rospy.Publisher('/cv/victim', PolygonStamped, queue_size=10)  # change message type
+        pub_line = rospy.Publisher('/cv/lines', PolygonStamped, queue_size=10)  # change message type
         while not rospy.is_shutdown():
-            victim = Polygon()
-            victim.points = [
+            victim = PolygonStamped()
+            victim.header = Header(stamp=rospy.Time.now(), frame_id="cv")
+            victim.polygon.points = [
                 Point32(800.0, 400.0, 0),
                 Point32(400.0, 100.0, 0),
                 Point32(50.0, 100.0, 0),
                 Point32(100.0, 50.0, 0)
             ]
             pub_victim.publish(victim)
-            lines = Polygon()
-            lines.points = [
+            lines = PolygonStamped()
+            lines.header = Header(stamp=rospy.Time.now(), frame_id="cv")
+            lines.polygon.points = [
                 Point32(437.0, 184.0, 0), 
                 Point32(827.0, 448.0, 0),
                 Point32(346.0, 127.0, 0),
