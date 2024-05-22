@@ -12,7 +12,7 @@ from sensor import TwistSensor
 from sensor import BatterySensor
 from util import StateCsvLogger
 import common.config.defaults
-
+import datetime
 
 def drone_node(drone):
     # Initialize the ROS node
@@ -56,7 +56,9 @@ def drone_node(drone):
     )
     drone.registerStateHandler(battery.publish)
 
-    writer = StateCsvLogger("./state-log.csv")
+    # append timestamp to filename
+
+    writer = StateCsvLogger("./state-log-" +  datetime.datetime.now().strftime("%Y%m%d%H%M%S") + ".cvs")
     drone.registerStateHandler(writer.log)
 
     # keepalive

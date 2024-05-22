@@ -47,7 +47,13 @@ def drone_node():
     rospy.Timer(rospy.Duration(common.config.defaults.drone_image_sensor_publish_delay), img.publish)
     rospy.loginfo("image publisher started")
 
-    twist = TwistSensor(datadir+'/telemetry/state-log.csv', topic=common.config.defaults.drone_twist_sensor_publish_topic_name)
+    if rospy.has_param('~statelog'):
+        logfile = rospy.get_param('~statelog')
+    else:
+        logfile = 'telemetry/state-log-20240522144925.cvs'
+
+    twist = TwistSensor(datadir+'/'+logfile, topic=common.config.defaults.drone_twist_sensor_publish_topic_name)
+    
     rospy.Timer(rospy.Duration(0.1), twist.publish)
     rospy.loginfo("twist publisher started")
 
