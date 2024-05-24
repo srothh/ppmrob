@@ -18,8 +18,11 @@ class Mapping:
 
 
 class Control:
-    MOVE_ACTION_NAMESPACE = "planning_move"
-    COMMAND_ACTION_NAMESPACE = "planning_command"
+    MOVE_ACTION_NAMESPACE = "/control/planning_move"
+    COMMAND_ACTION_NAMESPACE = "/control/planning_command"
+
+
+class Odometry:
     WORLD_POSITION_TOPIC_NAME = "/odometry/return_signal"
 
 

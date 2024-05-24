@@ -11,6 +11,7 @@ from collections import deque
 import math
 import threading
 from online_kmeans import OnlineKMeans
+import common.config.defaults as defaults
 
 # from src.common.src.common.config.defaults import Mapping
 
@@ -90,8 +91,8 @@ def calculate_fov_size(diagonal_fov_degrees, height):
 
 # Assumes square window and absolute drone position
 def map_coordinate(x, y, x_d, y_d, fov_width, fov_height):
-    x_p = int(x_d) - fov_width // 2 + int(x*(fov_width/frame_width))
-    y_p = int(y_d) - fov_height // 2 + int(y*(fov_height/frame_height))
+    x_p = int(x_d) - fov_width // 2 + int(x * (fov_width / frame_width))
+    y_p = int(y_d) - fov_height // 2 + int(y * (fov_height / frame_height))
     return x_p, y_p
 
 
@@ -107,7 +108,6 @@ def transform_ros_point(point_msg, orientation_quaternion):
         orientation_quaternion.inverse() * point_quaternion * orientation_quaternion
     )
 
-    
     # Extract the vector part
     transformed_point = quaternion.as_float_array(transformed_point_quaternion)[1:]
     return point
@@ -361,7 +361,7 @@ def publish_occupancy_grid(grid, resolution, publisher):
 rospy.init_node("mapping")
 occ_grid = CustomOccupancyGrid(initial_size, initial_size, resolution)
 odometry_subscriber = rospy.Subscriber(
-    "/odometry/return_signal", PoseStamped, callback=odometry_callback
+    defaults.Odometry.WORLD_POSITION_TOPIC_NAME, PoseStamped, callback=odometry_callback
 )
 lines_subsriber = rospy.Subscriber("/cv/lines", PolygonStamped, callback=lines_callback)
 victim_subscriber = rospy.Subscriber(
