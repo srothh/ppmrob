@@ -17,7 +17,7 @@ RUN pip install opencv-python numpy-quaternion
 RUN apt-get update && apt-get install ffmpeg libsm6 libxext6  -y
 
 # Copy the mapping package into the container
-COPY . /catkin_ws/src/$PACKAGE_NAME/
+COPY src/$PACKAGE_NAME/ /catkin_ws/src/$PACKAGE_NAME/
 COPY src/common/ /catkin_ws/src/common/
 
 
