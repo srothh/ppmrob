@@ -49,8 +49,8 @@ last_time = 0
 move_idx = 0
 victim_idx = 0
 
-map_ylim = common.config.defaults.Cockpit.map_ylim
-map_xlim = common.config.defaults.Cockpit.map_xlim
+map_ylim = defaults.Cockpit.map_ylim
+map_xlim = defaults.Cockpit.map_xlim
 
 
 def pairwise(iterable):
@@ -176,34 +176,34 @@ odo_subscriber = rospy.Subscriber(
     defaults.Odometry.WORLD_POSITION_TOPIC_NAME, PoseStamped, callback=odometry_callback
 )
 # control_subscriber = rospy.Subscriber('/TransformActionServer/goal', drone.msg.ControlTransformActionGoal, callback=control_callback)
-# control_subscriber = rospy.Subscriber('/'+common.config.defaults.Control.MOVE_ACTION_NAMESPACE + '/goal', control.msg.PlanningMoveActionGoal, callback=control_callback)
+# control_subscriber = rospy.Subscriber('/'+defaults.Control.MOVE_ACTION_NAMESPACE + '/goal', control.msg.PlanningMoveActionGoal, callback=control_callback)
 control_subscriber = rospy.Subscriber(
-    "/" + common.config.defaults.Control.MOVE_ACTION_NAMESPACE + "/goal",
+    "/" + defaults.Control.MOVE_ACTION_NAMESPACE + "/goal",
     control.msg.PlanningMoveActionGoal,
     callback=control_callback,
 )
 drone_subscriber = rospy.Subscriber(
-    "/" + common.config.defaults.drone_move_action_name + "/goal",
+    "/" + defaults.drone_move_action_name + "/goal",
     drone.msg.MoveActionGoal,
     callback=drone_move_callback,
 )
 twist_subscriber = rospy.Subscriber(
-    common.config.defaults.drone_twist_sensor_publish_topic_name,
+    defaults.drone_twist_sensor_publish_topic_name,
     TwistStamped,
     callback=drone_twist_callback,
 )
 drone_battery_subscriber = rospy.Subscriber(
-    common.config.defaults.drone_battery_sensor_publish_topic_name,
+    defaults.drone_battery_sensor_publish_topic_name,
     BatteryState,
     callback=drone_battery_callback,
 )
 battery_signal_subscriber = rospy.Subscriber(
-    common.config.defaults.battery_publish_topic_name,
+    defaults.battery_publish_topic_name,
     Bool,
     callback=battery_signal_callback,
 )
 drone_camera_subsriber = rospy.Subscriber(
-    common.config.defaults.drone_image_sensor_publish_topic_name,
+    defaults.drone_image_sensor_publish_topic_name,
     Image,
     callback=drone_camera_callback,
 )
@@ -217,11 +217,9 @@ cv_lines_subsriber = rospy.Subscriber(
 waypoint_publisher = rospy.Publisher("/cockpit/waypoint", Pose, queue_size=10)
 
 emergency_client = actionlib.SimpleActionClient(
-    common.config.defaults.drone_emergency_action_name, drone.msg.EmergencyAction
+    defaults.drone_emergency_action_name, drone.msg.EmergencyAction
 )
-rospy.loginfo(
-    "waiting for action server: %s", common.config.defaults.drone_emergency_action_name
-)
+rospy.loginfo("waiting for action server: %s", defaults.drone_emergency_action_name)
 emergency_client.wait_for_server()
 rospy.loginfo("done")
 targets.append((0, 0, 0))
@@ -246,8 +244,8 @@ gs = gridspec.GridSpec(3, 4)
 ax1 = fig.add_subplot(gs[:, :-2])
 ax1.axis("equal")
 ax1.grid(True)
-ax1.set_ylim(common.config.defaults.Cockpit.map_ylim)
-ax1.set_xlim(common.config.defaults.Cockpit.map_xlim)
+ax1.set_ylim(defaults.Cockpit.map_ylim)
+ax1.set_xlim(defaults.Cockpit.map_xlim)
 # ax1.invert_xaxis()
 
 
