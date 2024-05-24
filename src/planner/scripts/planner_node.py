@@ -246,6 +246,10 @@ def path_to_pos(x, y):
 
 
 def create_root_interactive():
+    """
+    Creates the behaviour tree for interactive waypoints mode and returns the root node.
+    """
+    rospy.loginfo("Interactive waypoints mode")
     # nodes
     root = py_trees.composites.Parallel("Mission")
     topics2bb = py_trees.composites.Sequence("Topics2BB")
@@ -360,6 +364,7 @@ def create_root():
     Creates the behaviour tree and returns the root node.
     The tree is built as if executing a tree traversal algorithm: from root to bottom left to bottom right nodes.
     """
+    rospy.loginfo("Non-interactive waypoints mode")
     # nodes
     root = py_trees.composites.Parallel("Mission")
     topics2bb = py_trees.composites.Sequence("Topics2BB")
@@ -484,6 +489,9 @@ def create_root():
 
 
 def post_tick_handler(snapshot_visitor, tree):
+    """
+    Post-tick handler for printing the tree in the console.
+    """
     # print(py_trees.display.ascii_tree(tree.root, snapshot_information=snapshot_visitor))
     # the following actually shows more info than the above
     py_trees.display.print_ascii_tree(tree.root, show_status=True)
@@ -499,7 +507,6 @@ def setup_bt(timeout=defaults.Planning.BT_SETUP_TIMEOUT):
     Returns:
         py_trees_ros.trees.BehaviourTree: The configured behaviour tree.
     """
-
     if rospy.get_param("~interactive_waypoints"):
         root = create_root_interactive()
     else:
@@ -513,10 +520,14 @@ def setup_bt(timeout=defaults.Planning.BT_SETUP_TIMEOUT):
     tree.visitors.append(py_trees.visitors.DebugVisitor())
     tree.visitors.append(snapshot_visitor)
     tree.setup(timeout=timeout)
+    rospy.loginfo("Behaviour tree created.")
     return tree
 
 
 def lead_drone_into_safe_state():
+    """
+    If the drone is in the air, it will be stopped and landed.
+    """
     ac_stop_cmd = actionlib.SimpleActionClient(
         defaults.Control.COMMAND_ACTION_NAMESPACE, control.msg.PlanningCommandAction
     )
@@ -533,6 +544,7 @@ def lead_drone_into_safe_state():
         control.msg.PlanningCommandGoal(command=defaults.TelloCommands.LAND)
     )
     ac_land_cmd.wait_for_result()
+    rospy.loginfo("Drone in safe state.")
 
 
 def run_bt(behavior_tree: py_trees_ros.trees.BehaviourTree, rate_hz=2):
@@ -567,15 +579,12 @@ def run_bt(behavior_tree: py_trees_ros.trees.BehaviourTree, rate_hz=2):
             rospy.loginfo("Drone returned home.")
             break
         bt_tip = behavior_tree.tip()
-        if (
-            bt_tip
-            # and bt_tip.name == LEAF_CHECK_VICTIM_FOUND_NAME
-            and bt_tip.status == py_trees.common.Status.FAILURE
-        ):
+        if bt_tip and bt_tip.status == py_trees.common.Status.FAILURE:
             break
         rate.sleep()
     bt_tip = behavior_tree.tip()
     if bt_tip and bt_tip.status == py_trees.common.Status.FAILURE:
+        rospy.loginfo("Behavior tree failed.")
         lead_drone_into_safe_state()
 
 
