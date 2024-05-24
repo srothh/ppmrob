@@ -3,18 +3,15 @@
 from collections import deque
 import functools
 import json
-import os
-from typing import List
 
 import numpy
-from numpy import array
 
 import actionlib
 import py_trees
 import py_trees_ros
 import rospy
 
-from std_msgs.msg import String, Bool
+from std_msgs.msg import Bool
 from geometry_msgs.msg import Point, PoseStamped
 from nav_msgs.msg import OccupancyGrid
 import pathfinding
@@ -374,7 +371,7 @@ def create_root():
         topic_name=defaults.Mapping.VICTIM_FOUND_TOPIC_NAME,
         topic_type=Bool,
         # get rid of the annoying sub-data field
-        blackboard_variables={BB_VAR_VICTIM_FOUND: "data."},
+        blackboard_variables={BB_VAR_VICTIM_FOUND: "data"},
         initialise_variables={BB_VAR_VICTIM_FOUND: False},
     )
     battery2bb = py_trees_ros.battery.ToBlackboard(
@@ -391,9 +388,9 @@ def create_root():
     )
     world_pos2bb = py_trees_ros.subscribers.ToBlackboard(
         name="WorldPos2BB",
-        topic_name=defaults.Control.WORLD_POSITION_TOPIC_NAME,
-        topic_type=Point,
-        blackboard_variables={BB_VAR_WORLD_POS: None},
+        topic_name=defaults.Odometry.WORLD_POSITION_TOPIC_NAME,
+        topic_type=PoseStamped,
+        blackboard_variables={BB_VAR_WORLD_POS: "pose.position"},
         initialise_variables={BB_VAR_WORLD_POS: Point(0, 0, 0)},
     )
     priorities = py_trees.composites.Selector("Priorities")
