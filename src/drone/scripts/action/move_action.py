@@ -21,7 +21,7 @@ class MoveAction(object):
         self._result = drone.msg.MoveResult() 
 
     def execute_cb(self, goal):
-        rospy.loginfo('%s %s' % (self._action_name, goal.target))
+        rospy.logdebug('%s %s' % (self._action_name, goal.target))
         success = False
         try:
             x = round(goal.target.translation.x)
@@ -75,5 +75,5 @@ class MoveAction(object):
     def success_cb(self, success):
         self._result.success = success
         self._as.set_succeeded(self._result)
-        rospy.loginfo('end: %s %s' % (self._action_name, success))
+        rospy.logdebug('end: %s %s' % (self._action_name, success))
 

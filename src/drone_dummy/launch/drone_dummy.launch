@@ -1,3 +1,5 @@
-<launch>
-  <node pkg="drone_dummy" type="drone_dummy_node.py" name="drone_node" output="screen"/>
-</launch>
+
+   <node pkg="drone_dummy" type="drone_dummy_node.py" name="drone_node" output="screen">  
+    <!-- <param name="statelog" value="/home/lazafi/labor/mobrob-2023/src/ppmrob2/repo/src/drone_dummy/data/telemetry/state-log-20240522145803.cvs" type="string"/> -->
+    <!-- <param name="images" value="/home/lazafi/labor/mobrob-2023/src/ppmrob2/repo/src/drone_dummy/data/camera" type="string"/> -->
+   </node>

@@ -11,6 +11,7 @@ from sensor import ImageSensor
 from sensor import TwistSensor
 from sensor import BatterySensor
 from util import StateCsvLogger
+from util import ImageRecorder
 import common.config.defaults
 import datetime
 
@@ -20,6 +21,8 @@ def drone_node(drone):
     rospy.loginfo("starting drone node")
 
     drone.connect()
+
+    # action servers
 
     emergency_server = EmergencyAction(
         common.config.defaults.drone_emergency_action_name, drone
@@ -32,11 +35,12 @@ def drone_node(drone):
     move_server = MoveAction(common.config.defaults.drone_move_action_name, drone)
     rospy.loginfo("move server created")
 
-    command_server = CommandAction(
-        common.config.defaults.drone_command_action_name, drone
-    )
+    command_server = CommandAction(common.config.defaults.drone_command_action_name, drone)
     rospy.loginfo("command server created")
 
+    # topic publishers
+
+    # publish image triggered by a timer
     img = ImageSensor(
         drone, topic=common.config.defaults.drone_image_sensor_publish_topic_name
     )
@@ -45,6 +49,8 @@ def drone_node(drone):
         img.publish,
     )
     rospy.loginfo("image publisher started")
+
+    # publish state info by registering handlers
 
     twist = TwistSensor(
         topic=common.config.defaults.drone_twist_sensor_publish_topic_name
@@ -56,10 +62,12 @@ def drone_node(drone):
     )
     drone.registerStateHandler(battery.publish)
 
-    # append timestamp to filename
-
+    # register state logger
     writer = StateCsvLogger("./state-log-" +  datetime.datetime.now().strftime("%Y%m%d%H%M%S") + ".cvs")
     drone.registerStateHandler(writer.log)
+
+    # image recorder
+    recorder = ImageRecorder(topic=common.config.defaults.drone_image_sensor_publish_topic_name, dir="./images-" +  datetime.datetime.now().strftime("%Y%m%d%H%M%S"))
 
     # keepalive
     rospy.Timer(rospy.Duration(10), lambda x: drone.keep_alive())
