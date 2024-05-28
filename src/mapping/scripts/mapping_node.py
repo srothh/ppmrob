@@ -312,10 +312,14 @@ def victim_callback(data: PolygonStamped):
         )
         # rand = np.random.randint(100)
         # print("#"*rand)
+        victim_found_msg = Bool()
         if victims.is_first_point(center):
             print("\n\nNew Victim\n\n with Center:", center)
-            victim_found_msg = Bool()
+            
             victim_found_msg.data = True
+            victim_pub.publish(victim_found_msg)
+        else:
+            victim_found_msg.data = False
             victim_pub.publish(victim_found_msg)
         victims.add_point(center)
 
@@ -368,8 +372,8 @@ victim_subscriber = rospy.Subscriber(
     "/cv/victims", PolygonStamped, callback=victim_callback
 )
 grid_pub = rospy.Publisher("/mapping/occupancy_grid", OccupancyGrid, queue_size=10)
-planning_grid_pub = rospy.Publisher("/mapping/map", OccupancyGrid, queue_size=10)
-victim_pub = rospy.Publisher("/mapping/victim_found", Bool, queue_size=10)
+planning_grid_pub = rospy.Publisher(defaults.OCCUPANCY_GRID_TOPIC_NAME, OccupancyGrid, queue_size=10)
+victim_pub = rospy.Publisher(defaults.VICTIM_FOUND_TOPIC_NAME, Bool, queue_size=10)
 step = 0
 
 spin_thread = threading.Thread(target=spin_thread)
