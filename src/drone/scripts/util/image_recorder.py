@@ -30,8 +30,7 @@ class ImageRecorder:
         # note: swich encoding to bgr8 
         frame = self._br.imgmsg_to_cv2(data, desired_encoding='bgr8')
         #save image
-        os.chdir(self._dir)
-        cv2.imwrite('frame-{:04d}.png'.format(self._counter), frame)
+        cv2.imwrite(self._dir + '/frame-{:04d}.png'.format(self._counter), frame)
         self._counter += 1
 
 if __name__ == '__main__':
