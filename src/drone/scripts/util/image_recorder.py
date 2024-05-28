@@ -15,11 +15,12 @@ class ImageRecorder:
         # Create the directory
         if not os.path.exists(dir):
             os.makedirs(dir)
+            rospy.loginfo("created dir: %s" % dir)
         self._br = CvBridge()
         self.record(topic)
   
     def record(self, topic):
-        rospy.init_node('image_recorder', anonymous=True)
+        #rospy.init_node('image_recorder', anonymous=True)
         rospy.Subscriber(topic, Image, self.save)
         rospy.loginfo("Recording Images from %s to %s" % (topic, self._dir))
 

@@ -17,7 +17,7 @@ class Odometry:
     def __init__(self, rate=ODOMETRY_DEFAULT_RATE):
 
         self._sub = rospy.Subscriber(
-            "/drone/twist", TwistStamped, callback=self.read_vel
+            defaults.drone_twist_sensor_publish_topic_name, TwistStamped, callback=self.read_vel
         )
         self._pub = rospy.Publisher(
             defaults.Odometry.WORLD_POSITION_TOPIC_NAME, PoseStamped, queue_size=10
@@ -36,7 +36,7 @@ class Odometry:
                 pose = self.update_odom()
                 # rospy.loginfo(self._pose)
                 self.send_pose(pose)
-                # self.send_tf(pose)
+                self.send_tf(pose)
                 self._rate.sleep()
             except Exception as e:
                 rospy.loginfo(e)
