@@ -516,7 +516,8 @@ def setup_bt(timeout=defaults.Planning.BT_SETUP_TIMEOUT):
     # `DebugVisitor` prints debug logging messages to stdout
     tree.visitors.append(py_trees.visitors.DebugVisitor())
     tree.visitors.append(snapshot_visitor)
-    tree.setup(timeout=timeout)
+    if tree.setup(timeout=timeout):
+        rospy.loginfo("Setup of BT failed")
     rospy.loginfo("Behaviour tree created.")
     return tree
 
