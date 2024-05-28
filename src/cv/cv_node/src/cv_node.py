@@ -8,7 +8,9 @@ from geometry_msgs.msg import Polygon, PolygonStamped
 import sys
 import os
 
-parent_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
+parent_dir = os.path.dirname(
+    os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
+)
 sys.path.append(parent_dir)
 from PIL import Image
 from sensor_msgs.msg import Image as Image_msg
@@ -34,7 +36,7 @@ Both publish a geometry_msgs/Polygon message, and every pair of Point32 in the m
 def callback(data):
     br = CvBridge()
     # note: swich encoding to bgr8
-    frame = br.imgmsg_to_cv2(data, desired_encoding='bgr8')
+    frame = br.imgmsg_to_cv2(data, desired_encoding="bgr8")
     # show image
     # cv2.imshow("Image window", frame)
     # cv2.waitKey(3)
@@ -58,10 +60,11 @@ def callback(data):
             victim_msg = build_polygon_msg(detected, victim_msg, header)
         pub_victim.publish(victim_msg)
 
+
 def cv_node():
     global pub_lines, pub_victim
     # Initialize the ROS node
-    rospy.init_node('cv_node', anonymous=True)
+    rospy.init_node("cv_node", anonymous=True)
     # UNCOMMENT THIS TO TEST THE CLASSIFY_IMAGE FUNCTION (or0001.jpg needs to be in src directory)
     # DELETE THIS FOR TESTING WITH DRONE
     #    frame = cv2.imread('/catkin_ws/src/cv/src/or0001.jpg')
@@ -71,13 +74,17 @@ def cv_node():
     # STOP DELETE
     # Subscribe to the 'chatter' topic and register the callback function
 
-    rospy.Subscriber('/drone/camera', Image_msg, callback)
-    pub_victim = rospy.Publisher('/cv/victim', PolygonStamped, queue_size=10)  # change message type
-    pub_lines = rospy.Publisher('/cv/lines', PolygonStamped, queue_size=10)  # change message type
+    rospy.Subscriber("/drone/camera", Image_msg, callback)
+    pub_victim = rospy.Publisher(
+        "/cv/victims", PolygonStamped, queue_size=10
+    )  # change message type
+    pub_lines = rospy.Publisher(
+        "/cv/lines", PolygonStamped, queue_size=10
+    )  # change message type
     print("Started CV NODE")
     # Spin to keep the script from exiting
     rospy.spin()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     cv_node()

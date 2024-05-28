@@ -43,3 +43,7 @@ class Cockpit:
 
 class Planning:
     BT_SETUP_TIMEOUT = 60
+
+
+class CV:
+    VICTIM_LINES_TOPIC_NAME = "/cv/victims"

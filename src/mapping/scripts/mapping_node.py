@@ -322,7 +322,8 @@ def victim_callback(data: PolygonStamped):
         else:
             victim_found_msg.data = False
             victim_pub.publish(victim_found_msg)
-        rospy.loginfo("published")
+        rospy.loginfo(f"Publishing victim found message: {victim_found_msg.data}")
+        victims.add_point(center)
 
 
 def odometry_callback(data: PoseStamped):
@@ -370,7 +371,7 @@ odometry_subscriber = rospy.Subscriber(
 )
 lines_subsriber = rospy.Subscriber("/cv/lines", PolygonStamped, callback=lines_callback)
 victim_subscriber = rospy.Subscriber(
-    "/cv/victims", PolygonStamped, callback=victim_callback
+    defaults.CV.VICTIM_LINES_TOPIC_NAME, PolygonStamped, callback=victim_callback
 )
 grid_pub = rospy.Publisher("/mapping/occupancy_grid", OccupancyGrid, queue_size=10)
 planning_grid_pub = rospy.Publisher(
