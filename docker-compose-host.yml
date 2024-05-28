@@ -1,0 +1,83 @@
+version: "3"
+volumes:
+  workspace:
+services:
+  ros_master:
+    image: ros:noetic-ros-base
+    command: roscore
+    stdin_open: true
+    tty: true
+    network_mode: host
+  cv:
+    build: ./src/cv/cv_node
+    env_file:
+      - docker.env
+    network_mode: host
+  drone:
+    build:
+      context: ./src
+      dockerfile: ./drone/Dockerfile
+    env_file:
+      - docker.env
+    network_mode: host
+  cockpit:
+    build:
+      context: ./src
+      dockerfile: ./cockpit/Dockerfile
+    env_file:
+      - docker.env
+    volumes:
+      - /tmp/.X11-unix:/tmp/.X11-unix
+    network_mode: host
+  control:
+    build:
+      dockerfile: ./src/control/Dockerfile
+    env_file:
+      - docker.env
+    network_mode: host
+  mapping:
+    build:
+      dockerfile: ./src/mapping/Dockerfile
+    env_file:
+      - docker.env
+    network_mode: host
+    volumes:
+      - ./src/mapping/occ_grid.npy:/catkin_ws/src/mapping/occ_grid.npy
+    depends_on:
+      - cv
+  planner:
+    build:
+      # If not set explicitly, context defaults to project directory (.).
+      # relative ==> resolved from the Compose file's parent folder
+      # context: ./src/
+      # relative ==> resolved from the build context
+      dockerfile: ./src/planner/Dockerfile
+    env_file:
+      # paths are relative to the location of `compose.yml` file
+      - docker.env
+      - docker_planner_vars.env
+    network_mode: host
+    depends_on:
+      # FIXME adjust to actual dependencies
+      - control
+      - mapping
+      # mapping_simulation:
+      #   build: ./src/mapping_simulation
+      #   env_file:
+      #     - docker.env
+      #   ports:
+      #     - "9009:9009"
+      #   networks:
+      #     - ppmrob
+      #   depends_on:
+      #     - ros_master
+      #   working_dir: /catkin_ws/src/mapping_simulation/scripts
+      #   # stdin_open: true  # Keeps STDIN open
+      #   # tty: true         # Allocates a pseudo-TTY
+  rviz:
+    build: ./src/rviz
+    network_mode: host
+    env_file:
+      - docker.env
+    volumes:
+      - /tmp/.X11-unix:/tmp/.X11-unix

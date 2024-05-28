@@ -178,12 +178,12 @@ odo_subscriber = rospy.Subscriber(
 # control_subscriber = rospy.Subscriber('/TransformActionServer/goal', drone.msg.ControlTransformActionGoal, callback=control_callback)
 # control_subscriber = rospy.Subscriber('/'+defaults.Control.MOVE_ACTION_NAMESPACE + '/goal', control.msg.PlanningMoveActionGoal, callback=control_callback)
 control_subscriber = rospy.Subscriber(
-    "/" + defaults.Control.MOVE_ACTION_NAMESPACE + "/goal",
+    defaults.Control.MOVE_ACTION_NAMESPACE + "/goal",
     control.msg.PlanningMoveActionGoal,
     callback=control_callback,
 )
 drone_subscriber = rospy.Subscriber(
-    "/" + defaults.drone_move_action_name + "/goal",
+    defaults.drone_move_action_name + "/goal",
     drone.msg.MoveActionGoal,
     callback=drone_move_callback,
 )
