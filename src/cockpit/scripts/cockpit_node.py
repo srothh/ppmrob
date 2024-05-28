@@ -215,7 +215,7 @@ drone_camera_subsriber = rospy.Subscriber(
     callback=drone_camera_callback,
 )
 cv_victim_subsriber = rospy.Subscriber(
-    "/cv/victim", PolygonStamped, callback=cv_victim_callback
+    defaults.CV.VICTIM_LINES_TOPIC_NAME, PolygonStamped, callback=cv_victim_callback
 )
 cv_lines_subsriber = rospy.Subscriber(
     "/cv/lines", PolygonStamped, callback=cv_lines_callback

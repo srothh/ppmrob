@@ -110,7 +110,7 @@ def transform_ros_point(point_msg, orientation_quaternion):
 
     # Extract the vector part
     transformed_point = quaternion.as_float_array(transformed_point_quaternion)[1:]
-    return point
+    return transformed_point
 
 
 class CustomOccupancyGrid:
@@ -287,6 +287,10 @@ def lines_callback(data: PolygonStamped):
 
 
 def victim_callback(data: PolygonStamped):
+    if len(data.polygon.points)<1:
+        victim_pub.publish(Bool(False))
+        return
+
     timestamp = data.header.stamp.to_sec()
     current_positions = odometry_msgs.get_buffer()
     if len(current_positions) > 0:
@@ -323,7 +327,6 @@ def victim_callback(data: PolygonStamped):
             victim_found_msg.data = False
             victim_pub.publish(victim_found_msg)
         rospy.loginfo(f"Publishing victim found message: {victim_found_msg.data}")
-        victims.add_point(center)
 
 
 def odometry_callback(data: PoseStamped):
