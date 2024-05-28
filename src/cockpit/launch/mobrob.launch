@@ -3,8 +3,8 @@
   <!-- <node pkg="planner" type="planner_node.py" name="planner_node" output="screen"/> -->
  <node pkg="planner" type="planner_node.py" name="planner_node" output="screen">
         <param name="num_of_victims_to_rescue" value="100" type="int"/>
-        <param name="interactive_waypoints" value="false" type="bool"/>
-        <param name="waypoints_arr" value="[100, 0, 0, 50, 100, 50, 100, -50, 0, -50, 0, 0]" type="str"/>
+        <param name="interactive_waypoints" value="true" type="bool"/>
+        <param name="waypoints_arr" value="[50, 0, 100, 0 , 50, 0, 0, 0]" type="str"/>
     </node>
   
   <node pkg="drone" type="drone_node.py" name="drone_node" output="screen"/>

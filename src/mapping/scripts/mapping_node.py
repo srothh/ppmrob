@@ -318,10 +318,11 @@ def victim_callback(data: PolygonStamped):
 
             victim_found_msg.data = True
             victim_pub.publish(victim_found_msg)
+            victims.add_point(center)
         else:
             victim_found_msg.data = False
             victim_pub.publish(victim_found_msg)
-        victims.add_point(center)
+        rospy.loginfo("published")
 
 
 def odometry_callback(data: PoseStamped):
