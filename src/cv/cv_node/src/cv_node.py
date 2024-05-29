@@ -8,7 +8,9 @@ from geometry_msgs.msg import Polygon, PolygonStamped
 import sys
 import os
 
-parent_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
+parent_dir = os.path.dirname(
+    os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
+)
 sys.path.append(parent_dir)
 from PIL import Image
 from sensor_msgs.msg import Image as Image_msg
@@ -35,7 +37,8 @@ def callback(data):
     rospy.loginfo("Received image frame: %d %dx%d" % (data.height, data.height, data.width))
     time = data.header.stamp
     br = CvBridge()
-    frame = br.imgmsg_to_cv2(data, desired_encoding='mono8')
+    # note: swich encoding to bgr8
+    frame = br.imgmsg_to_cv2(data, desired_encoding="bgr8")
     # show image
     # cv2.imshow("Image window", frame)
     # cv2.waitKey(3)
@@ -70,13 +73,17 @@ def cv_node():
     # STOP DELETE
     # Subscribe to the 'chatter' topic and register the callback function
 
-    rospy.Subscriber('/drone/camera', Image_msg, callback)
-    pub_victim = rospy.Publisher('/cv/victim', PolygonStamped, queue_size=10)  # change message type
-    pub_lines = rospy.Publisher('/cv/lines', PolygonStamped, queue_size=10)  # change message type
+    rospy.Subscriber("/drone/camera", Image_msg, callback)
+    pub_victim = rospy.Publisher(
+        "/cv/victims", PolygonStamped, queue_size=10
+    )  # change message type
+    pub_lines = rospy.Publisher(
+        "/cv/lines", PolygonStamped, queue_size=10
+    )  # change message type
     print("Started CV NODE")
     # Spin to keep the script from exiting
     rospy.spin()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     cv_node()

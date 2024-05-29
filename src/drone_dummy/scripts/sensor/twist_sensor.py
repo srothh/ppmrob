@@ -17,7 +17,7 @@ class TwistSensor():
         self._counter = 0
         self.idx = 0
         # read data
-
+        rospy.loginfo("statelog file: " + self._datafile)
         self.df = pd.read_csv(self._datafile, delimiter=';', decimal=".")
         self.idx = 0 
 

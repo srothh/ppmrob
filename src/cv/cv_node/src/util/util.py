@@ -20,5 +20,4 @@ def build_polygon_msg(detected,msg, header):
         second = Point32(x=pair[2], y=pair[3])
         msg.polygon.points.append(first)
         msg.polygon.points.append(second)
-    msg.header = header
     return msg

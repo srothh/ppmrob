@@ -1,0 +1,3 @@
+<launch>
+  <node pkg="odometry" type="odometry_node.py" name="odometry_node" output="screen"/>
+</launch>

@@ -73,6 +73,20 @@ services:
       - ppmrob
     depends_on:
       - ros_master
+  mapping:
+    build:
+      dockerfile: ./src/mapping/Dockerfile
+    env_file:
+      - docker.env
+    ports:
+      - "9007:9007"
+    volumes:
+      - ./src/mapping/occ_grid.npy:/catkin_ws/src/mapping/occ_grid.npy
+    networks:
+      - ppmrob
+    depends_on:
+      - ros_master
+      - cv
   planner:
     build:
       # If not set explicitly, context defaults to project directory (.).
@@ -90,8 +104,32 @@ services:
       # FIXME adjust to actual dependencies
       - ros_master
       - control
-      # - mapping
-      # - odometry
+      - mapping
+      # mapping_simulation:
+      #   build: ./src/mapping_simulation
+      #   env_file:
+      #     - docker.env
+      #   ports:
+      #     - "9009:9009"
+      #   networks:
+      #     - ppmrob
+      #   depends_on:
+      #     - ros_master
+      #   working_dir: /catkin_ws/src/mapping_simulation/scripts
+      #   # stdin_open: true  # Keeps STDIN open
+      #   # tty: true         # Allocates a pseudo-TTY
+  rviz:
+    build: ./src/rviz
+    networks:
+      - ppmrob
+    depends_on:
+      - ros_master
+    environment:
+      - "QT_X11_NO_MITSHM=1"
+      - "DISPLAY=$DISPLAY"
+      - ROS_MASTER_URI=http://ros_master:11311
+    volumes:
+      - /tmp/.X11-unix:/tmp/.X11-unix
 networks:
   ppmrob:
     driver: "bridge"

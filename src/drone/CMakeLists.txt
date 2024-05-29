@@ -69,13 +69,6 @@ FILES
 Launch.action Emergency.action Move.action Command.action
 )
 
-# TODO: move to control node
-add_action_files(
-DIRECTORY action/control
-FILES
-ControlTransform.action
-)
-
 ## Generate added messages and services with any dependencies listed here
 generate_messages(
 DEPENDENCIES
