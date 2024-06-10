@@ -110,7 +110,7 @@ def transform_ros_point(point_msg, orientation_quaternion):
 
     # Extract the vector part
     transformed_point = quaternion.as_float_array(transformed_point_quaternion)[1:]
-    return point
+    return transformed_point
 
 
 class CustomOccupancyGrid:
@@ -287,6 +287,10 @@ def lines_callback(data: PolygonStamped):
 
 
 def victim_callback(data: PolygonStamped):
+    if len(data.polygon.points)<1:
+        victim_pub.publish(Bool(False))
+        return
+
     timestamp = data.header.stamp.to_sec()
     current_positions = odometry_msgs.get_buffer()
     if len(current_positions) > 0:
@@ -312,12 +316,17 @@ def victim_callback(data: PolygonStamped):
         )
         # rand = np.random.randint(100)
         # print("#"*rand)
+        victim_found_msg = Bool()
         if victims.is_first_point(center):
             print("\n\nNew Victim\n\n with Center:", center)
-            victim_found_msg = Bool()
+
             victim_found_msg.data = True
             victim_pub.publish(victim_found_msg)
-        victims.add_point(center)
+            victims.add_point(center)
+        else:
+            victim_found_msg.data = False
+            victim_pub.publish(victim_found_msg)
+        rospy.loginfo(f"Publishing victim found message: {victim_found_msg.data}")
 
 
 def odometry_callback(data: PoseStamped):
@@ -365,11 +374,15 @@ odometry_subscriber = rospy.Subscriber(
 )
 lines_subsriber = rospy.Subscriber("/cv/lines", PolygonStamped, callback=lines_callback)
 victim_subscriber = rospy.Subscriber(
-    "/cv/victims", PolygonStamped, callback=victim_callback
+    defaults.CV.VICTIM_LINES_TOPIC_NAME, PolygonStamped, callback=victim_callback
 )
 grid_pub = rospy.Publisher("/mapping/occupancy_grid", OccupancyGrid, queue_size=10)
-planning_grid_pub = rospy.Publisher("/mapping/map", OccupancyGrid, queue_size=10)
-victim_pub = rospy.Publisher("/mapping/victim_found", Bool, queue_size=10)
+planning_grid_pub = rospy.Publisher(
+    defaults.Mapping.OCCUPANCY_GRID_TOPIC_NAME, OccupancyGrid, queue_size=10
+)
+victim_pub = rospy.Publisher(
+    defaults.Mapping.VICTIM_FOUND_TOPIC_NAME, Bool, queue_size=10
+)
 step = 0
 
 spin_thread = threading.Thread(target=spin_thread)

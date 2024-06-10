@@ -36,6 +36,7 @@ image = []
 victims = []
 lines = []
 waypoints = []
+victim_positions = []
 
 br = CvBridge()
 
@@ -128,6 +129,12 @@ def cv_lines_callback(data: PolygonStamped):
     for f, s in pairwise(data.polygon.points):
         lines.append([(f.x, f.y), (s.x, s.y)])
 
+def mapping_vfound_callback(data: Bool):
+    global positions
+    pos_current = positions.pop()
+    if data:
+        victim_positions.append(pos_current)
+
 
 def on_press(event):
     sys.stdout.flush()
@@ -208,10 +215,13 @@ drone_camera_subsriber = rospy.Subscriber(
     callback=drone_camera_callback,
 )
 cv_victim_subsriber = rospy.Subscriber(
-    "/cv/victim", PolygonStamped, callback=cv_victim_callback
+    defaults.CV.VICTIM_LINES_TOPIC_NAME, PolygonStamped, callback=cv_victim_callback
 )
 cv_lines_subsriber = rospy.Subscriber(
     "/cv/lines", PolygonStamped, callback=cv_lines_callback
+)
+maps_vfound_subsriber = rospy.Subscriber(
+    "/mapping/victim_found", Bool, callback=mapping_vfound_callback
 )
 
 waypoint_publisher = rospy.Publisher("/cockpit/waypoint", Pose, queue_size=10)
@@ -269,6 +279,8 @@ yp = np.arange(100)
 (pos_history,) = ax1.plot(0, 0, ".", alpha=0.6, color="tab:blue", lw=1)
 
 (waypoints_all,) = ax1.plot(0, 0, "x", color="tab:red", lw=1)
+(victims_all,) = ax1.plot(0, 0, "o", color="green", alpha=0.8)
+
 
 # compass
 ax4 = plt.subplot(gs[0, 2], projection="polar")
@@ -414,6 +426,14 @@ def update(frame_number):
             y = [y for x, y in waypoints]
             waypoints_all.set_data(x, y)
             waypoints_all.set_visible(True)
+
+        if len(victim_positions)>0:
+            xv = [i for i, j, k, l in victim_positions]
+            yv = [j for i, j, k, l in victim_positions]
+            victims_all.set_data(xv ,yv)
+
+
+
     except Exception as e:
         rospy.logerr(e)
         pass
@@ -432,6 +452,7 @@ def update(frame_number):
         victim_current,
         lines_current,
         waypoints_all,
+        victims_all,
     ]
 
 

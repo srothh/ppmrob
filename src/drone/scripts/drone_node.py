@@ -11,6 +11,7 @@ from sensor import ImageSensor
 from sensor import TwistSensor
 from sensor import BatterySensor
 from util import StateCsvLogger
+from util import ImageRecorder
 import common.config.defaults
 import datetime
 
@@ -60,6 +61,9 @@ def drone_node(drone):
 
     writer = StateCsvLogger("./state-log-" +  datetime.datetime.now().strftime("%Y%m%d%H%M%S") + ".cvs")
     drone.registerStateHandler(writer.log)
+
+    # image recorder
+    recorder = ImageRecorder(topic=common.config.defaults.drone_image_sensor_publish_topic_name, dir="./images-" +  datetime.datetime.now().strftime("%Y%m%d%H%M%S"))
 
     # keepalive
     rospy.Timer(rospy.Duration(10), lambda x: drone.keep_alive())

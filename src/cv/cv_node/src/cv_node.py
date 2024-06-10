@@ -8,7 +8,9 @@ from geometry_msgs.msg import Polygon, PolygonStamped
 import sys
 import os
 
-parent_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
+parent_dir = os.path.dirname(
+    os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
+)
 sys.path.append(parent_dir)
 from PIL import Image
 from sensor_msgs.msg import Image as Image_msg
@@ -32,9 +34,11 @@ Both publish a geometry_msgs/Polygon message, and every pair of Point32 in the m
 
 
 def callback(data):
+    rospy.loginfo("Received image frame: %d %dx%d" % (data.height, data.height, data.width))
+    time = data.header.stamp
     br = CvBridge()
     # note: swich encoding to bgr8
-    frame = br.imgmsg_to_cv2(data, desired_encoding='bgr8')
+    frame = br.imgmsg_to_cv2(data, desired_encoding="bgr8")
     # show image
     # cv2.imshow("Image window", frame)
     # cv2.waitKey(3)
@@ -42,18 +46,16 @@ def callback(data):
     # cv2.imwrite('lastframe.png', frame)
     detected, lines = img_processing(frame)
     # publish
-    header = Header(stamp=rospy.Time.now(), frame_id="cv")
+    header = Header(stamp=time, frame_id="cv")
     if pub_lines is not None:
         lines_msg = PolygonStamped()
         lines_msg.polygon.points = []
-        lines_msg.header = header
         if lines is not None:
             lines_msg = build_polygon_msg(lines, lines_msg, header)
         pub_lines.publish(lines_msg)
     if pub_victim is not None:
         victim_msg = PolygonStamped()
         victim_msg.polygon.points = []
-        victim_msg.header = header
         if detected is not None:
             victim_msg = build_polygon_msg(detected, victim_msg, header)
         pub_victim.publish(victim_msg)
@@ -71,13 +73,17 @@ def cv_node():
     # STOP DELETE
     # Subscribe to the 'chatter' topic and register the callback function
 
-    rospy.Subscriber('/drone/camera', Image_msg, callback)
-    pub_victim = rospy.Publisher('/cv/victim', PolygonStamped, queue_size=10)  # change message type
-    pub_lines = rospy.Publisher('/cv/lines', PolygonStamped, queue_size=10)  # change message type
+    rospy.Subscriber("/drone/camera", Image_msg, callback)
+    pub_victim = rospy.Publisher(
+        "/cv/victims", PolygonStamped, queue_size=10
+    )  # change message type
+    pub_lines = rospy.Publisher(
+        "/cv/lines", PolygonStamped, queue_size=10
+    )  # change message type
     print("Started CV NODE")
     # Spin to keep the script from exiting
     rospy.spin()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     cv_node()
