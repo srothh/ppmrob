@@ -113,6 +113,7 @@ class Leaf(py_trees.Behaviour):
 class ReturnHomeDynamicActionClient(py_trees_ros.actions.ActionClient):
     def initialise(self):
         planned_path = py_trees.blackboard.Blackboard().plan
+        rospy.loginfo("Planned path: "+str(planned_path))
         if len(planned_path) == 0:
             rospy.loginfo("Path could not be calculated")
         else:
@@ -124,6 +125,7 @@ class ReturnHomeDynamicActionClient(py_trees_ros.actions.ActionClient):
 class PlanningMoveDynamicActionClient(py_trees_ros.actions.ActionClient):
     def initialise(self):
         planned_path = py_trees.blackboard.Blackboard().plan
+        rospy.loginfo("Planned path: "+str(planned_path))
         if len(planned_path) == 0:
             rospy.loginfo("Path could not be calculated")
         else:
@@ -167,15 +169,15 @@ def dynamic_plan():
         py_trees.blackboard.Blackboard().get(BB_VAR_MAP_WIDTH),
     )
 
-    print(grid)
+    # print(grid)
 
     world_pos = py_trees.blackboard.Blackboard().get(BB_VAR_WORLD_POS)
 
-    print(world_pos)
+    # print(world_pos)
 
     grid_pos_x, grid_pos_y = world_to_grid(world_pos.x, world_pos.z)
 
-    print(grid_pos_x, grid_pos_y)
+    # print(grid_pos_x, grid_pos_y)
     path = []
     if grid[grid_pos_x][grid_pos_y + 1] == 50:
         path = [Point(world_pos.x + DRONE_MOVEMENT_INCREMENT, world_pos.y, world_pos.z)]
@@ -237,8 +239,6 @@ def path_to_pos(x, y):
                 w_pos[1],
             )
         )
-
-    # print("world_path: ",path)
     return path
 
 
@@ -466,7 +466,7 @@ def create_root():
     victim_rescued = IncrementBbVar("Rescued victim", BB_VAR_NUM_OF_RESCUED_VICTIMS)
     # tree
     root.add_children([topics2bb, priorities])
-    topics2bb.add_children([world_pos2bb, map2bb, victim_found2bb, battery2bb])
+    topics2bb.add_children([map2bb, world_pos2bb, victim_found2bb, battery2bb])
     priorities.add_children([battery_check, search_and_rescue])
     battery_check.add_children([is_battery_low, return_home])
     return_home.add_children([fly_home, land_home, terminate])
@@ -617,6 +617,7 @@ def parse_waypoints():
 
 
 if __name__ == "__main__":
+    rospy.loginfo("planner started")
     # pathfinding test
     # occupancy_grid = [
     #         100, 100, 100, 100, 100, 100, 100, 100, 100, 100,
@@ -644,7 +645,7 @@ if __name__ == "__main__":
             blackboard = py_trees.blackboard.Blackboard()
             blackboard.waypoints = waypoints
         # for testing purpose
-        # py_trees.logging.level = py_trees.logging.Level.DEBUG
+        py_trees.logging.level = py_trees.logging.Level.ERROR
         tree = setup_bt()
         py_trees.display.render_dot_tree(tree.root, name="planner_tree")
         run_bt(tree)
