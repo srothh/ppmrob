@@ -15,7 +15,7 @@ from online_kmeans import OnlineKMeans
 
 fov_x = 150
 fov_y = 150
-offset = 0
+offset = 100
 
 num_victims = 3
 min_distance_victims = 150  # Minimum distance between two victims in cm
@@ -124,13 +124,14 @@ class CustomOccupancyGrid:
 
     def update_fov(self, drone_pos, fov_size):
         # Convert the drone's position to grid coordinates
+        drone_pos = drone_pos[0] + offset, drone_pos[1] + offset
         drone_grid_x, drone_grid_y = self.world_to_grid(*drone_pos)
         buffer_x = 0 # int(fov_size[0]*0.05)
         buffer_y = 0 # int(fov_size[1]*0.05)
 
         if drone_grid_x > self.width or drone_grid_y > self.height:
-            new_grid_width = max(int(1.05*self.width), drone_grid_x + 1)
-            new_grid_height = max(int(1.05*self.height), drone_grid_y + 1)
+            new_grid_width = max(int(1.05*self.width), drone_grid_x + 2)
+            new_grid_height = max(int(1.05*self.height), drone_grid_y + 2)
             self.resize(new_grid_width, new_grid_height)
 
         # Calculate the top-left and bottom-right corners of the FOV in grid coordinates
@@ -143,8 +144,8 @@ class CustomOccupancyGrid:
         # print(top_left_x, top_left_y, bottom_right_x, bottom_right_y)
 
         # Update the grid cells within the FOV to mark them as free
-        self.grid[top_left_y - 1:bottom_right_y, top_left_x - 1:bottom_right_x] =\
-            np.where(self.grid[top_left_y - 1:bottom_right_y, top_left_x - 1:bottom_right_x] != 100, 0, 100)
+        # self.grid[top_left_y - 1:bottom_right_y, top_left_x - 1:bottom_right_x] =\
+        #     np.where(self.grid[top_left_y - 1:bottom_right_y, top_left_x - 1:bottom_right_x] != 100, 0, 100)
 
         # Update planning grid cells
         planning_grid_fov = self.planning_grid[top_left_y - 1:bottom_right_y, top_left_x - 1:bottom_right_x]
@@ -179,7 +180,7 @@ class CustomOccupancyGrid:
                 # Find the indices where the grid is unexplored (-1) and the mask has the line drawn (1)
                 update_indices = np.where(self.mask == 1) # update_indices = np.where((self.grid == -1) & (self.mask == 1))
 
-                self.grid[update_indices] = 100
+                # self.grid[update_indices] = 100
                 self.planning_grid[update_indices] = 100
 
 
@@ -295,7 +296,7 @@ def publish_occupancy_grid(grid, resolution, publisher):
 
 
 rospy.init_node('mapping')
-occ_grid = CustomOccupancyGrid(250, 250, 1)
+occ_grid = CustomOccupancyGrid(250, 250, 5)
 odometry_subscriber = rospy.Subscriber('/odometry/return_signal', PoseStamped, callback=odometry_callback)
 lines_subsriber = rospy.Subscriber('/cv/lines', PolygonStamped, callback=lines_callback)
 victim_subscriber = rospy.Subscriber('/cv/victims', PolygonStamped, callback=victim_callback)
