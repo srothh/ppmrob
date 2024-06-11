@@ -152,6 +152,7 @@ class CustomOccupancyGrid:
         self.width = new_width
 
     def update_fov(self, drone_pos, fov_size):
+        drone_pos = drone_pos[0] + offset, drone_pos[1] + offset
         # Convert the drone's position to grid coordinates
         drone_grid_x, drone_grid_y = self.world_to_grid(*drone_pos)
         buffer_x = 0  # int(fov_size[0]*0.05)
@@ -287,7 +288,7 @@ def lines_callback(data: PolygonStamped):
 
 
 def victim_callback(data: PolygonStamped):
-    if len(data.polygon.points)<1:
+    if len(data.polygon.points) < 1:
         victim_pub.publish(Bool(False))
         return
 
