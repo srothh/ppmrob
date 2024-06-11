@@ -41,9 +41,6 @@ yolo_model = torch.hub.load(
 
 
 def callback(data):
-    rospy.loginfo(
-        "Received image frame: %d %dx%d" % (data.height, data.height, data.width)
-    )
     time = data.header.stamp
     br = CvBridge()
     # note: switch encoding to bgr8
