@@ -617,7 +617,6 @@ def parse_waypoints():
 
 
 if __name__ == "__main__":
-    rospy.loginfo("planner started")
     # pathfinding test
     # occupancy_grid = [
     #         100, 100, 100, 100, 100, 100, 100, 100, 100, 100,

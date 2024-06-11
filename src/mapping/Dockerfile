@@ -39,4 +39,4 @@ RUN chmod +x /catkin_ws/src/${PACKAGE_NAME}/scripts/*
 RUN echo "source /opt/ros/noetic/setup.bash" >> ~/.bashrc
 
 # Source the ROS setup file every time a new container is run
-ENTRYPOINT ["/bin/bash", "-c", "source /opt/ros/$ROS_DISTRO/setup.bash && source /catkin_ws/devel/setup.bash && rosbag record -a & && roslaunch $PACKAGE_NAME $LAUNCH_FILE --wait"]
+ENTRYPOINT ["/bin/bash", "-c", "source /opt/ros/$ROS_DISTRO/setup.bash && source /catkin_ws/devel/setup.bash && roslaunch $PACKAGE_NAME $LAUNCH_FILE --wait"]
