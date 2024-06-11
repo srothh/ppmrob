@@ -20,6 +20,7 @@ from image_processing.display_image import display_image, display_object_detecti
 from image_processing.process_image import img_processing
 from util.util import build_coordinate_msg, build_polygon_msg
 import cv2
+import torch
 
 pub_victim = None
 pub_lines = None
@@ -32,19 +33,20 @@ Both publish a geometry_msgs/Polygon message, and every pair of Point32 in the m
 (start_point,end_point) for lines or (lower_left,upper_right) for the bounding box of the victim.
 """
 
-
+yolo_model = None
 def callback(data):
     rospy.loginfo("Received image frame: %d %dx%d" % (data.height, data.height, data.width))
     time = data.header.stamp
     br = CvBridge()
-    # note: swich encoding to bgr8
+    # note: switch encoding to bgr8
     frame = br.imgmsg_to_cv2(data, desired_encoding="bgr8")
     # show image
     # cv2.imshow("Image window", frame)
     # cv2.waitKey(3)
     # save image
     # cv2.imwrite('lastframe.png', frame)
-    detected, lines = img_processing(frame)
+    global yolo_model
+    detected, lines = img_processing(frame, yolo_model)
     # publish
     header = Header(stamp=time, frame_id="cv")
     if pub_lines is not None:
@@ -59,6 +61,7 @@ def callback(data):
         if detected is not None:
             victim_msg = build_polygon_msg(detected, victim_msg, header)
         pub_victim.publish(victim_msg)
+
 
 def cv_node():
     global pub_lines, pub_victim
@@ -80,7 +83,12 @@ def cv_node():
     pub_lines = rospy.Publisher(
         "/cv/lines", PolygonStamped, queue_size=10
     )  # change message type
+    script_dir = os.path.dirname(os.path.realpath(__file__))
+    yolo_path = os.path.join(script_dir, 'image_processing', 'model', 'best.pt')
+    global yolo_model
+    yolo_model = torch.hub.load('ultralytics/yolov5', 'custom', path=yolo_path, force_reload=False)
     print("Started CV NODE")
+
     # Spin to keep the script from exiting
     rospy.spin()
 
