@@ -13,7 +13,7 @@ model = model.to(device)
 script_dir = os.path.dirname(os.path.realpath(__file__))
 model_path = os.path.join(script_dir, 'model', 'first_cnn.pth')
 yolo_path = os.path.join(script_dir, 'model', 'best.pt')
-yolo_model = torch.hub.load('ultralytics/yolov5', 'custom', path=yolo_path, force_reload=True)
+yolo_model = torch.hub.load('ultralytics/yolov5', 'custom', path=yolo_path, force_reload=False)
 state_dict = torch.load(model_path, map_location=torch.device(device))
 model.load_state_dict(state_dict)
 # Load the state dictionary into the model
