@@ -34,6 +34,7 @@ RUN source /opt/ros/noetic/setup.bash && catkin_make && source /catkin_ws/devel/
 # Set up environment variables for ROS
 ENV ROS_DISTRO noetic
 ENV ROS_WORKSPACE /catkin_ws
+RUN python3 -c "import torch; yolo_model = torch.hub.load('ultralytics/yolov5', 'custom', path='/catkin_ws/src/$PACKAGE_NAME/src/image_processing/model/best.pt', force_reload=True)"
 
 RUN chmod +x /catkin_ws/src/$PACKAGE_NAME/src/cv_node.py
 # Source the ROS setup file every time a new container is run
