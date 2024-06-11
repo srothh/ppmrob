@@ -491,7 +491,7 @@ def post_tick_handler(snapshot_visitor, tree):
     """
     # print(py_trees.display.ascii_tree(tree.root, snapshot_information=snapshot_visitor))
     # the following actually shows more info than the above
-    py_trees.display.print_ascii_tree(tree.root, show_status=True)
+    # py_trees.display.print_ascii_tree(tree.root, show_status=True)
     pass
 
 

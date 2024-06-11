@@ -33,9 +33,17 @@ Both publish a geometry_msgs/Polygon message, and every pair of Point32 in the m
 (start_point,end_point) for lines or (lower_left,upper_right) for the bounding box of the victim.
 """
 
-yolo_model = None
+script_dir = os.path.dirname(os.path.realpath(__file__))
+yolo_path = os.path.join(script_dir, "image_processing", "model", "best.pt")
+yolo_model = torch.hub.load(
+    "ultralytics/yolov5", "custom", path=yolo_path, force_reload=False
+)
+
+
 def callback(data):
-    rospy.loginfo("Received image frame: %d %dx%d" % (data.height, data.height, data.width))
+    rospy.loginfo(
+        "Received image frame: %d %dx%d" % (data.height, data.height, data.width)
+    )
     time = data.header.stamp
     br = CvBridge()
     # note: switch encoding to bgr8
@@ -66,7 +74,7 @@ def callback(data):
 def cv_node():
     global pub_lines, pub_victim
     # Initialize the ROS node
-    rospy.init_node('cv_node', anonymous=True)
+    rospy.init_node("cv_node", anonymous=True)
     # UNCOMMENT THIS TO TEST THE CLASSIFY_IMAGE FUNCTION (or0001.jpg needs to be in src directory)
     # DELETE THIS FOR TESTING WITH DRONE
     #    frame = cv2.imread('/catkin_ws/src/cv/src/or0001.jpg')
@@ -83,10 +91,6 @@ def cv_node():
     pub_lines = rospy.Publisher(
         "/cv/lines", PolygonStamped, queue_size=10
     )  # change message type
-    script_dir = os.path.dirname(os.path.realpath(__file__))
-    yolo_path = os.path.join(script_dir, 'image_processing', 'model', 'best.pt')
-    global yolo_model
-    yolo_model = torch.hub.load('ultralytics/yolov5', 'custom', path=yolo_path, force_reload=False)
     print("Started CV NODE")
 
     # Spin to keep the script from exiting
