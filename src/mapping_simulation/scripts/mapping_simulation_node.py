@@ -2,9 +2,12 @@
 
 import rospy
 from geometry_msgs.msg import PoseStamped, Point32, PolygonStamped
+from sensor_msgs.msg import Image
+from cv_bridge import CvBridge
 import json
 import os
-
+import glob
+import threading
 # Initialize ROS node
 rospy.init_node('simulation_data_publisher')
 
@@ -20,6 +23,26 @@ os.chdir(script_dir)
 # Load simulation data
 with open('sim_data_victims.json', 'r') as infile:
     simulation_data = json.load(infile)
+
+publisher = rospy.Publisher("/drone/image", Image, queue_size=10)
+cv_bridge = CvBridge()
+
+
+def publish_mock_frames(publisher, cv_bridge):
+    # Specify the directory path
+    directory = './imgs'
+
+    # List all files
+    files = glob.glob(f"{directory}/*")
+
+    #TODO: Publish mock frames, if want to also publish odometry data, need to stop publishing mock lines and victims!!!!!!!!!!
+
+    for frame in files:
+        msg = cv_bridge.cv2_to_imgmsg(frame, encoding='rgb8')
+        #rospy.loginfo(msg)
+        # self._publisher.publish(msg)
+
+    print(files)
 
 # Helper function to create a PoseStamped message from position data
 def create_pose_stamped_msg(x, y, time):
@@ -55,6 +78,9 @@ def create_polygon_stamped_victim_msg(victims, time):
         victim_point = Point32(x=victim[0], y=victim[1], z=0)  # z is ignored
         msg.polygon.points.extend([victim_point, victim_point])  # TODO: Add imaginary bounding box for simulation
     return msg
+
+frame_pub_thread = threading.Thread(target=publish_mock_frames)
+frame_pub_thread.start()
 
 # Publish data
 rate = rospy.Rate(10)  # Adjust as needed

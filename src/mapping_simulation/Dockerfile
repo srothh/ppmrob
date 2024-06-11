@@ -8,7 +8,7 @@ WORKDIR /catkin_ws/src
 ENV PACKAGE_NAME mapping_simulation
 ENV LAUNCH_FILE mapping_simulation.launch
 # Create a new ROS package for the listener
-RUN /bin/bash -c "source /opt/ros/noetic/setup.bash && catkin_create_pkg $PACKAGE_NAME std_msgs rospy geometry_msgs nav_msgs"
+RUN /bin/bash -c "source /opt/ros/noetic/setup.bash && catkin_create_pkg $PACKAGE_NAME std_msgs rospy geometry_msgs nav_msgs sensor_msgs"
 
 RUN apt-get update && apt-get install -y dos2unix
 RUN apt-get update && apt-get install -y python3

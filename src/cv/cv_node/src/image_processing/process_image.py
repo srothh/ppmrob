@@ -10,8 +10,8 @@ def img_processing(frame, yolo_model, window=None, confidence_threshhold=0.8):
     # Perform yolo object detection
     # Convert NumPy array to PIL Image
     pil_image = Image.fromarray(frame)
-    detected = yolo_detection(pil_image, yolo_model, confidence_threshold=confidence_threshhold)
+    # detected = yolo_detection(pil_image, yolo_model, confidence_threshold=confidence_threshhold)
     lines = detect_lines(frame)
     # Display the image (needs to have image server when run from docker)
     # display_object_detection(detected, window, line_frame, 10, (0, 255, 0))
-    return detected, lines
+    return None, lines
