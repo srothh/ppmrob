@@ -11,6 +11,7 @@ from collections import deque
 import math
 import threading
 from online_kmeans import OnlineKMeans
+import keyboard
 # from src.common.src.common.config.defaults import Mapping
 
 fov_x = 150
@@ -37,6 +38,12 @@ max_msgs = 10000
 odometry_msgs = CircularBuffer(max_msgs)
 
 counter = 0
+
+
+def on_press(key, grid):
+    if key.name == 's':
+        print("Saving grid")
+        np.save('occupancy_grid.npy', grid)
 
 
 def spin_thread():
@@ -310,6 +317,8 @@ spin_thread.start()
 
 curr_time = rospy.Time().to_sec()
 
+# keyboard.on_press(lambda event: on_press(event, occ_grid))
+
 while not rospy.is_shutdown():
     current_positions = odometry_msgs.get_buffer()
     if len(current_positions) > 0:
@@ -323,7 +332,10 @@ while not rospy.is_shutdown():
         occ_grid.update_fov(drone_pos, fov)
         publish_occupancy_grid(occ_grid.grid, occ_grid.resolution, grid_pub)
         publish_occupancy_grid(occ_grid.planning_grid, occ_grid.resolution, planning_grid_pub)
+        step += 1
+        if step == 40000:
+            np.save('/catkin_ws/src/mapping/data/grid.npy',occ_grid.grid)
+            print("Saved grid")
     # if step % 10000 == 0:
         # print(victims.cluster_centers)
-    step += 1
     

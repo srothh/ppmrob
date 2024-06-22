@@ -80,7 +80,7 @@ services:
     ports:
       - "9007:9007"
     volumes:
-      - ./src/mapping/occ_grid.npy:/catkin_ws/src/mapping/occ_grid.npy
+      - ./src/mapping/data:/catkin_ws/src/mapping/data
     networks:
       - ppmrob
     depends_on:
