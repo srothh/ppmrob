@@ -20,9 +20,9 @@ def publish_occupancy_grid():
         grid.info.resolution = 1.0  # 1 meter per cell
         grid.info.width = 10  # 10 cells wide
         grid.info.height = 10  # 10 cells tall
-        grid.info.origin.position.x = 0.0
+        grid.info.origin.position.x = 75.0
         grid.info.origin.position.y = 0.0
-        grid.info.origin.position.z = 0.0
+        grid.info.origin.position.z = 255.0
         grid.info.origin.orientation.x = 0.0
         grid.info.origin.orientation.y = 0.0
         grid.info.origin.orientation.z = 0.0
