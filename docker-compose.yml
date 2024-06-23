@@ -74,7 +74,8 @@ services:
     depends_on:
       - ros_master
   mapping:
-    build: ./src/mapping
+    build:
+      dockerfile: ./src/mapping/Dockerfile
     env_file:
       - docker.env
     ports:
@@ -85,6 +86,7 @@ services:
       - ppmrob
     depends_on:
       - ros_master
+      - cv
   planner:
     build:
       # If not set explicitly, context defaults to project directory (.).

@@ -13,13 +13,15 @@ battery_publish_topic_name = "/battery/return_signal"
 
 
 class Mapping:
-    VICTIM_FOUND_TOPIC_NAME = "/mapping/victim_found"
     OCCUPANCY_GRID_TOPIC_NAME = "/mapping/map"
 
 
 class Control:
-    MOVE_ACTION_NAMESPACE = "planning_move"
-    COMMAND_ACTION_NAMESPACE = "planning_command"
+    MOVE_ACTION_NAMESPACE = "/control/planning_move"
+    COMMAND_ACTION_NAMESPACE = "/control/planning_command"
+
+
+class Odometry:
     WORLD_POSITION_TOPIC_NAME = "/odometry/return_signal"
 
 
@@ -40,3 +42,7 @@ class Cockpit:
 
 class Planning:
     BT_SETUP_TIMEOUT = 60
+
+
+class CV:
+    VICTIM_LINES_TOPIC_NAME = "/cv/victims"

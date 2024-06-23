@@ -11,15 +11,21 @@ from collections import deque
 import math
 import threading
 from online_kmeans import OnlineKMeans
+import common.config.defaults as defaults
 
 # from src.common.src.common.config.defaults import Mapping
 
-fov_x = 150
-fov_y = 150
-offset = 250
+fov_x = 100
+fov_y = 100
+offset = 100
+initial_size = 100
+
+frame_width = 320
+frame_height = 240
 
 num_victims = 3
 min_distance_victims = 150  # Minimum distance between two victims in cm
+resolution = 2
 
 victims = OnlineKMeans(
     num_victims, min_distance_victims, init_points=[[1, 0], [2, 0], [3, 0]]
@@ -85,8 +91,8 @@ def calculate_fov_size(diagonal_fov_degrees, height):
 
 # Assumes square window and absolute drone position
 def map_coordinate(x, y, x_d, y_d, fov_width, fov_height):
-    x_p = int(x_d) - fov_width // 2 + x
-    y_p = int(y_d) - fov_height // 2 + y
+    x_p = int(x_d) - fov_width // 2 + int(x * (fov_width / frame_width))
+    y_p = int(y_d) - fov_height // 2 + int(y * (fov_height / frame_height))
     return x_p, y_p
 
 
@@ -104,7 +110,6 @@ def transform_ros_point(point_msg, orientation_quaternion):
 
     # Extract the vector part
     transformed_point = quaternion.as_float_array(transformed_point_quaternion)[1:]
-
     return transformed_point
 
 
@@ -147,6 +152,7 @@ class CustomOccupancyGrid:
         self.width = new_width
 
     def update_fov(self, drone_pos, fov_size):
+        drone_pos = drone_pos[0] + offset, drone_pos[1] + offset
         # Convert the drone's position to grid coordinates
         drone_grid_x, drone_grid_y = self.world_to_grid(*drone_pos)
         buffer_x = 0  # int(fov_size[0]*0.05)
@@ -282,6 +288,10 @@ def lines_callback(data: PolygonStamped):
 
 
 def victim_callback(data: PolygonStamped):
+    if len(data.polygon.points) < 1:
+        victim_pub.publish(Bool(False))
+        return
+
     timestamp = data.header.stamp.to_sec()
     current_positions = odometry_msgs.get_buffer()
     if len(current_positions) > 0:
@@ -307,12 +317,17 @@ def victim_callback(data: PolygonStamped):
         )
         # rand = np.random.randint(100)
         # print("#"*rand)
+        victim_found_msg = Bool()
         if victims.is_first_point(center):
             print("\n\nNew Victim\n\n with Center:", center)
-            victim_found_msg = Bool()
+
             victim_found_msg.data = True
             victim_pub.publish(victim_found_msg)
-        victims.add_point(center)
+            victims.add_point(center)
+        else:
+            victim_found_msg.data = False
+            victim_pub.publish(victim_found_msg)
+        rospy.loginfo(f"Publishing victim found message: {victim_found_msg.data}")
 
 
 def odometry_callback(data: PoseStamped):
@@ -354,17 +369,21 @@ def publish_occupancy_grid(grid, resolution, publisher):
 
 
 rospy.init_node("mapping")
-occ_grid = CustomOccupancyGrid(250, 250, 5)
+occ_grid = CustomOccupancyGrid(initial_size, initial_size, resolution)
 odometry_subscriber = rospy.Subscriber(
-    "/odometry/return_signal", PoseStamped, callback=odometry_callback
+    defaults.Odometry.WORLD_POSITION_TOPIC_NAME, PoseStamped, callback=odometry_callback
 )
 lines_subsriber = rospy.Subscriber("/cv/lines", PolygonStamped, callback=lines_callback)
 victim_subscriber = rospy.Subscriber(
-    "/cv/victims", PolygonStamped, callback=victim_callback
+    defaults.CV.VICTIM_LINES_TOPIC_NAME, PolygonStamped, callback=victim_callback
 )
 grid_pub = rospy.Publisher("/mapping/occupancy_grid", OccupancyGrid, queue_size=10)
-planning_grid_pub = rospy.Publisher("/mapping/map", OccupancyGrid, queue_size=10)
-victim_pub = rospy.Publisher("/mapping/victim_found", Bool, queue_size=10)
+planning_grid_pub = rospy.Publisher(
+    defaults.Mapping.OCCUPANCY_GRID_TOPIC_NAME, OccupancyGrid, queue_size=10
+)
+victim_pub = rospy.Publisher(
+    defaults.Mapping.VICTIM_FOUND_TOPIC_NAME, Bool, queue_size=10
+)
 step = 0
 
 spin_thread = threading.Thread(target=spin_thread)

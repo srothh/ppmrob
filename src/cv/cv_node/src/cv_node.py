@@ -8,7 +8,9 @@ from geometry_msgs.msg import Polygon, PolygonStamped
 import sys
 import os
 
-parent_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
+parent_dir = os.path.dirname(
+    os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
+)
 sys.path.append(parent_dir)
 from PIL import Image
 from sensor_msgs.msg import Image as Image_msg
@@ -18,6 +20,7 @@ from image_processing.display_image import display_image, display_object_detecti
 from image_processing.process_image import img_processing
 from util.util import build_coordinate_msg, build_polygon_msg
 import cv2
+import torch
 
 pub_victim = None
 pub_lines = None
@@ -30,38 +33,45 @@ Both publish a geometry_msgs/Polygon message, and every pair of Point32 in the m
 (start_point,end_point) for lines or (lower_left,upper_right) for the bounding box of the victim.
 """
 
+script_dir = os.path.dirname(os.path.realpath(__file__))
+yolo_path = os.path.join(script_dir, "image_processing", "model", "best.pt")
+yolo_model = torch.hub.load(
+    "ultralytics/yolov5", "custom", path=yolo_path, force_reload=False
+)
+
 
 def callback(data):
+    time = data.header.stamp
     br = CvBridge()
-    # note: swich encoding to bgr8
-    frame = br.imgmsg_to_cv2(data, desired_encoding='bgr8')
+    # note: switch encoding to bgr8
+    frame = br.imgmsg_to_cv2(data, desired_encoding="bgr8")
     # show image
     # cv2.imshow("Image window", frame)
     # cv2.waitKey(3)
     # save image
     # cv2.imwrite('lastframe.png', frame)
-    detected, lines = img_processing(frame)
+    global yolo_model
+    detected, lines = img_processing(frame, yolo_model)
     # publish
-    header = Header(stamp=rospy.Time.now(), frame_id="cv")
+    header = Header(stamp=time, frame_id="cv")
     if pub_lines is not None:
         lines_msg = PolygonStamped()
         lines_msg.polygon.points = []
-        lines_msg.header = header
         if lines is not None:
             lines_msg = build_polygon_msg(lines, lines_msg, header)
         pub_lines.publish(lines_msg)
     if pub_victim is not None:
         victim_msg = PolygonStamped()
         victim_msg.polygon.points = []
-        victim_msg.header = header
         if detected is not None:
             victim_msg = build_polygon_msg(detected, victim_msg, header)
         pub_victim.publish(victim_msg)
 
+
 def cv_node():
     global pub_lines, pub_victim
     # Initialize the ROS node
-    rospy.init_node('cv_node', anonymous=True)
+    rospy.init_node("cv_node", anonymous=True)
     # UNCOMMENT THIS TO TEST THE CLASSIFY_IMAGE FUNCTION (or0001.jpg needs to be in src directory)
     # DELETE THIS FOR TESTING WITH DRONE
     #    frame = cv2.imread('/catkin_ws/src/cv/src/or0001.jpg')
@@ -71,13 +81,18 @@ def cv_node():
     # STOP DELETE
     # Subscribe to the 'chatter' topic and register the callback function
 
-    rospy.Subscriber('/drone/camera', Image_msg, callback)
-    pub_victim = rospy.Publisher('/cv/victim', PolygonStamped, queue_size=10)  # change message type
-    pub_lines = rospy.Publisher('/cv/lines', PolygonStamped, queue_size=10)  # change message type
+    rospy.Subscriber("/drone/camera", Image_msg, callback)
+    pub_victim = rospy.Publisher(
+        "/cv/victims", PolygonStamped, queue_size=10
+    )  # change message type
+    pub_lines = rospy.Publisher(
+        "/cv/lines", PolygonStamped, queue_size=10
+    )  # change message type
     print("Started CV NODE")
+
     # Spin to keep the script from exiting
     rospy.spin()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     cv_node()

@@ -1,0 +1,17 @@
+<launch>
+<!--  Set the config argument to test different mocked occupancy grids and therefore different situations the drone might encounter-->
+    <arg name="config" default="1"/>
+    <node pkg="planner" type="mock_command_action_server.py" name="planning_command" output="screen"/>
+    <node pkg="planner" type="mock_move_action_server.py" name="planning_move" output="screen"/>
+    <node pkg="planner" type="mock_map_publisher.py" name="planning_map" output="screen">
+        <param name="conf" value="$(arg config)" type="int"/>
+    </node>
+    <node pkg="planner" type="mock_control_position_publisher.py" name="planning_pos" output="screen">
+        <param name="conf" value="$(arg config)" type="int"/>
+    </node>
+    <node pkg="planner" name="planner_node"  type="planner_node.py" output="screen">
+        <param name="num_of_victims_to_rescue" value="1" type="int"/>
+        <param name="interactive_waypoints" value="false" type="bool"/>
+        <param name="waypoints_arr" value="[]" type="str"/>
+    </node>
+</launch>

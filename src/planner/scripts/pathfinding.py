@@ -44,7 +44,7 @@ def a_star(occupancy_grid, start, goal):
                 heapq.heappush(frontier, (priority, next))
                 came_from[next] = current
 
-    if len(came_from)<=1:
+    if len(came_from)<=1 or goal not in came_from:
         return []
 
     # Reconstruct path from goal to start (backtracking)

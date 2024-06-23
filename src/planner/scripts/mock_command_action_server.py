@@ -16,9 +16,9 @@ def cb_after_goal_received(goal):
 
 
 if __name__ == "__main__":
-    rospy.init_node(defaults.Control.COMMAND_ACTION_NAMESPACE)
+    rospy.init_node("mock_command_action_server")
     mock_as = py_trees_ros.mock.action_server.ActionServer(
-        action_name=rospy.get_name(),
+        action_name=defaults.Control.COMMAND_ACTION_NAMESPACE,
         action_type=control.msg.PlanningCommandAction,
         worker=cb_inside_exec,
         goal_received_callback=cb_after_goal_received,
