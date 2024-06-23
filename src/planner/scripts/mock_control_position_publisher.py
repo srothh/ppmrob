@@ -14,9 +14,9 @@ def publish_drone_position():
 
     while not rospy.is_shutdown():
         position = Point()
-        position.x = 75.0  # Example x position in cm
+        position.x = 0.0  # Example x position in cm
         position.y = 2.0  # Example y position in cm
-        position.z = 255.0  # Example z position in cm
+        position.z = 0.0  # Example z position in cm
 
         # Publish the Point
         pub.publish(position)
