@@ -15,13 +15,13 @@ import common.config.defaults as defaults
 
 # from src.common.src.common.config.defaults import Mapping
 
-fov_x = 100
-fov_y = 100
+fov_x = 150
+fov_y = 150
 offset = 100
-initial_size = 100
+initial_size = 250
 
-frame_width = 320
-frame_height = 240
+frame_width = 150  # Replace 150 by 320 for working on the drone
+frame_height = 150 # Replace 150 by 240 for working on the drone
 
 num_victims = 3
 min_distance_victims = 150  # Minimum distance between two victims in cm

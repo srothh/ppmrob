@@ -82,25 +82,25 @@ services:
       - ppmrob
     depends_on:
       - ros_master
-  # mapping:
-  #   build:
-  #     dockerfile: ./src/mapping/Dockerfile
-  #   env_file:
-  #     - docker.env
-  #   ports:
-  #     - "9007:9007"
-  #   volumes:
-  #     - ./src/mapping/occ_grid.npy:/catkin_ws/src/mapping/occ_grid.npy
-  #   networks:
-  #     - ppmrob
-  #   depends_on:
-  #     # Compose creates and removes services in dependency order (e.g., here ros_master is created before mapping and mapping is removed before ros_master)
-  #     cv:
-  #       # Set the condition under which dependency is considered satisfied
-  #       # condition: service_healthy # Specifies that a dependency is expected to be "healthy" (as indicated by healthcheck) before starting a dependent service.
-  #       condition: service_started
-  #     ros_master:
-  #       condition: service_started # same as default depends_on
+  mapping:
+   build:
+     dockerfile: ./src/mapping/Dockerfile
+   env_file:
+     - docker.env
+   ports:
+     - "9007:9007"
+   volumes:
+     - ./src/mapping/occ_grid.npy:/catkin_ws/src/mapping/occ_grid.npy
+   networks:
+     - ppmrob
+   depends_on:
+     # Compose creates and removes services in dependency order (e.g., here ros_master is created before mapping and mapping is removed before ros_master)
+     # cv:
+       # Set the condition under which dependency is considered satisfied
+       # condition: service_healthy # Specifies that a dependency is expected to be "healthy" (as indicated by healthcheck) before starting a dependent service.
+     #  condition: service_started
+     ros_master:
+       condition: service_started
   static_map:
     build:
       dockerfile: ./src/static_map/Dockerfile
@@ -131,19 +131,19 @@ services:
       - control
       # - mapping
 
-      # mapping_simulation:
-      #   build: ./src/mapping_simulation
-      #   env_file:
-      #     - docker.env
-      #   ports:
-      #     - "9009:9009"
-      #   networks:
-      #     - ppmrob
-      #   depends_on:
-      #     - ros_master
-      #   working_dir: /catkin_ws/src/mapping_simulation/scripts
-      #   # stdin_open: true  # Keeps STDIN open
-      #   # tty: true         # Allocates a pseudo-TTY
+  mapping_simulation:
+     build: ./src/mapping_simulation
+     env_file:
+       - docker.env
+     ports:
+       - "9009:9009"
+     networks:
+       - ppmrob
+     depends_on:
+       - ros_master
+     working_dir: /catkin_ws/src/mapping_simulation/scripts
+     # stdin_open: true  # Keeps STDIN open
+     # tty: true         # Allocates a pseudo-TTY
 
   rviz:
     build: ./src/rviz
