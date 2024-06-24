@@ -168,12 +168,17 @@ def add_points(point1, point2):
     result.z = point1.z + point2.z
     return result
 
+
 def process_map():
-    grid = flat_to_2d(py_trees.blackboard.Blackboard().get(BB_VAR_MAP_DATA), py_trees.blackboard.Blackboard().get(BB_VAR_MAP_WIDTH))
+    grid = flat_to_2d(
+        py_trees.blackboard.Blackboard().get(BB_VAR_MAP_DATA),
+        py_trees.blackboard.Blackboard().get(BB_VAR_MAP_WIDTH),
+    )
     origin = py_trees.blackboard.Blackboard().get(BB_VAR_MAP_ORIGIN)
-    world_pos = add_points(py_trees.blackboard.Blackboard().get(BB_VAR_WORLD_POS), origin)
-    grid_pos_x, grid_pos_y = world_to_grid(world_pos.x,
-                                               world_pos.z)
+    world_pos = add_points(
+        py_trees.blackboard.Blackboard().get(BB_VAR_WORLD_POS), origin
+    )
+    grid_pos_x, grid_pos_y = world_to_grid(world_pos.x, world_pos.z)
     map = py_trees.blackboard.Blackboard().get("map")
     if len(map) != len(grid):
         map = grid
@@ -196,7 +201,9 @@ def dynamic_plan():
 
     print(grid)
     origin = py_trees.blackboard.Blackboard().get(BB_VAR_MAP_ORIGIN)
-    world_pos = add_points(py_trees.blackboard.Blackboard().get(BB_VAR_WORLD_POS), origin)
+    world_pos = add_points(
+        py_trees.blackboard.Blackboard().get(BB_VAR_WORLD_POS), origin
+    )
 
     # print(world_pos)
 
@@ -205,13 +212,37 @@ def dynamic_plan():
     # print(grid_pos_x, grid_pos_y)
     path = []
     if grid[grid_pos_x][grid_pos_y + 1] == 0:
-        path = [Point(world_pos.x + DRONE_MOVEMENT_INCREMENT - origin.x, world_pos.y, world_pos.z - origin.z)]
+        path = [
+            Point(
+                world_pos.x + DRONE_MOVEMENT_INCREMENT - origin.x,
+                world_pos.y,
+                world_pos.z - origin.z,
+            )
+        ]
     elif grid[grid_pos_x + 1][grid_pos_y] == 0:
-        path = [Point(world_pos.x - origin.x, world_pos.y, world_pos.z + DRONE_MOVEMENT_INCREMENT - origin.z)]
+        path = [
+            Point(
+                world_pos.x - origin.x,
+                world_pos.y,
+                world_pos.z + DRONE_MOVEMENT_INCREMENT - origin.z,
+            )
+        ]
     elif grid[grid_pos_x][grid_pos_y - 1] == 0:
-        path = [Point(world_pos.x - DRONE_MOVEMENT_INCREMENT - origin.x, world_pos.y, world_pos.z - origin.z)]
+        path = [
+            Point(
+                world_pos.x - DRONE_MOVEMENT_INCREMENT - origin.x,
+                world_pos.y,
+                world_pos.z - origin.z,
+            )
+        ]
     elif grid[grid_pos_x - 1][grid_pos_y] == 0:
-        path = [Point(world_pos.x - origin.x, world_pos.y, world_pos.z - DRONE_MOVEMENT_INCREMENT - origin.z)]
+        path = [
+            Point(
+                world_pos.x - origin.x,
+                world_pos.y,
+                world_pos.z - DRONE_MOVEMENT_INCREMENT - origin.z,
+            )
+        ]
     return path
 
 
@@ -232,8 +263,7 @@ def path_to_unexplored():
 
 def path_home():
     origin = py_trees.blackboard.Blackboard().get(BB_VAR_MAP_ORIGIN)
-    grid_pos_x, grid_pos_y = world_to_grid(origin.x,
-                                           origin.z)
+    grid_pos_x, grid_pos_y = world_to_grid(origin.x, origin.z)
     return path_to_pos(grid_pos_x, grid_pos_y)
 
 
@@ -245,10 +275,11 @@ def path_to_pos(x, y):
     # grid = flat_to_2d(py_trees.blackboard.Blackboard().get(BB_VAR_MAP_DATA), py_trees.blackboard.Blackboard().get(BB_VAR_MAP_WIDTH))
 
     origin = py_trees.blackboard.Blackboard().get(BB_VAR_MAP_ORIGIN)
-    world_pos = add_points(py_trees.blackboard.Blackboard().get(BB_VAR_WORLD_POS), origin)
+    world_pos = add_points(
+        py_trees.blackboard.Blackboard().get(BB_VAR_WORLD_POS), origin
+    )
 
-    grid_pos_x, grid_pos_y = world_to_grid(world_pos.x,
-                                           world_pos.z)
+    grid_pos_x, grid_pos_y = world_to_grid(world_pos.x, world_pos.z)
     current = (grid_pos_x, grid_pos_y)
     # print("current grid_pos: ",current)
     target = (x, y)
@@ -258,7 +289,13 @@ def path_to_pos(x, y):
     for point in path_indices:
         w_pos = grid_to_world(point[0], point[1])
 
-        path.append(Point(w_pos[0] - origin.x, py_trees.blackboard.Blackboard().get(BB_VAR_WORLD_POS).y, w_pos[1] - origin.z))
+        path.append(
+            Point(
+                w_pos[0] - origin.x,
+                py_trees.blackboard.Blackboard().get(BB_VAR_WORLD_POS).y,
+                w_pos[1] - origin.z,
+            )
+        )
 
     # print("world_path: ",path)
     return path
@@ -407,8 +444,16 @@ def create_root():
         name="Map2BB",
         topic_name=defaults.Mapping.OCCUPANCY_GRID_TOPIC_NAME,
         topic_type=OccupancyGrid,
-        blackboard_variables={BB_VAR_MAP_WIDTH: "info.width", BB_VAR_MAP_DATA: "data", BB_VAR_MAP_ORIGIN: "info.origin.position"},
-        initialise_variables={BB_VAR_MAP_WIDTH: 0, BB_VAR_MAP_DATA: [], BB_VAR_MAP_ORIGIN: Point(0,0,0)}
+        blackboard_variables={
+            BB_VAR_MAP_WIDTH: "info.width",
+            BB_VAR_MAP_DATA: "data",
+            BB_VAR_MAP_ORIGIN: "info.origin.position",
+        },
+        initialise_variables={
+            BB_VAR_MAP_WIDTH: 0,
+            BB_VAR_MAP_DATA: [],
+            BB_VAR_MAP_ORIGIN: Point(0, 0, 0),
+        },
     )
     world_pos2bb = py_trees_ros.subscribers.ToBlackboard(
         name="WorldPos2BB",
@@ -611,6 +656,7 @@ def run_bt(behavior_tree: py_trees_ros.trees.BehaviourTree, rate_hz=2):
         rospy.loginfo("Behavior tree failed.")
         lead_drone_into_safe_state()
 
+
 # Drone world position in centimetres -> Drone position in grid
 def world_to_grid(world_x, world_y):
     grid_x = int(world_x / defaults.map_resolution)
@@ -669,12 +715,12 @@ if __name__ == "__main__":
             blackboard = py_trees.blackboard.Blackboard()
             blackboard.waypoints = waypoints
         # for testing purpose
-        py_trees.logging.level = py_trees.logging.Level.DEBUG
+        # py_trees.logging.level = py_trees.logging.Level.DEBUG
 
         py_trees.blackboard.Blackboard().set("map", [])
 
         tree = setup_bt()
-        py_trees.display.render_dot_tree(tree.root, name="planner_tree")
+        # py_trees.display.render_dot_tree(tree.root, name="planner_tree")
         run_bt(tree)
     except rospy.ROSInterruptException:
         pass
