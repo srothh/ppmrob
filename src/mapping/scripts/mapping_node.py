@@ -43,7 +43,7 @@ counter = 0
 def on_press(key, grid):
     if key.name == 's':
         print("Saving grid")
-        np.save('occupancy_grid.npy', grid)
+        np.save('grid_2406.npy', grid)
 
 
 def spin_thread():
@@ -333,6 +333,8 @@ while not rospy.is_shutdown():
         publish_occupancy_grid(occ_grid.grid, occ_grid.resolution, grid_pub)
         publish_occupancy_grid(occ_grid.planning_grid, occ_grid.resolution, planning_grid_pub)
         step += 1
+        if step % 100 == 0:
+            print(step)
         if step == 40000:
             np.save('/catkin_ws/src/mapping/data/grid.npy',occ_grid.grid)
             print("Saved grid")

@@ -18,7 +18,7 @@ script_dir = '/catkin_ws/src/mapping_simulation/scripts'
 os.chdir(script_dir)
 
 # Load simulation data
-with open('sim_data_victims.json', 'r') as infile:
+with open('sim_data_2406.json', 'r') as infile:
     simulation_data = json.load(infile)
 
 # Helper function to create a PoseStamped message from position data
@@ -58,6 +58,8 @@ def create_polygon_stamped_victim_msg(victims, time):
 
 # Publish data
 rate = rospy.Rate(10)  # Adjust as needed
+num_timesteps = len(simulation_data["timesteps"])
+print(f"{num_timesteps} timesteps")
 for timestep in simulation_data['timesteps']:
     keys = timestep.keys()
     # Publish odometry
@@ -79,6 +81,8 @@ for timestep in simulation_data['timesteps']:
         print(f"Published victim {timestep['victims']}")
 
     rate.sleep()
+
+print("Published everything")
 
 # Keep node alive until shut down
 rospy.spin()
