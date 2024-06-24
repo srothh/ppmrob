@@ -3,14 +3,9 @@
 import rospy
 from std_msgs.msg import String
 from tello import Tello
-from action import LaunchAction
-from action import MoveAction
-from action import EmergencyAction
-from action import CommandAction
-from sensor import ImageSensor
-from sensor import TwistSensor
-from sensor import BatterySensor
-from util import StateCsvLogger
+from action import LaunchAction, MoveAction, EmergencyAction, CommandAction
+from sensor import ImageSensor, TwistSensor, BatterySensor, ImuSensor
+from util import StateCsvLogger, ImageRecorder
 import common.config.defaults
 import datetime
 
@@ -48,6 +43,11 @@ def drone_node(drone):
 
     twist = TwistSensor(
         topic=common.config.defaults.drone_twist_sensor_publish_topic_name
+    )
+    drone.registerStateHandler(twist.publish)
+
+    twist = ImuSensor(
+        topic=common.config.defaults.drone_imu_sensor_publish_topic_name
     )
     drone.registerStateHandler(twist.publish)
 

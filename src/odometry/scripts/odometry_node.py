@@ -6,7 +6,8 @@ from geometry_msgs.msg import TwistStamped, Twist
 from geometry_msgs.msg import PoseStamped, Pose
 from std_msgs.msg import Header
 import tf2_ros
-from geometry_msgs.msg import TransformStamped
+from geometry_msgs.msg import TransformStamped, PoseWithCovariance, TwistWithCovariance
+from nav_msgs.msg import Odometry as Odometry_MSG
 import numpy as np
 
 ODOMETRY_DEFAULT_RATE = 10  
@@ -14,9 +15,18 @@ ODOMETRY_DEFAULT_RATE = 10
 
 class Odometry:
     def __init__(self, rate=ODOMETRY_DEFAULT_RATE):
-        
-        self._sub = rospy.Subscriber("/drone/twist", TwistStamped, callback=self.read_vel)
-        self._pub = rospy.Publisher('/odometry/return_signal', PoseStamped, queue_size=10) 
+
+        self._sub = rospy.Subscriber(
+            defaults.drone_twist_sensor_publish_topic_name, TwistStamped, callback=self.read_vel
+        )
+        self._pub = rospy.Publisher(
+            defaults.Odometry.WORLD_POSITION_TOPIC_NAME, PoseStamped, queue_size=10
+        )
+
+        self._odometry_pub = rospy.Publisher(
+            "/odometry/odometry", Odometry_MSG, queue_size=10
+        )
+
         self._tf = tf2_ros.TransformBroadcaster()
         self._rate = rospy.Rate(rate) 
         self._messages = []
@@ -32,7 +42,10 @@ class Odometry:
                 pose = self.update_odom()
                 #rospy.loginfo(self._pose)
                 self.send_pose(pose)
-                #self.send_tf(pose)
+                self.send_tf(pose)
+                
+                if len(self._messages) > 0:
+                    self.send_odometry(pose, self._messages[-1])
                 self._rate.sleep()
             except Exception as e:
                 rospy.loginfo(e)
@@ -101,6 +114,22 @@ class Odometry:
         
         self._tf.sendTransform(odom_tf)
 
+    def send_odometry(self, pose, twist):
+            msg = Odometry_MSG()
+            msg.header = Header()
+            msg.header.frame_id = "map"
+            msg.header.stamp = rospy.Time.now()
+            msg.child_frame_id = "base_link"
+
+            msg.pose = PoseWithCovariance()
+            msg.pose.pose = pose
+            msg.pose.covariance = [0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0 ]
+
+            msg.twist = TwistWithCovariance()
+            msg.twist.twist = twist.twist
+            msg.twist.covariance = [0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0 ]
+
+            self._odometry_pub.publish(msg)
 
 if __name__ == '__main__':
     try:

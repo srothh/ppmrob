@@ -21,7 +21,7 @@ class TwistSensor():
             if state:
                 msg = TwistStamped()
                 msg.header = Header()
-                msg.header.frame_id = "velocity"
+                msg.header.frame_id = "map"
                 msg.header.stamp = rospy.Time.now()
                 msg.twist.linear.x = state.get('vgx')
                 msg.twist.linear.y = state.get('vgy')
