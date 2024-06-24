@@ -1,0 +1,3 @@
+<launch>
+  <node pkg="static_map" type="static_map_node.py" name="static_map_node" output="screen"/>
+</launch>

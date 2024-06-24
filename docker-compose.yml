@@ -101,7 +101,18 @@ services:
         condition: service_started
       ros_master:
         condition: service_started # same as default depends_on
-
+  static_map:
+    build:
+      dockerfile: ./src/static_map/Dockerfile
+    env_file:
+      - docker.env
+    ports:
+      - "9010:9010"
+    working_dir: /catkin_ws/src/static_map/scripts
+    networks:
+      - ppmrob
+    depends_on:
+      - ros_master
   planner:
     build:
       # If not set explicitly, context defaults to project directory (.).
