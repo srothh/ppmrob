@@ -42,13 +42,13 @@ def publish_occupancy_grid(grid, resolution, publisher):
 
 rospy.init_node("static_map")
 grid_pub = rospy.Publisher("/mapping/map", OccupancyGrid, queue_size=10)
-resolution = 2
+resolution = 5
 
 if __name__ == "__main__":
     # Change the current working directory
     script_dir = '/catkin_ws/src/static_map/scripts'
     os.chdir(script_dir)
-    occ_grid = np.load("new_occ_grid.npy")
+    occ_grid = np.load("grid.npy")
     while not rospy.is_shutdown():
         publish_occupancy_grid(occ_grid, resolution, grid_pub)
         rospy.sleep(3)
