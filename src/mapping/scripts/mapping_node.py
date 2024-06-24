@@ -141,20 +141,20 @@ class CustomOccupancyGrid:
             new_grid_height = max(int(1.05*self.height), drone_grid_y + 2)
             self.resize(new_grid_width, new_grid_height)
 
-        # Calculate the top-left and bottom-right corners of the FOV in grid coordinates
+
         half_fov_x, half_fov_y = self.world_to_grid(fov_size[0] // 2 - buffer_x, fov_size[1] // 2 - buffer_y)
         top_left_x = max(drone_grid_x - half_fov_x, 0)
         top_left_y = max(drone_grid_y - half_fov_y, 0)
         bottom_right_x = min(drone_grid_x + half_fov_x, self.grid.shape[1] - 1)
         bottom_right_y = min(drone_grid_y + half_fov_y, self.grid.shape[0] - 1)
 
-        # print(top_left_x, top_left_y, bottom_right_x, bottom_right_y)
 
-        # Update the grid cells within the FOV to mark them as free
-        # self.grid[top_left_y - 1:bottom_right_y, top_left_x - 1:bottom_right_x] =\
-        #     np.where(self.grid[top_left_y - 1:bottom_right_y, top_left_x - 1:bottom_right_x] != 100, 0, 100)
 
-        # Update planning grid cells
+
+        self.grid[top_left_y - 1:bottom_right_y, top_left_x - 1:bottom_right_x] =\
+            np.where(self.grid[top_left_y - 1:bottom_right_y, top_left_x - 1:bottom_right_x] != 100, 0, 100)
+
+
         planning_grid_fov = self.planning_grid[top_left_y - 1:bottom_right_y, top_left_x - 1:bottom_right_x]
         self.planning_grid[top_left_y - 1:bottom_right_y, top_left_x - 1:bottom_right_x] =\
             np.where(np.logical_or(planning_grid_fov == 0, planning_grid_fov == 100), planning_grid_fov, 50)
@@ -187,7 +187,7 @@ class CustomOccupancyGrid:
                 # Find the indices where the grid is unexplored (-1) and the mask has the line drawn (1)
                 update_indices = np.where(self.mask == 1) # update_indices = np.where((self.grid == -1) & (self.mask == 1))
 
-                # self.grid[update_indices] = 100
+                self.grid[update_indices] = 100
                 self.planning_grid[update_indices] = 100
 
 
@@ -335,8 +335,8 @@ while not rospy.is_shutdown():
         step += 1
         if step % 100 == 0:
             print(step)
-        if step == 40000:
-            np.save('/catkin_ws/src/mapping/data/grid.npy',occ_grid.grid)
+        if step == 10500:
+            np.save('/catkin_ws/src/mapping/data/grid_2406.npy',occ_grid.grid)
             print("Saved grid")
     # if step % 10000 == 0:
         # print(victims.cluster_centers)
