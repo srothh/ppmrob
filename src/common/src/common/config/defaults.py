@@ -14,6 +14,7 @@ battery_publish_topic_name = "/battery/return_signal"
 
 class Mapping:
     OCCUPANCY_GRID_TOPIC_NAME = "/mapping/map"
+    VICTIM_FOUND_TOPIC_NAME = "/mapping/victim"
 
 
 class Control:

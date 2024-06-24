@@ -669,7 +669,7 @@ if __name__ == "__main__":
             blackboard = py_trees.blackboard.Blackboard()
             blackboard.waypoints = waypoints
         # for testing purpose
-        py_trees.logging.level = py_trees.logging.Level.DEBUG
+        # py_trees.logging.level = py_trees.logging.Level.DEBUG
 
         py_trees.blackboard.Blackboard().set("map", [])
 

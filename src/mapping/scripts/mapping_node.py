@@ -25,7 +25,7 @@ frame_height = 240
 
 num_victims = 3
 min_distance_victims = 150  # Minimum distance between two victims in cm
-resolution = 2
+resolution = 5
 
 victims = OnlineKMeans(
     num_victims, min_distance_victims, init_points=[[1, 0], [2, 0], [3, 0]]
