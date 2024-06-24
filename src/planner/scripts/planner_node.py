@@ -23,6 +23,7 @@ BB_VAR_RETURNED_HOME = "returned_home"
 BB_VAR_VICTIM_LINES = "victim_found"
 BB_VAR_WAYPOINT = "waypoint"
 BB_VAR_NUM_OF_RESCUED_VICTIMS = "num_of_rescued_victims"
+BB_VAR_VICTIM_JUST_SAVED = "victim_just_saved"
 
 BB_VAR_WAYPOINTS = "waypoints"
 BB_VAR_MAP_WIDTH = "map_width"
@@ -158,6 +159,7 @@ class IncrementBbVar(py_trees.behaviours.Success):
         blackboard.set(
             self.variable_name, IncrementBbVar.initialise.counter, overwrite=True
         )
+        blackboard.set(BB_VAR_VICTIM_JUST_SAVED, True, overwrite=True)
         rospy.loginfo(f"Number of rescued victims: {IncrementBbVar.initialise.counter}")
 
 
@@ -364,6 +366,20 @@ def create_root_interactive():
     search_subtree_condition = py_trees.decorators.Condition(
         child=search_subtree, status=py_trees.common.Status.FAILURE
     )
+    victim_found_or_just_saved = py_trees.composites.Selector(
+        "Victim found or just saved"
+    )
+    skip_victim_found = py_trees.composites.Sequence("Skip victim found")
+    victim_just_saved = py_trees.blackboard.CheckBlackboardVariable(
+        name="Victim just saved?",
+        variable_name=BB_VAR_VICTIM_JUST_SAVED,
+        expected_value=True,
+    )
+    look_for_next_victim = py_trees.blackboard.SetBlackboardVariable(
+        name="Look for next victim",
+        variable_name=BB_VAR_VICTIM_JUST_SAVED,
+        variable_value=False,
+    )
     no_victim_found = py_trees.blackboard.CheckBlackboardVariable(
         name="No victim found?",
         variable_name=BB_VAR_VICTIM_LINES,
@@ -409,8 +425,10 @@ def create_root_interactive():
     return_home.add_children([fly_home, land_home, terminate])
     search_and_rescue.add_children([takeoff, search_subtree_condition, rescue_subtree])
     search_subtree.add_children(
-        [no_victim_found, move_to_next_position, is_waypoints_empty]
+        [victim_found_or_just_saved, move_to_next_position, is_waypoints_empty]
     )
+    victim_found_or_just_saved.add_children([skip_victim_found, no_victim_found])
+    skip_victim_found.add_children([victim_just_saved, look_for_next_victim])
     rescue_subtree.add_children(
         [no_victim_actually_found_inverter, land_where_victim_found, victim_rescued]
     )
@@ -502,6 +520,20 @@ def create_root():
     search_subtree_condition = py_trees.decorators.Condition(
         child=search_subtree, status=py_trees.common.Status.FAILURE
     )
+    victim_found_or_just_saved = py_trees.composites.Selector(
+        "Victim found or just saved"
+    )
+    skip_victim_found = py_trees.composites.Sequence("Skip victim found")
+    victim_just_saved = py_trees.blackboard.CheckBlackboardVariable(
+        name="Victim just saved?",
+        variable_name=BB_VAR_VICTIM_JUST_SAVED,
+        expected_value=True,
+    )
+    look_for_next_victim = py_trees.blackboard.SetBlackboardVariable(
+        name="Look for next victim",
+        variable_name=BB_VAR_VICTIM_JUST_SAVED,
+        variable_value=False,
+    )
     no_victim_found = py_trees.blackboard.CheckBlackboardVariable(
         name="No victim found?",
         variable_name=BB_VAR_VICTIM_LINES,
@@ -544,11 +576,13 @@ def create_root():
     search_and_rescue.add_children([takeoff, search_subtree_condition, rescue_subtree])
     search_subtree.add_children(
         [
-            no_victim_found,
+            victim_found_or_just_saved,
             path_planning,
             move_to_next_position,
         ]
     )
+    victim_found_or_just_saved.add_children([skip_victim_found, no_victim_found])
+    skip_victim_found.add_children([victim_just_saved, look_for_next_victim])
     path_planning.add_children([dynamic, unexplored, plan_home])
     rescue_subtree.add_children(
         [no_victim_actually_found_inverter, land_where_victim_found, victim_rescued]
