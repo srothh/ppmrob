@@ -22,6 +22,13 @@ services:
       - ppmrob
     depends_on:
       - ros_master
+    # healthcheck:
+    #   # https://docs.docker.com/compose/compose-file/05-services/#healthcheck
+    #   test: [ "CMD-SHELL", "./check_cv_health.sh" ]
+    #   interval: 1m30s
+    #   timeout: 30s
+    #   retries: 5
+    #   start_period: 30s
   drone:
     build:
       context: ./src
@@ -36,6 +43,7 @@ services:
       - ppmrob
     depends_on:
       - ros_master
+
   # DO NOT start drone_dummy together with drone
   # drone_dummy:
   #   build:
@@ -47,6 +55,7 @@ services:
   #     - ppmrob
   #   depends_on:
   #     - ros_master
+
   cockpit:
     build:
       context: ./src
@@ -85,8 +94,13 @@ services:
     networks:
       - ppmrob
     depends_on:
-      - ros_master
-      - cv
+      # Compose creates and removes services in dependency order (e.g., here ros_master is created before mapping and mapping is removed before ros_master)
+      cv:
+        # Set the condition under which dependency is considered satisfied
+        # condition: service_healthy # Specifies that a dependency is expected to be "healthy" (as indicated by healthcheck) before starting a dependent service.
+        condition: service_started
+      ros_master:
+        condition: service_started # same as default depends_on
   static_map:
     build:
       dockerfile: ./src/static_map/Dockerfile
@@ -113,23 +127,24 @@ services:
     networks:
       - ppmrob
     depends_on:
-      # FIXME adjust to actual dependencies
       - ros_master
       - control
       - mapping
-      # mapping_simulation:
-      #   build: ./src/mapping_simulation
-      #   env_file:
-      #     - docker.env
-      #   ports:
-      #     - "9009:9009"
-      #   networks:
-      #     - ppmrob
-      #   depends_on:
-      #     - ros_master
-      #   working_dir: /catkin_ws/src/mapping_simulation/scripts
-      #   # stdin_open: true  # Keeps STDIN open
-      #   # tty: true         # Allocates a pseudo-TTY
+
+  # mapping_simulation:
+  #   build: ./src/mapping_simulation
+  #   env_file:
+  #     - docker.env
+  #   ports:
+  #     - "9009:9009"
+  #   networks:
+  #     - ppmrob
+  #   depends_on:
+  #     - ros_master
+  #   working_dir: /catkin_ws/src/mapping_simulation/scripts
+  #   # stdin_open: true  # Keeps STDIN open
+  #   # tty: true         # Allocates a pseudo-TTY
+
   rviz:
     build: ./src/rviz
     networks:
@@ -142,6 +157,17 @@ services:
       - ROS_MASTER_URI=http://ros_master:11311
     volumes:
       - /tmp/.X11-unix:/tmp/.X11-unix
+  # rqt_graph:
+  #   image: osrf/ros:noetic-desktop-full
+  #   command: rqt_graph
+  #   env_file:
+  #     - docker.env
+  #   depends_on:
+  #     - ros_master
+  #   networks:
+  #     - ppmrob
+  #   volumes:
+  #     - /tmp/.X11-unix:/tmp/.X11-unix:rw
 networks:
   ppmrob:
     driver: "bridge"

@@ -11,8 +11,7 @@ import py_trees
 import py_trees_ros
 import rospy
 
-from std_msgs.msg import Bool
-from geometry_msgs.msg import Point, PoseStamped
+from geometry_msgs.msg import Point, PoseStamped, PolygonStamped
 from nav_msgs.msg import OccupancyGrid
 import pathfinding
 import common.config.defaults as defaults
@@ -21,13 +20,14 @@ import control.msg
 DRONE_MOVEMENT_INCREMENT = 30
 
 BB_VAR_RETURNED_HOME = "returned_home"
-BB_VAR_VICTIM_FOUND = "victim_found"
+BB_VAR_VICTIM_LINES = "victim_found"
 BB_VAR_WAYPOINT = "waypoint"
 BB_VAR_NUM_OF_RESCUED_VICTIMS = "num_of_rescued_victims"
 
 BB_VAR_WAYPOINTS = "waypoints"
 BB_VAR_MAP_WIDTH = "map_width"
 BB_VAR_MAP_DATA = "map_data"
+BB_VAR_MAP_ORIGIN = "map_origin"
 BB_VAR_WORLD_POS = "world_pos"
 
 
@@ -113,7 +113,7 @@ class Leaf(py_trees.Behaviour):
 class ReturnHomeDynamicActionClient(py_trees_ros.actions.ActionClient):
     def initialise(self):
         planned_path = py_trees.blackboard.Blackboard().plan
-        rospy.loginfo("Planned path: "+str(planned_path))
+        rospy.loginfo("Planned path: " + str(planned_path))
         if len(planned_path) == 0:
             rospy.loginfo("Path could not be calculated")
         else:
@@ -125,7 +125,7 @@ class ReturnHomeDynamicActionClient(py_trees_ros.actions.ActionClient):
 class PlanningMoveDynamicActionClient(py_trees_ros.actions.ActionClient):
     def initialise(self):
         planned_path = py_trees.blackboard.Blackboard().plan
-        rospy.loginfo("Planned path: "+str(planned_path))
+        rospy.loginfo("Planned path: " + str(planned_path))
         if len(planned_path) == 0:
             rospy.loginfo("Path could not be calculated")
         else:
@@ -161,17 +161,49 @@ class IncrementBbVar(py_trees.behaviours.Success):
         rospy.loginfo(f"Number of rescued victims: {IncrementBbVar.initialise.counter}")
 
 
-def dynamic_plan():
-    if py_trees.blackboard.Blackboard().get(BB_VAR_MAP_WIDTH) == 0:
-        return []
+def add_points(point1, point2):
+    result = Point()
+    result.x = point1.x + point2.x
+    result.y = point1.y + point2.y
+    result.z = point1.z + point2.z
+    return result
+
+
+def process_map():
     grid = flat_to_2d(
         py_trees.blackboard.Blackboard().get(BB_VAR_MAP_DATA),
         py_trees.blackboard.Blackboard().get(BB_VAR_MAP_WIDTH),
     )
+    origin = py_trees.blackboard.Blackboard().get(BB_VAR_MAP_ORIGIN)
+    world_pos = add_points(
+        py_trees.blackboard.Blackboard().get(BB_VAR_WORLD_POS), origin
+    )
+    grid_pos_x, grid_pos_y = world_to_grid(world_pos.x, world_pos.z)
+    map = py_trees.blackboard.Blackboard().get("map")
+    if len(map) != len(grid):
+        map = grid
+    map[grid_pos_x][grid_pos_y] = 50
+    for row in range(len(grid)):
+        for cell in range(len(grid[row])):
+            if grid[row][cell] != 50:
+                map[row][cell] = grid[row][cell]
 
-    # print(grid)
+    py_trees.blackboard.Blackboard().set("map", map, overwrite=True)
 
-    world_pos = py_trees.blackboard.Blackboard().get(BB_VAR_WORLD_POS)
+
+def dynamic_plan():
+    if py_trees.blackboard.Blackboard().get(BB_VAR_MAP_WIDTH) == 0:
+        return []
+
+    process_map()
+    grid = py_trees.blackboard.Blackboard().get("map")
+    # grid = flat_to_2d(py_trees.blackboard.Blackboard().get(BB_VAR_MAP_DATA), py_trees.blackboard.Blackboard().get(BB_VAR_MAP_WIDTH))
+
+    print(grid)
+    origin = py_trees.blackboard.Blackboard().get(BB_VAR_MAP_ORIGIN)
+    world_pos = add_points(
+        py_trees.blackboard.Blackboard().get(BB_VAR_WORLD_POS), origin
+    )
 
     # print(world_pos)
 
@@ -179,50 +211,75 @@ def dynamic_plan():
 
     # print(grid_pos_x, grid_pos_y)
     path = []
-    if grid[grid_pos_x][grid_pos_y + 1] == 50:
-        path = [Point(world_pos.x + DRONE_MOVEMENT_INCREMENT, world_pos.y, world_pos.z)]
-    elif grid[grid_pos_x + 1][grid_pos_y] == 50:
-        path = [Point(world_pos.x, world_pos.y, world_pos.z + DRONE_MOVEMENT_INCREMENT)]
-    elif grid[grid_pos_x][grid_pos_y - 1] == 50:
-        path = [Point(world_pos.x - DRONE_MOVEMENT_INCREMENT, world_pos.y, world_pos.z)]
-    elif grid[grid_pos_x - 1][grid_pos_y] == 50:
-        path = [Point(world_pos.x, world_pos.y, world_pos.z - DRONE_MOVEMENT_INCREMENT)]
+    if grid[grid_pos_x][grid_pos_y + 1] == 0:
+        path = [
+            Point(
+                world_pos.x + DRONE_MOVEMENT_INCREMENT - origin.x,
+                world_pos.y,
+                world_pos.z - origin.z,
+            )
+        ]
+    elif grid[grid_pos_x + 1][grid_pos_y] == 0:
+        path = [
+            Point(
+                world_pos.x - origin.x,
+                world_pos.y,
+                world_pos.z + DRONE_MOVEMENT_INCREMENT - origin.z,
+            )
+        ]
+    elif grid[grid_pos_x][grid_pos_y - 1] == 0:
+        path = [
+            Point(
+                world_pos.x - DRONE_MOVEMENT_INCREMENT - origin.x,
+                world_pos.y,
+                world_pos.z - origin.z,
+            )
+        ]
+    elif grid[grid_pos_x - 1][grid_pos_y] == 0:
+        path = [
+            Point(
+                world_pos.x - origin.x,
+                world_pos.y,
+                world_pos.z - DRONE_MOVEMENT_INCREMENT - origin.z,
+            )
+        ]
     return path
 
 
 def path_to_unexplored():
     if py_trees.blackboard.Blackboard().get(BB_VAR_MAP_WIDTH) == 0:
         return []
-    grid = flat_to_2d(
-        py_trees.blackboard.Blackboard().get(BB_VAR_MAP_DATA),
-        py_trees.blackboard.Blackboard().get(BB_VAR_MAP_WIDTH),
-    )
+
+    grid = py_trees.blackboard.Blackboard().get("map")
+    # grid = flat_to_2d(py_trees.blackboard.Blackboard().get(BB_VAR_MAP_DATA), py_trees.blackboard.Blackboard().get(BB_VAR_MAP_WIDTH))
     for row in range(len(grid)):
         for cell in range(len(grid[row])):
-            if grid[row][cell] == 50:
-                return path_to_pos(row, cell)
+            if grid[row][cell] == 0:
+                path = path_to_pos(row, cell)
+                if len(path) != 0:
+                    return path
     return []
 
 
 def path_home():
-    return path_to_pos(0, 0)
+    origin = py_trees.blackboard.Blackboard().get(BB_VAR_MAP_ORIGIN)
+    grid_pos_x, grid_pos_y = world_to_grid(origin.x, origin.z)
+    return path_to_pos(grid_pos_x, grid_pos_y)
 
 
 def path_to_pos(x, y):
     if py_trees.blackboard.Blackboard().get(BB_VAR_MAP_WIDTH) == 0:
         return []
-    # print(x, " : ", y)
-    grid = flat_to_2d(
-        py_trees.blackboard.Blackboard().get(BB_VAR_MAP_DATA),
-        py_trees.blackboard.Blackboard().get(BB_VAR_MAP_WIDTH),
+
+    grid = py_trees.blackboard.Blackboard().get("map")
+    # grid = flat_to_2d(py_trees.blackboard.Blackboard().get(BB_VAR_MAP_DATA), py_trees.blackboard.Blackboard().get(BB_VAR_MAP_WIDTH))
+
+    origin = py_trees.blackboard.Blackboard().get(BB_VAR_MAP_ORIGIN)
+    world_pos = add_points(
+        py_trees.blackboard.Blackboard().get(BB_VAR_WORLD_POS), origin
     )
-    # print("---------")
-    # print(grid)
-    # print("---------")
-    grid_pos_x, grid_pos_y = world_to_grid(
-        py_trees.blackboard.Blackboard().get(BB_VAR_WORLD_POS).x,
-        py_trees.blackboard.Blackboard().get(BB_VAR_WORLD_POS).z,
-    )
+
+    grid_pos_x, grid_pos_y = world_to_grid(world_pos.x, world_pos.z)
     current = (grid_pos_x, grid_pos_y)
     # print("current grid_pos: ",current)
     target = (x, y)
@@ -234,11 +291,13 @@ def path_to_pos(x, y):
 
         path.append(
             Point(
-                w_pos[0],
+                w_pos[0] - origin.x,
                 py_trees.blackboard.Blackboard().get(BB_VAR_WORLD_POS).y,
-                w_pos[1],
+                w_pos[1] - origin.z,
             )
         )
+
+    # print("world_path: ",path)
     return path
 
 
@@ -253,11 +312,11 @@ def create_root_interactive():
     # preferred way of getting data from a topic according to docs (instead of, e.g., `py_trees_ros.subscribers.CheckData`)
     victim_found2bb = py_trees_ros.subscribers.ToBlackboard(
         name="VictimFound2BB",
-        topic_name=defaults.Mapping.VICTIM_FOUND_TOPIC_NAME,
-        topic_type=Bool,
-        # get rid of the annoying sub-data field
-        blackboard_variables={BB_VAR_VICTIM_FOUND: "data"},
-        initialise_variables={BB_VAR_VICTIM_FOUND: False},
+        topic_name=defaults.CV.VICTIM_LINES_TOPIC_NAME,
+        topic_type=PolygonStamped,
+        # get rid of the sub-polygon field
+        blackboard_variables={BB_VAR_VICTIM_LINES: "polygon.points"},
+        initialise_variables={BB_VAR_VICTIM_LINES: []},
     )
     battery2bb = py_trees_ros.battery.ToBlackboard(
         name="Battery2BB",
@@ -305,12 +364,11 @@ def create_root_interactive():
     search_subtree_condition = py_trees.decorators.Condition(
         child=search_subtree, status=py_trees.common.Status.FAILURE
     )
-    is_victim_found = py_trees.blackboard.CheckBlackboardVariable(
-        name="Victim found?",
-        variable_name=BB_VAR_VICTIM_FOUND,
-        expected_value=True,
+    no_victim_found = py_trees.blackboard.CheckBlackboardVariable(
+        name="No victim found?",
+        variable_name=BB_VAR_VICTIM_LINES,
+        expected_value=[],
     )
-    is_victim_found_inverter = py_trees.decorators.Inverter(child=is_victim_found)
     move_to_next_position = PlanningMoveInteractiveActionClient(
         name="Move to next position",
         action_spec=control.msg.PlanningMoveAction,
@@ -320,15 +378,18 @@ def create_root_interactive():
     is_waypoints_empty = py_trees.meta.inverter(
         py_trees.blackboard.CheckBlackboardVariable
     )(
-        name="All waypoints flown?",
+        name="Any waypoints not yet flown?",
         variable_name=BB_VAR_WAYPOINTS,
         expected_value=deque([]),
     )
     rescue_subtree = py_trees.composites.Sequence(name="Rescue victim")
-    is_victim_actually_found = py_trees.blackboard.CheckBlackboardVariable(
-        name="Victim actually found?",
-        variable_name=BB_VAR_VICTIM_FOUND,
-        expected_value=True,
+    no_victim_actually_found = py_trees.blackboard.CheckBlackboardVariable(
+        name="No victim actually found?",
+        variable_name=BB_VAR_VICTIM_LINES,
+        expected_value=[],
+    )
+    no_victim_actually_found_inverter = py_trees.decorators.Inverter(
+        child=no_victim_actually_found
     )
     land_where_victim_found = py_trees_ros.actions.ActionClient(
         name="Land where victim found",
@@ -348,10 +409,10 @@ def create_root_interactive():
     return_home.add_children([fly_home, land_home, terminate])
     search_and_rescue.add_children([takeoff, search_subtree_condition, rescue_subtree])
     search_subtree.add_children(
-        [is_victim_found_inverter, move_to_next_position, is_waypoints_empty]
+        [no_victim_found, move_to_next_position, is_waypoints_empty]
     )
     rescue_subtree.add_children(
-        [is_victim_actually_found, land_where_victim_found, victim_rescued]
+        [no_victim_actually_found_inverter, land_where_victim_found, victim_rescued]
     )
     return root
 
@@ -368,11 +429,11 @@ def create_root():
     # preferred way of getting data from a topic according to docs (instead of, e.g., `py_trees_ros.subscribers.CheckData`)
     victim_found2bb = py_trees_ros.subscribers.ToBlackboard(
         name="VictimFound2BB",
-        topic_name=defaults.Mapping.VICTIM_FOUND_TOPIC_NAME,
-        topic_type=Bool,
-        # get rid of the annoying sub-data field
-        blackboard_variables={BB_VAR_VICTIM_FOUND: "data"},
-        initialise_variables={BB_VAR_VICTIM_FOUND: False},
+        topic_name=defaults.CV.VICTIM_LINES_TOPIC_NAME,
+        topic_type=PolygonStamped,
+        # get rid of the sub-polygon field
+        blackboard_variables={BB_VAR_VICTIM_LINES: "polygon.points"},
+        initialise_variables={BB_VAR_VICTIM_LINES: []},
     )
     battery2bb = py_trees_ros.battery.ToBlackboard(
         name="Battery2BB",
@@ -383,8 +444,16 @@ def create_root():
         name="Map2BB",
         topic_name=defaults.Mapping.OCCUPANCY_GRID_TOPIC_NAME,
         topic_type=OccupancyGrid,
-        blackboard_variables={BB_VAR_MAP_WIDTH: "info.width", BB_VAR_MAP_DATA: "data"},
-        initialise_variables={BB_VAR_MAP_WIDTH: 0, BB_VAR_MAP_DATA: []},
+        blackboard_variables={
+            BB_VAR_MAP_WIDTH: "info.width",
+            BB_VAR_MAP_DATA: "data",
+            BB_VAR_MAP_ORIGIN: "info.origin.position",
+        },
+        initialise_variables={
+            BB_VAR_MAP_WIDTH: 0,
+            BB_VAR_MAP_DATA: [],
+            BB_VAR_MAP_ORIGIN: Point(0, 0, 0),
+        },
     )
     world_pos2bb = py_trees_ros.subscribers.ToBlackboard(
         name="WorldPos2BB",
@@ -433,12 +502,11 @@ def create_root():
     search_subtree_condition = py_trees.decorators.Condition(
         child=search_subtree, status=py_trees.common.Status.FAILURE
     )
-    is_victim_found = py_trees.blackboard.CheckBlackboardVariable(
-        name="Victim found?",
-        variable_name=BB_VAR_VICTIM_FOUND,
-        expected_value=True,
+    no_victim_found = py_trees.blackboard.CheckBlackboardVariable(
+        name="No victim found?",
+        variable_name=BB_VAR_VICTIM_LINES,
+        expected_value=[],
     )
-    is_victim_found_inverter = py_trees.decorators.Inverter(child=is_victim_found)
     path_planning = py_trees.composites.Selector("Path planning")
     dynamic = DynamicPlan("Dynamic planning")
     unexplored = UnexploredPlan("Plan path to unexplored cell")
@@ -449,10 +517,13 @@ def create_root():
         override_feedback_message_on_running="Moving to next position...",
     )
     rescue_subtree = py_trees.composites.Sequence(name="Rescue victim")
-    is_victim_actually_found = py_trees.blackboard.CheckBlackboardVariable(
-        name="Victim actually found?",
-        variable_name=BB_VAR_VICTIM_FOUND,
-        expected_value=True,
+    no_victim_actually_found = py_trees.blackboard.CheckBlackboardVariable(
+        name="No victim actually found?",
+        variable_name=BB_VAR_VICTIM_LINES,
+        expected_value=[],
+    )
+    no_victim_actually_found_inverter = py_trees.decorators.Inverter(
+        child=no_victim_actually_found
     )
     land_where_victim_found = py_trees_ros.actions.ActionClient(
         name="Land where victim found",
@@ -473,14 +544,14 @@ def create_root():
     search_and_rescue.add_children([takeoff, search_subtree_condition, rescue_subtree])
     search_subtree.add_children(
         [
-            is_victim_found_inverter,
+            no_victim_found,
             path_planning,
             move_to_next_position,
         ]
     )
     path_planning.add_children([dynamic, unexplored, plan_home])
     rescue_subtree.add_children(
-        [is_victim_actually_found, land_where_victim_found, victim_rescued]
+        [no_victim_actually_found_inverter, land_where_victim_found, victim_rescued]
     )
     return root
 
@@ -491,8 +562,8 @@ def post_tick_handler(snapshot_visitor, tree):
     """
     # print(py_trees.display.ascii_tree(tree.root, snapshot_information=snapshot_visitor))
     # the following actually shows more info than the above
-    # py_trees.display.print_ascii_tree(tree.root, show_status=True)
-    pass
+    py_trees.display.print_ascii_tree(tree.root, show_status=True)
+    # pass
 
 
 def setup_bt(timeout=defaults.Planning.BT_SETUP_TIMEOUT):
@@ -516,7 +587,7 @@ def setup_bt(timeout=defaults.Planning.BT_SETUP_TIMEOUT):
     # `DebugVisitor` prints debug logging messages to stdout
     tree.visitors.append(py_trees.visitors.DebugVisitor())
     tree.visitors.append(snapshot_visitor)
-    if tree.setup(timeout=timeout):
+    if not tree.setup(timeout=timeout):
         rospy.loginfo("Setup of BT failed")
     rospy.loginfo("Behaviour tree created.")
     return tree
@@ -644,9 +715,12 @@ if __name__ == "__main__":
             blackboard = py_trees.blackboard.Blackboard()
             blackboard.waypoints = waypoints
         # for testing purpose
-        # py_trees.logging.level = py_trees.logging.Level.ERROR
+        # py_trees.logging.level = py_trees.logging.Level.DEBUG
+
+        py_trees.blackboard.Blackboard().set("map", [])
+
         tree = setup_bt()
-        py_trees.display.render_dot_tree(tree.root, name="planner_tree")
+        # py_trees.display.render_dot_tree(tree.root, name="planner_tree")
         run_bt(tree)
     except rospy.ROSInterruptException:
         pass

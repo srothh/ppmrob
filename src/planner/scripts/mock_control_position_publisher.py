@@ -21,21 +21,21 @@ def publish_drone_position():
     while not rospy.is_shutdown():
         pos = PoseStamped()
         if conf == 1:
-            pos.pose.position.x = 75.0
+            pos.pose.position.x = 0.0
             pos.pose.position.y = 2.0
-            pos.pose.position.z = 255.0
+            pos.pose.position.z = 0.0
         elif conf == 2:
-            pos.pose.position.x = 75.0
+            pos.pose.position.x = 0.0
             pos.pose.position.y = 2.0
-            pos.pose.position.z = 255.0
+            pos.pose.position.z = 0.0
         elif conf == 3:
-            pos.pose.position.x = 75.0
+            pos.pose.position.x = 0.0
             pos.pose.position.y = 2.0
-            pos.pose.position.z = 255.0
+            pos.pose.position.z = 0.0
         elif conf == 4:
-            pos.pose.position.x = 225.0
+            pos.pose.position.x = 0.0
             pos.pose.position.y = 2.0
-            pos.pose.position.z = 255.0
+            pos.pose.position.z = 0.0
 
         # Publish the PoseStamped
         pub.publish(pos)
