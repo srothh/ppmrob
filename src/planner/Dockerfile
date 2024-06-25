@@ -36,6 +36,7 @@ RUN source /opt/ros/noetic/setup.bash  && catkin_make && source /catkin_ws/devel
 ENV ROS_DISTRO noetic
 ENV ROS_WORKSPACE /catkin_ws
 
+# Give execute permissions to the Python script
 RUN chmod +x /catkin_ws/src/${PACKAGE_NAME}/scripts/*
 
 # Source the ROS setup file every time a new container is run
