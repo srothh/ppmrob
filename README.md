@@ -14,15 +14,6 @@ Send `Ctrl+C` or run:
 docker compose down
 ``
 
-## Mapping and Mapping Simulation
-
-- In order to simulate mapping, start the mapping node and afterwards the mapping_simulation node.
-The mapping node publishes the map under the topics `mapping/map` and `mapping/occupancy_grid`.
-
-- In order to use the mapping node with the real setup, the mapping simulation must not run. If all nodes are to be started with `docker-compose up`, it needs to be commented in the docker-compose file. Additionally, the dependency on the CV node needs to be uncommented.
-- The parameters frame_width and frame_height in mapping_node.py are currently set to 150 as needed in the simulation. For running it with the drone, the values need to be changed to 320 and 240 respectively.
-
-
 ## Development
 
     # in catkin workspace (i.e., ppmrob)
