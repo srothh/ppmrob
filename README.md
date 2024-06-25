@@ -14,7 +14,7 @@ Send `Ctrl+C` or run:
 docker compose down
 ``
 
-## Development
+## For further development
 
     # in catkin workspace (i.e., ppmrob)
     catkin_make # compile
