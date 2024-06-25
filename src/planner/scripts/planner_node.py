@@ -25,7 +25,7 @@ BB_VAR_VICTIM_LINES = "victim_found"
 BB_VAR_WAYPOINT = "waypoint"
 BB_VAR_NUM_OF_RESCUED_VICTIMS = "num_of_rescued_victims"
 BB_VAR_VICTIM_JUST_SAVED = "victim_just_saved"
-
+BB_VAR_WAYPOINTS_FLOWN = "waypoints_flown"
 BB_VAR_WAYPOINTS = "waypoints"
 BB_VAR_MAP_WIDTH = "map_width"
 BB_VAR_MAP_DATA = "map_data"
@@ -376,12 +376,18 @@ def create_root_interactive():
         action_namespace=defaults.Control.MOVE_ACTION_NAMESPACE,
         override_feedback_message_on_running="Moving to next position...",
     )
+    waypoints_priority = py_trees.composites.Selector("Waypoints priority")
     is_waypoints_empty = py_trees.meta.inverter(
         py_trees.blackboard.CheckBlackboardVariable
     )(
         name="Any waypoints not yet flown?",
         variable_name=BB_VAR_WAYPOINTS,
         expected_value=deque([]),
+    )
+    terminate_waypoints = py_trees.blackboard.SetBlackboardVariable(
+        name="Terminate waypoints",
+        variable_name=BB_VAR_WAYPOINTS_FLOWN,
+        variable_value=True,
     )
     rescue_subtree = py_trees.composites.Sequence(name="Rescue victim")
     no_victim_actually_found = py_trees.blackboard.CheckBlackboardVariable(
@@ -410,10 +416,11 @@ def create_root_interactive():
     return_home.add_children([fly_home, land_home, terminate])
     search_and_rescue.add_children([takeoff, search_subtree_condition, rescue_subtree])
     search_subtree.add_children(
-        [victim_found_or_just_saved, move_to_next_position, is_waypoints_empty]
+        [victim_found_or_just_saved, move_to_next_position, waypoints_priority]
     )
     victim_found_or_just_saved.add_children([skip_victim_found, no_victim_found])
     skip_victim_found.add_children([victim_just_saved, look_for_next_victim])
+    waypoints_priority.add_children([is_waypoints_empty, terminate_waypoints])
     rescue_subtree.add_children(
         [no_victim_actually_found_inverter, land_where_victim_found, victim_rescued]
     )
@@ -656,6 +663,9 @@ def run_bt(behavior_tree: py_trees_ros.trees.BehaviourTree, rate_hz=2):
             rospy.loginfo("Mission completed.")
             break
         behavior_tree.tick()
+        if py_trees.blackboard.Blackboard().get(BB_VAR_WAYPOINTS_FLOWN):
+            rospy.loginfo("All waypoints flown.")
+            break
         if py_trees.blackboard.Blackboard().get(BB_VAR_RETURNED_HOME):
             rospy.loginfo("Drone returned home.")
             break
