@@ -12,6 +12,7 @@ Send `Ctrl+C` or run:
 
 ``
 docker compose down
+``
 
 ## Mapping and Mapping Simulation
 
