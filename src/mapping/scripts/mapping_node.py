@@ -54,41 +54,6 @@ def spin_thread():
     rospy.spin()
 
 
-def calculate_fov_size(diagonal_fov_degrees, height):
-    # Camera resolution aspect ratio: 162:121
-    aspect_ratio_width = 162
-    aspect_ratio_height = 121
-
-    # Convert diagonal FoV from degrees to radians
-    diagonal_fov_radians = math.radians(diagonal_fov_degrees)
-
-    # Calculate the horizontal and vertical FoV
-    horizontal_fov_radians = 2 * math.atan(
-        math.tan(diagonal_fov_radians / 2)
-        * (
-            aspect_ratio_width
-            / math.sqrt(aspect_ratio_width**2 + aspect_ratio_height**2)
-        )
-    )
-    vertical_fov_radians = 2 * math.atan(
-        math.tan(diagonal_fov_radians / 2)
-        * (
-            aspect_ratio_height
-            / math.sqrt(aspect_ratio_width**2 + aspect_ratio_height**2)
-        )
-    )
-
-    # Calculate the field of view dimensions at the given height
-    width = 2 * height * math.tan(horizontal_fov_radians / 2)
-    depth = 2 * height * math.tan(vertical_fov_radians / 2)
-
-    # Round up fov values to multiples of 3
-    width = width + (width % 3)
-    depth = depth + (depth % 3)
-
-    return width, depth
-
-
 # Assumes square window and absolute drone position
 def map_coordinate(x, y, x_d, y_d, fov_width, fov_height):
     x_p = int(x_d) - fov_width // 2 + int(x * (fov_width / frame_width))
@@ -121,11 +86,6 @@ class CustomOccupancyGrid:
         self.planning_grid = np.full((height, width), -1)
         self.mask = np.full((height, width), 0, np.uint8)
         self.resolution = resolution
-
-    def update_cell(self, x, y, value):
-        # Ensure coordinates are within the grid bounds
-        if 0 <= x < self.grid.shape[1] and 0 <= y < self.grid.shape[0]:
-            self.grid[y, x] = value
 
     def world_to_grid(self, world_x, world_y):
         return int(world_x / self.resolution), int(world_y / self.resolution)
@@ -171,8 +131,6 @@ class CustomOccupancyGrid:
         top_left_y = max(drone_grid_y - half_fov_y, 0)
         bottom_right_x = min(drone_grid_x + half_fov_x, self.grid.shape[1] - 1)
         bottom_right_y = min(drone_grid_y + half_fov_y, self.grid.shape[0] - 1)
-
-        # print(top_left_x, top_left_y, bottom_right_x, bottom_right_y)
 
         # Update the grid cells within the FOV to mark them as free
         self.grid[top_left_y - 1 : bottom_right_y, top_left_x - 1 : bottom_right_x] = (
@@ -354,13 +312,6 @@ def publish_occupancy_grid(grid, resolution, publisher):
     grid_msg.info.origin.orientation.z = 0.0
     grid_msg.info.origin.orientation.w = 1.0
 
-    # Specify the path where the file should be saved inside the container
-    # file_path = '/catkin_ws/src/mapping/occ_grid.npy'
-    #
-    # if print_grid:
-    #     np.save(file_path, custom_grid.grid)
-    #     print("SAVED")
-
     # Flatten the grid array and convert it to a list for the message
     grid_msg.data = list(grid.flatten())
 
@@ -397,15 +348,12 @@ while not rospy.is_shutdown():
         closest_msg = current_positions[-1]
         pos_point = closest_msg[0].position
         drone_pos = pos_point.x, pos_point.y
-        # TODO: CHECK WHATS WRONG WITH THE FOV COMPUTATION (maybe it's just because the height is 0 in this simulation)
-        # fov = calculate_fov_size(82.6, pos_point.z)
-        # fov_x, fov_y = fov[0], fov[1]
+
         fov = (fov_x, fov_y)
         occ_grid.update_fov(drone_pos, fov)
         publish_occupancy_grid(occ_grid.grid, occ_grid.resolution, grid_pub)
         publish_occupancy_grid(
             occ_grid.planning_grid, occ_grid.resolution, planning_grid_pub
         )
-    # if step % 10000 == 0:
-    # print(victims.cluster_centers)
+
     step += 1
