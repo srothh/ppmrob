@@ -47,9 +47,3 @@ Project file structure as a tree (find more info [here](https://www.yahboom.net/
 1. [CreatingPackage](http://wiki.ros.org/ROS/Tutorials/catkin/CreatingPackage)
 2. Add `Dockerfile` to the package folder
 3. Add the node/service to the `docker-compose.yml` file
-
-# [Initial commit](https://github.com/srothh/ppmrob/commit/a84e313148c968950890c279be86650bc3b27f8c)
-
--camera off 
-- rviz
-takeoff height?
