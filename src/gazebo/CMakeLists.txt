@@ -24,14 +24,14 @@ catkin_package(
 link_directories(${GAZEBO_LIBRARY_DIRS})
 list(APPEND CMAKE_CXX_FLAGS "${GAZEBO_CXX_FLAGS}")
 
-add_library(control_plugin SHARED src/control_plugin.cpp)
-target_link_libraries(control_plugin ${GAZEBO_LIBRARIES} ${catkin_LIBRARIES})
+#add_library(control_plugin SHARED src/control_plugin.cpp)
+#target_link_libraries(control_plugin ${GAZEBO_LIBRARIES} ${catkin_LIBRARIES})
 
-add_library(battery_plugin SHARED src/battery_plugin.cpp)
-target_link_libraries(battery_plugin ${GAZEBO_LIBRARIES} ${catkin_LIBRARIES})
+#add_library(battery_plugin SHARED src/battery_plugin.cpp)
+#target_link_libraries(battery_plugin ${GAZEBO_LIBRARIES} ${catkin_LIBRARIES})
 
-add_library(cv_plugin SHARED src/cv_plugin.cpp)
-target_link_libraries(cv_plugin ${catkin_LIBRARIES} ${GAZEBO_LIBRARIES})
+#add_library(cv_plugin SHARED src/cv_plugin.cpp)
+#target_link_libraries(cv_plugin ${catkin_LIBRARIES} ${GAZEBO_LIBRARIES})
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${GAZEBO_CXX_FLAGS}")
 
