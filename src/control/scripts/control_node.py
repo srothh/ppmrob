@@ -127,8 +127,6 @@ class DroneControl:
         position = msg.pose.position
         orientation = msg.pose.orientation
 
-        # TODO: Use this data for calculate_rotation_and_translation?
-
         x = position.x
         y = position.y
         z = position.z
@@ -176,7 +174,7 @@ class DroneControl:
 
         for target in target_points:
 
-            # course angle and distance fpr movement are calculated
+            # course angle and distance for movement are calculated
             course, distance = self.calculate_rotation_and_translation(self.prev, target)
 
             bear = course - self.prev_course
@@ -212,12 +210,6 @@ class DroneControl:
                 else:
                     rospy.loginfo("Retrying to translate")
                     time.sleep(1)
-
-            # Send feedback via move action server for planning node
-            # TODO: is feedback needed?
-            #feedback = PlanningMoveFeedback()
-            #feedback.progress = result.progress
-            #self.move_action_server.publish_feedback(feedback)
 
         # Set result for move action server for planning node
         result_msg = PlanningMoveResult()
