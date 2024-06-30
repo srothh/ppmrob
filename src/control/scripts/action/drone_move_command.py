@@ -44,10 +44,7 @@ class DroneMoveCommand(object):
         # For publishing as topic
         rospy.loginfo("Control: Publishing Transform Action Goal: x: %.2f y: %.2f z: %.2f r: %.2f " % (
             x, y, z, r))
-        #self.move_pub.publish(goal)
 
-        # self.drone_move_client.send_goal_and_wait(
-        #     drone.msg.MoveActionGoal(target=Transform(Vector3(x, y, z), Quaternion(0, 0, r, 0))))
         result = self.drone_move_client.get_result()
         return result
 
