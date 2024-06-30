@@ -8,9 +8,6 @@ from drone.msg import CommandAction, CommandGoal
 class TakeOffAndLandHandler:
     def __init__(self):
 
-        # self.take_off_action_client = actionlib.SimpleActionClient('TakeOff', TakeOffAction)
-        # self.take_off_action_client.wait_for_server()
-        # self.land_client = actionlib.SimpleActionClient('Land', LandAction)
         self.command_client = actionlib.SimpleActionClient('command', CommandAction)
         self.command_client.wait_for_server()
 

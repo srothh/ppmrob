@@ -47,8 +47,6 @@ class DroneControl:
             "planning_decision_data", String, self.planning_decision_callback
         )
 
-        rospy.Subscriber("/odometry/home_coordinates", String, self.odometry_callback)
-
         self.drone_command_pub = rospy.Publisher("drone_node", String, queue_size=10)
 
         self._feedback = MoveFeedback
@@ -119,20 +117,6 @@ class DroneControl:
         self.target_x = planning_data.position.x
         self.target_y = planning_data.position.y
 
-    def odometry_callback(self, msg):
-        """Return th odometry data for orientation and position
-
-        @param msg:
-        """
-        position = msg.pose.position
-        orientation = msg.pose.orientation
-
-        # TODO: Use this data for calculate_rotation_and_translation?
-
-        x = position.x
-        y = position.y
-        z = position.z
-        direction = orientation.z
 
     def calculate_rotation_and_translation(self, prev, target):
         """Calculates the rotation angle and translation for the drone node
@@ -146,9 +130,7 @@ class DroneControl:
         else:
             dx = target.x - prev.x
             dy = target.y - prev.y
-            # hypoth = math.sqrt(dx ** 2 + dy ** 2)
-            # sine = dy / hypoth
-            # rad_angle = math.asin(sine)
+
             angle = math.atan2(dy, dx)
             degree_angle = math.degrees(angle)
             distance = float(math.sqrt(dx**2 + dy**2))
@@ -176,7 +158,7 @@ class DroneControl:
 
         for target in target_points:
 
-            # course angle and distance fpr movement are calculated
+            # course angle and distance for movement are calculated
             course, distance = self.calculate_rotation_and_translation(self.prev, target)
 
             bear = course - self.prev_course
@@ -212,12 +194,6 @@ class DroneControl:
                 else:
                     rospy.loginfo("Retrying to translate")
                     time.sleep(1)
-
-            # Send feedback via move action server for planning node
-            # TODO: is feedback needed?
-            #feedback = PlanningMoveFeedback()
-            #feedback.progress = result.progress
-            #self.move_action_server.publish_feedback(feedback)
 
         # Set result for move action server for planning node
         result_msg = PlanningMoveResult()

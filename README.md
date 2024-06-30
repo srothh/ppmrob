@@ -5,7 +5,7 @@
 docker compose up --build
 ``
 
-This defaults to 1 victim, change `NUMBER_OF_VICTIMS=value` in `docker_planner_vars.env` for different number of victims.
+This defaults to 1 victim, change `NUMBER_OF_VICTIMS=<value>` in `docker_planner_vars.env` for different number of victims.
 
 ### To exit
 Send `Ctrl+C` or run:
@@ -14,7 +14,7 @@ Send `Ctrl+C` or run:
 docker compose down
 ``
 
-## Development
+## For further development
 
     # in catkin workspace (i.e., ppmrob)
     catkin_make # compile

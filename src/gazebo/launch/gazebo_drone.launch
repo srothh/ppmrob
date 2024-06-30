@@ -1,0 +1,30 @@
+<launch>
+  <!-- Start gazebo in empty world -->
+  <include file="$(find gazebo_ros)/launch/empty_world.launch">
+    <arg name="world_name" value="$(find gazebo)/worlds/empty.world"/>
+  </include>
+  
+  <param name="robot_description" command="cat '$(find gazebo)/urdf/drone.urdf'"/>
+
+  <node name="spawn_urdf" pkg="gazebo_ros" type="spawn_model" respawn="false" output="screen"
+        args="-urdf -model tello_model -param robot_description"/>
+
+  <rosparam file="$(find gazebo)/config/drone_control.yaml" command="load"/>
+
+  <node name="controller_manager" pkg="controller_manager" type="controller_manager" respawn="false" output="screen">
+    <param name="robot_description" command="$(find xacro)/xacro $(find gazebo)/urdf/drone.xacro"/>
+  </node>
+
+  <node name="controller_spawner" pkg="controller_manager" type="spawner" respawn="false"
+    output="screen" args="joint_state_controller joint_motor_controller joint_velocity_controller"/>
+
+  <node name="camera_controller" pkg="controller_manager" type="spawner" respawn="false" output="screen"
+        args="camera1"/>
+  
+  <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher"
+    respawn="false" output="screen">
+    <param name="use_sim_time" value="false"/>
+    <remap from="/joint_states" to="/gazebo/joint_states" />
+  </node>
+
+</launch>

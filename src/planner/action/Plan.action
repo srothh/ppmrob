@@ -1,9 +1,0 @@
-# Goal definition
-uint32[] x
-uint32[] y
----
-# Result definition
-uint32[] discovered_cells
----
-# Feedback definition
-uint32 cells_discovered_so_far
