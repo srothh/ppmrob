@@ -16,7 +16,6 @@ from PIL import Image
 from sensor_msgs.msg import Image as Image_msg
 from image_processing.detect_line import detect_lines
 from image_processing.detect_victim import classify_image, yolo_detection
-from image_processing.display_image import display_image, display_object_detection
 from image_processing.process_image import img_processing
 from util.util import build_coordinate_msg, build_polygon_msg
 import cv2
@@ -46,10 +45,6 @@ def callback(data):
     # note: switch encoding to bgr8
     frame = br.imgmsg_to_cv2(data, desired_encoding="bgr8")
     # show image
-    # cv2.imshow("Image window", frame)
-    # cv2.waitKey(3)
-    # save image
-    # cv2.imwrite('lastframe.png', frame)
     global yolo_model
     detected, lines = img_processing(frame, yolo_model)
     # publish
