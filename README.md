@@ -56,9 +56,3 @@ takeoff height?
 
 
 
-
-TODO:
-
-* repo aufräumen
-* kurze zusammenfassung
-* howto test module
