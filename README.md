@@ -53,3 +53,12 @@ Project file structure as a tree (find more info [here](https://www.yahboom.net/
 -camera off 
 - rviz
 takeoff height?
+
+
+
+
+TODO:
+
+* repo aufräumen
+* kurze zusammenfassung
+* howto test module

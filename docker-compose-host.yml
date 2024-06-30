@@ -11,7 +11,7 @@ services:
   cv:
     build: ./src/cv/cv_node
     env_file:
-      - docker.env
+      - docker_host.env
     network_mode: host
   drone:
     build:

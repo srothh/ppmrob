@@ -427,10 +427,10 @@ def update(frame_number):
             waypoints_all.set_data(x, y)
             waypoints_all.set_visible(True)
 
-        if len(victim_positions)>0:
-            xv = [i for i, j, k, l in victim_positions]
-            yv = [j for i, j, k, l in victim_positions]
-            victims_all.set_data(xv ,yv)
+        #if len(victim_positions)>0:
+        #    xv = [i for i, j, k, l in victim_positions]
+        #    yv = [j for i, j, k, l in victim_positions]
+        #    victims_all.set_data(xv ,yv)
 
 
 
