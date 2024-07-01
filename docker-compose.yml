@@ -173,17 +173,6 @@ services:
       - default
       - sim
       - static-sim
-  rqt_graph:
-    image: osrf/ros:noetic-desktop-full
-    command: rqt_graph
-    env_file:
-      - docker.env
-    depends_on:
-      - ros_master
-    networks:
-      - ppmrob
-    volumes:
-      - /tmp/.X11-unix:/tmp/.X11-unix:rw
 networks:
   ppmrob:
     driver: "bridge"
