@@ -11,6 +11,10 @@ services:
       - "11311:11311"
     networks:
       - ppmrob
+    profiles:
+      - default
+      - sim
+      - static-sim
   cv:
     build: ./src/cv/cv_node
     # environment:
@@ -22,6 +26,8 @@ services:
       - ppmrob
     depends_on:
       - ros_master
+    profiles:
+      - default
   drone:
     build:
       context: ./src
@@ -36,8 +42,11 @@ services:
       - ppmrob
     depends_on:
       - ros_master
+    profiles:
+      - default
 
   # DO NOT start drone_dummy together with drone
+
   # drone_dummy:
   #   build:
   #     context: ./src
@@ -64,6 +73,8 @@ services:
       - /tmp/.X11-unix:/tmp/.X11-unix
     depends_on:
       - ros_master
+    profiles:
+      - default
   control:
     build:
       dockerfile: ./src/control/Dockerfile
@@ -75,6 +86,8 @@ services:
       - ppmrob
     depends_on:
       - ros_master
+    profiles:
+      - default
   mapping:
     build:
       dockerfile: ./src/mapping/Dockerfile
@@ -87,20 +100,25 @@ services:
     networks:
       - ppmrob
     depends_on:
-      - cv
       - ros_master
-#  static_map:
-#    build:
-#      dockerfile: ./src/static_map/Dockerfile
-#    env_file:
-#      - docker.env
-#    ports:
-#      - "9010:9010"
-#    working_dir: /catkin_ws/src/static_map/scripts
-#    networks:
-#      - ppmrob
-#    depends_on:
-#      - ros_master
+    profiles:
+      - default
+      - sim
+  static_map:
+    build:
+      dockerfile: ./src/static_map/Dockerfile
+    env_file:
+      - docker.env
+    ports:
+      - "9010:9010"
+    working_dir: /catkin_ws/src/static_map/scripts
+    networks:
+      - ppmrob
+    depends_on:
+      - ros_master
+      - mapping
+    profiles:
+      - static-sim
   planner:
     build:
       # If not set explicitly, context defaults to project directory (.).
@@ -119,6 +137,8 @@ services:
       - control
       - mapping
       - cv
+    profiles:
+      - default
 
   mapping_simulation:
     build: ./src/mapping_simulation
@@ -130,9 +150,12 @@ services:
       - ppmrob
     depends_on:
       - ros_master
+      - mapping
     working_dir: /catkin_ws/src/mapping_simulation/scripts
     # stdin_open: true  # Keeps STDIN open
     # tty: true         # Allocates a pseudo-TTY
+    profiles:
+      - sim
 
   rviz:
     build: ./src/rviz
@@ -146,6 +169,10 @@ services:
       - ROS_MASTER_URI=http://ros_master:11311
     volumes:
       - /tmp/.X11-unix:/tmp/.X11-unix
+    profiles:
+      - default
+      - sim
+      - static-sim
   rqt_graph:
     image: osrf/ros:noetic-desktop-full
     command: rqt_graph
