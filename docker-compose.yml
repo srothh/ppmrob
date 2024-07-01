@@ -89,18 +89,18 @@ services:
     depends_on:
       - cv
       - ros_master
-  static_map:
-    build:
-      dockerfile: ./src/static_map/Dockerfile
-    env_file:
-      - docker.env
-    ports:
-      - "9010:9010"
-    working_dir: /catkin_ws/src/static_map/scripts
-    networks:
-      - ppmrob
-    depends_on:
-      - ros_master
+#  static_map:
+#    build:
+#      dockerfile: ./src/static_map/Dockerfile
+#    env_file:
+#      - docker.env
+#    ports:
+#      - "9010:9010"
+#    working_dir: /catkin_ws/src/static_map/scripts
+#    networks:
+#      - ppmrob
+#    depends_on:
+#      - ros_master
   planner:
     build:
       # If not set explicitly, context defaults to project directory (.).
